@@ -1,211 +1,278 @@
-import React, { useState } from 'react';
-import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-    LayoutGrid,
-    Video,
-    Activity,
-    User,
-    Upload,
-    LogOut,
-    ChevronDown,
-    Menu,
-    X
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { ShoppingCart, Search, LogIn, Menu, X, Rocket, Sun, Moon, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const { user, login, logout } = useAuth();
-    const navigate = useNavigate();
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { user } = useAuth();
+    const { isDark, toggleTheme } = useTheme();
+    const location = useLocation();
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 40);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const navLinks = [
-        { id: 'marketplace', label: 'Marketplace', path: '/marketplace', icon: LayoutGrid },
-        { id: 'yazam', label: 'Yazam Vault', path: '/yazam', icon: Video },
-        { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: Activity },
+        { name: 'Home', path: '/' },
+        { name: 'Marketplace', path: '/marketplace' },
+        { name: 'Services', path: '/marketplace?type=services' },
     ];
 
-    const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
+    const isActive = (path) => {
+        if (path === '/') return location.pathname === '/';
+        return (location.pathname + location.search).startsWith(path);
+    };
 
     return (
-        <>
-            <header className="nav-wrapper">
-                <nav className="nav-container">
-                    <div className="nav-content">
-                        <div className="nav-left">
-                            <button className="hamburger-menu" onClick={toggleDrawer}>
-                                <Menu size={24} />
-                            </button>
-                            <Link to="/" className="logo">
-                                <span>Kwacha<strong>Digital</strong></span>
-                            </Link>
-                        </div>
-
-                        <div className="nav-right">
-                            <div className="nav-links">
-                                {navLinks.map((link) => (
-                                    <NavLink
-                                        key={link.id}
-                                        to={link.path}
-                                        className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
-                                    >
-                                        <link.icon className="nav-icon" size={18} />
-                                        <span>{link.label}</span>
-                                    </NavLink>
-                                ))}
-                            </div>
-
-                            <div className="nav-actions">
-                                {user ? (
-                                    <div className="user-menu">
-                                        <div
-                                            className="avatar"
-                                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                        >
-                                            {user.avatar}
-                                        </div>
-                                        <AnimatePresence>
-                                            {isDropdownOpen && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: 10 }}
-                                                    className="dropdown shadow-lg"
-                                                    onMouseLeave={() => setIsDropdownOpen(false)}
-                                                >
-                                                    <div className="dd-header">
-                                                        <div className="dd-avatar">{user.avatar}</div>
-                                                        <div>
-                                                            <div className="dd-name">{user.name}</div>
-                                                            <div className="dd-role">{user.role}</div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="dd-divider"></div>
-                                                    <button onClick={() => { navigate('/profile'); setIsDropdownOpen(false); }}>
-                                                        <User size={14} style={{ marginRight: 8 }} /> My Profile
-                                                    </button>
-                                                    <button onClick={() => { navigate('/dashboard'); setIsDropdownOpen(false); }}>
-                                                        <Activity size={14} style={{ marginRight: 8 }} /> Dashboard
-                                                    </button>
-                                                    <button onClick={() => { navigate('/upload'); setIsDropdownOpen(false); }}>
-                                                        <Upload size={14} style={{ marginRight: 8 }} /> Upload Product
-                                                    </button>
-                                                    <div className="dd-divider"></div>
-                                                    <button className="dd-danger" onClick={() => { logout(); setIsDropdownOpen(false); }}>
-                                                        <LogOut size={14} style={{ marginRight: 8 }} /> Sign Out
-                                                    </button>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-                                ) : (
-                                    <button className="btn btn--outline btn--sm sign-in-btn" onClick={() => navigate('/login')}>
-                                        Sign In
-                                    </button>
-                                )}
-                            </div>
+        <header className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-3 md:pt-6 px-4 pointer-events-none">
+            <motion.nav
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className={`
+                    pointer-events-auto
+                    flex items-center justify-between
+                    transition-all duration-700 cubic-bezier(0.23, 1, 0.32, 1)
+                    w-full
+                    ${isScrolled
+                        ? 'max-w-[1100px] rounded-full glass glass-premium px-4 md:px-8 py-2.5 md:py-3 shadow-2xl'
+                        : 'max-w-[1280px] rounded-2xl glass px-6 md:px-10 py-4 md:py-5 translate-y-2'
+                    }
+                `}
+            >
+                {/* Logo Section */}
+                <Link to="/" className="flex items-center gap-2 md:gap-3 no-underline group shrink-0">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-primary blur-md opacity-40 group-hover:opacity-80 transition-opacity" />
+                        <div className="relative w-8 md:w-10 h-8 md:h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg border border-white/20">
+                            <Rocket size={18} className="md:w-[22px] text-white transform group-hover:rotate-12 transition-transform" />
                         </div>
                     </div>
-                </nav>
-            </header>
+                    <span className="text-base md:text-xl font-display font-bold text-text-primary tracking-tight">
+                        Kwacha<span className="text-primary italic">.</span>Digital
+                    </span>
+                </Link>
 
+                {/* Desktop Navigation */}
+                <div className="hidden md:flex items-center gap-6 lg:gap-8 flex-1 justify-center">
+                    {navLinks.map((link, i) => (
+                        <Link
+                            key={link.name}
+                            to={link.path}
+                            className="relative group py-2"
+                        >
+                            <span className={`text-[12px] lg:text-[13px] font-bold uppercase tracking-wider transition-colors ${isActive(link.path) ? 'text-primary' : 'text-text-secondary group-hover:text-text-primary'}`}>
+                                {link.name}
+                            </span>
+                            {isActive(link.path) && (
+                                <motion.div
+                                    layoutId="navUnderline"
+                                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
+                                />
+                            )}
+                        </Link>
+                    ))}
+                </div>
 
-            {/* Mobile Drawer */}
+                {/* Action Buttons */}
+                <div className="flex items-center gap-1 md:gap-2 ml-auto">
+                    <div className="hidden sm:flex items-center glass rounded-full p-1 border border-glass-border">
+                        <button
+                            onClick={toggleTheme}
+                            className="p-1.5 md:p-2 text-text-secondary hover:text-primary transition-colors flex items-center justify-center rounded-full hover:bg-white/5"
+                            aria-label="Toggle Theme"
+                        >
+                            {isDark ? <Sun size={16} className="md:w-[18px]" /> : <Moon size={16} className="md:w-[18px]" />}
+                        </button>
+                        <div className="w-px h-3 md:h-4 bg-glass-border mx-1" />
+                        <button className="p-1.5 md:p-2 text-text-secondary hover:text-primary transition-colors flex items-center justify-center rounded-full hover:bg-white/5">
+                            <Search size={16} className="md:w-[18px]" />
+                        </button>
+                    </div>
+
+                    <Link to="/cart" className="relative p-1.5 md:p-2.5 text-text-secondary hover:text-primary transition-colors flex items-center justify-center rounded-full hover:bg-white/5">
+                        <ShoppingCart size={18} className="md:w-[20px]" />
+                        <span className="absolute top-1 md:top-1.5 right-1 md:right-1.5 w-3.5 md:w-4 h-3.5 md:h-4 bg-primary text-[8px] md:text-[9px] font-bold text-white flex items-center justify-center rounded-full border border-white/20">0</span>
+                    </Link>
+
+                    {user ? (
+                        <Link to="/profile" className="hidden sm:flex items-center gap-2 pl-2 md:pl-3 p-1 glass rounded-full hover:bg-white/5 border border-glass-border transition-all no-underline">
+                            <span className="text-[11px] md:text-xs font-bold text-text-primary hidden lg:block">{user.name.split(' ')[0]}</span>
+                            <div className="w-7 md:w-8 h-7 md:h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary border border-primary/20">
+                                {user.avatar}
+                            </div>
+                        </Link>
+                    ) : (
+                        <Link to="/login" className="btn btn-primary hidden sm:flex py-1.5 md:py-2 px-4 md:px-6 text-[11px] md:text-xs rounded-full ml-1 md:ml-2">
+                            Join Now
+                        </Link>
+                    )}
+
+                    {/* Mobile Menu Toggle */}
+                    <button
+                        className="md:hidden ml-1 p-1.5 text-text-primary hover:text-primary transition-colors pointer-events-auto"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsMobileMenuOpen(!isMobileMenuOpen);
+                        }}
+                        aria-label="Toggle menu"
+                    >
+                        {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                </div>
+            </motion.nav>
+
+            {/* Mobile Menu Overlay - Side Drawer */}
             <AnimatePresence>
-                {isDrawerOpen && (
+                {isMobileMenuOpen && (
                     <>
+                        {/* Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="drawer-overlay"
-                            onClick={toggleDrawer}
+                            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-md md:hidden pointer-events-auto"
+                            onClick={() => setIsMobileMenuOpen(false)}
                         />
+
+                        {/* Drawer */}
                         <motion.div
-                            initial={{ x: '-100%' }}
+                            initial={{ x: '100%' }}
                             animate={{ x: 0 }}
-                            exit={{ x: '-100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="mobile-drawer"
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+                            className="fixed top-0 right-0 bottom-0 w-[310px] z-50 bg-bg-main/80 backdrop-blur-2xl border-l border-glass-border shadow-[-20px_0_50px_rgba(0,0,0,0.2)] md:hidden flex flex-col pointer-events-auto overflow-hidden"
                         >
-                            <div className="drawer-header">
-                                <div className="logo">
-                                    <div className="logo-mark">₭</div>
-                                    <span>Kwacha<strong>Digital</strong></span>
-                                </div>
-                                <button className="close-btn" onClick={toggleDrawer}>
-                                    <X size={24} />
+                            {/* Animated Background Mesh */}
+                            <div className="absolute inset-0 -z-10 opacity-30 pointer-events-none">
+                                <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-primary/20 rounded-full blur-[80px] animate-pulse" />
+                                <div className="absolute bottom-[20%] left-[-20%] w-48 h-48 bg-emerald-500/10 rounded-full blur-[60px]" />
+                            </div>
+
+                            {/* Drawer Header */}
+                            <div className="p-6 pt-10 flex items-center justify-between border-b border-glass-border">
+                                <Link to="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg">
+                                        <Rocket size={16} className="text-white" />
+                                    </div>
+                                    <span className="font-display font-bold text-lg text-text-primary tracking-tight">Kwacha</span>
+                                </Link>
+                                <button
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="w-10 h-10 rounded-full glass border border-glass-border flex items-center justify-center text-text-primary hover:text-primary transition-colors"
+                                >
+                                    <X size={20} />
                                 </button>
                             </div>
 
-                            <div className="drawer-content">
-                                {user && (
-                                    <div className="drawer-user">
-                                        <div className="dd-avatar">{user.avatar}</div>
-                                        <div>
-                                            <div className="dd-name">{user.name}</div>
-                                            <div className="dd-role">{user.role}</div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="drawer-links">
-                                    {navLinks.map((link) => (
-                                        <NavLink
-                                            key={link.id}
-                                            to={link.path}
-                                            className={({ isActive }) => `drawer-link ${isActive ? 'active' : ''}`}
-                                            onClick={toggleDrawer}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                                <div className="flex flex-col gap-1">
+                                    {navLinks.map((link, i) => (
+                                        <motion.div
+                                            key={link.name}
+                                            initial={{ x: 30, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.1 + (i * 0.08), ease: [0.23, 1, 0.32, 1] }}
                                         >
-                                            <link.icon size={20} />
-                                            {link.label}
-                                        </NavLink>
+                                            <Link
+                                                to={link.path}
+                                                className={`group text-lg font-display font-bold no-underline flex items-center justify-between py-4 px-4 rounded-2xl transition-all ${isActive(link.path) ? 'bg-primary/10 text-primary border border-primary/10' : 'text-text-primary hover:bg-white/5 border border-transparent'}`}
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`w-1.5 h-1.5 rounded-full bg-primary transition-transform duration-300 ${isActive(link.path) ? 'scale-100' : 'scale-0 group-hover:scale-100'}`} />
+                                                    {link.name}
+                                                </div>
+                                                <ChevronRight size={18} className={`transition-transform duration-300 ${isActive(link.path) ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'}`} />
+                                            </Link>
+                                        </motion.div>
                                     ))}
-                                </div>
 
-                                <div className="drawer-divider"></div>
+                                    <div className="h-px bg-glass-border my-8 mx-2" />
 
-                                <div className="drawer-actions">
-                                    <button
-                                        className="drawer-link"
-                                        onClick={() => { navigate('/upload'); toggleDrawer(); }}
+                                    <motion.div
+                                        initial={{ y: 20, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ delay: 0.4 }}
+                                        className="flex flex-col gap-6"
                                     >
-                                        <Upload size={20} />
-                                        List Product
-                                    </button>
-                                    {user ? (
-                                        <>
-                                            <button
-                                                className="drawer-link"
-                                                onClick={() => { navigate('/profile'); toggleDrawer(); }}
-                                            >
-                                                <User size={20} />
-                                                My Profile
-                                            </button>
-                                            <button
-                                                className="drawer-link logout"
-                                                onClick={() => { logout(); toggleDrawer(); }}
-                                            >
-                                                <LogOut size={20} />
-                                                Sign Out
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button
-                                            className="btn btn--primary w-full"
-                                            onClick={() => { navigate('/login'); toggleDrawer(); }}
+                                        <div>
+                                            <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted font-bold mb-4 ml-2">Preferences</p>
+                                            <div className="flex items-center justify-between p-4 glass rounded-2xl border border-glass-border h-16">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold text-text-primary">Interface Theme</span>
+                                                    <span className="text-[10px] text-text-muted">{isDark ? 'Dark mode active' : 'Light mode active'}</span>
+                                                </div>
+                                                <button
+                                                    onClick={toggleTheme}
+                                                    className="w-11 h-11 rounded-xl flex items-center justify-center bg-primary/10 text-primary border border-primary/20 hover:scale-105 active:scale-95 transition-all"
+                                                >
+                                                    {isDark ? <Sun size={20} /> : <Moon size={20} />}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted font-bold mb-4 ml-2">Account</p>
+                                            {user ? (
+                                                <Link
+                                                    to="/profile"
+                                                    className="flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all no-underline group"
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                >
+                                                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary border border-primary/20 shadow-inner group-hover:scale-105 transition-transform">
+                                                        {user.avatar}
+                                                    </div>
+                                                    <div className="flex flex-col flex-1">
+                                                        <span className="text-sm font-bold text-text-primary">{user.name}</span>
+                                                        <span className="text-[10px] text-primary font-bold uppercase tracking-wider">View Dashboard</span>
+                                                    </div>
+                                                    <ChevronRight size={16} className="text-text-muted group-hover:text-primary transition-colors" />
+                                                </Link>
+                                            ) : (
+                                                <button
+                                                    onClick={() => { setIsMobileMenuOpen(false); /* Navigate to login */ }}
+                                                    className="w-full flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all group"
+                                                >
+                                                    <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center text-text-secondary border border-glass-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">
+                                                        <LogIn size={22} />
+                                                    </div>
+                                                    <div className="flex flex-col items-start translate-y-[-1px]">
+                                                        <span className="text-sm font-bold text-text-primary">Sign In</span>
+                                                        <span className="text-[10px] text-text-muted">Access your digital vault</span>
+                                                    </div>
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <Link
+                                            to={user ? "/sell" : "/login"}
+                                            className="btn btn-primary w-full text-base py-4 rounded-2xl shadow-[0_15px_30px_-10px_rgba(16,185,129,0.3)] flex items-center gap-2 group mb-6"
+                                            onClick={() => setIsMobileMenuOpen(false)}
                                         >
-                                            Sign In
-                                        </button>
-                                    )}
+                                            {user ? 'Sell Digital Asset' : 'Start Creating'}
+                                            <motion.div
+                                                animate={{ x: [0, 5, 0] }}
+                                                transition={{ repeat: Infinity, duration: 1.5 }}
+                                            >
+                                                <ChevronRight size={18} />
+                                            </motion.div>
+                                        </Link>
+                                    </motion.div>
                                 </div>
                             </div>
                         </motion.div>
                     </>
                 )}
             </AnimatePresence>
-        </>
+        </header>
     );
 };
 

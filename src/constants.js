@@ -18,8 +18,8 @@ export const CREATORS = [
 ];
 
 export const TICKER_ITEMS = [
-  { icon: '💳', name: '@Kondwani bought SME Funding Master', time: '1 min ago · MK 8,500' },
-  { icon: '🎯', name: '@Thandeka referred React Native Course', time: '5 min ago · Earned MK 600' },
-  { icon: '📥', name: '@UniMalawi downloaded Free Biz Guide', time: '8 min ago · Free' },
-  { icon: '💳', name: '@YasemineM bought Agribusiness Pitch', time: '19 min ago · MK 5,500' },
+  { icon: 'CreditCard', name: '@Kondwani bought SME Funding Master', time: '1 min ago · MK 8,500', color: '#10b981' },
+  { icon: 'Target', name: '@Thandeka referred React Native Course', time: '5 min ago · Earned MK 600', color: '#f59e0b' },
+  { icon: 'Inbox', name: '@UniMalawi downloaded Free Biz Guide', time: '8 min ago · Free', color: '#3b82f6' },
+  { icon: 'Zap', name: '@YasemineM bought Agribusiness Pitch', time: '19 min ago · MK 5,500', color: '#ec4899' },
 ];
