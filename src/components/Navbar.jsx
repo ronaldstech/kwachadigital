@@ -1,6 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Search, LogIn, Menu, X, Rocket, Sun, Moon, ChevronRight, Home, Store, Briefcase } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+    ShoppingCart,
+    Search,
+    LogIn,
+    Menu,
+    X,
+    Rocket,
+    Sun,
+    Moon,
+    ChevronRight,
+    Home,
+    Store,
+    Briefcase,
+    LayoutDashboard,
+    User,
+    LogOut,
+    ChevronDown
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,16 +25,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const profileRef = useRef(null);
     const { user, logout, openAuthModal } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const location = useLocation();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 40);
         };
+        const handleClickOutside = (event) => {
+            if (profileRef.current && !profileRef.current.contains(event.target)) {
+                setIsProfileOpen(false);
+            }
+        };
+
         window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
     }, []);
 
     const navLinks = [
@@ -29,6 +59,12 @@ const Navbar = () => {
     const isActive = (path) => {
         if (path === '/') return location.pathname === '/';
         return (location.pathname + location.search).startsWith(path);
+    };
+
+    const handleLogout = async () => {
+        setIsProfileOpen(false);
+        await logout();
+        navigate('/');
     };
 
     return (
@@ -104,12 +140,70 @@ const Navbar = () => {
                     </Link>
 
                     {user ? (
-                        <Link to="/profile" className="hidden sm:flex items-center gap-2 pl-2 md:pl-3 p-1 glass rounded-full hover:bg-white/5 border border-glass-border transition-all no-underline">
-                            <span className="text-[11px] md:text-xs font-bold text-text-primary hidden lg:block">{user.name.split(' ')[0]}</span>
-                            <div className="w-7 md:w-8 h-7 md:h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary border border-primary/20">
-                                {user.avatar}
-                            </div>
-                        </Link>
+                        <div className="relative" ref={profileRef}>
+                            <button
+                                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                className="hidden sm:flex items-center gap-2 pl-2 md:pl-3 p-1 glass rounded-full hover:bg-white/10 border border-glass-border transition-all group"
+                            >
+                                <span className="text-[11px] md:text-xs font-bold text-text-primary hidden lg:block">{user.name.split(' ')[0]}</span>
+                                <div className="w-7 md:w-8 h-7 md:h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary border border-primary/20 shadow-inner group-hover:scale-105 transition-transform">
+                                    {user.avatar}
+                                </div>
+                                <ChevronDown size={14} className={`text-text-muted transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            <AnimatePresence>
+                                {isProfileOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className="absolute top-full right-0 mt-3 w-64 glass-premium rounded-[28px] border border-glass-border shadow-2xl overflow-hidden py-3 p-2 pointer-events-auto"
+                                    >
+                                        <div className="px-4 py-3 mb-2 border-b border-glass-border/50">
+                                            <p className="text-[10px] uppercase tracking-widest font-black text-text-muted mb-1">Signed in as</p>
+                                            <p className="text-sm font-bold text-text-primary truncate">{user.email}</p>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Link
+                                                to="/dashboard"
+                                                className="flex items-center gap-3 px-4 py-1 rounded-2xl hover:bg-primary/10 text-text-secondary hover:text-primary transition-all group no-underline"
+                                                onClick={() => setIsProfileOpen(false)}
+                                            >
+                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                                                    <LayoutDashboard size={16} />
+                                                </div>
+                                                <span className="text-sm font-bold">Control Center</span>
+                                            </Link>
+
+                                            <Link
+                                                to="/profile"
+                                                className="flex items-center gap-3 px-4 py-1 rounded-2xl hover:bg-primary/10 text-text-secondary hover:text-primary transition-all group no-underline"
+                                                onClick={() => setIsProfileOpen(false)}
+                                            >
+                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                                                    <User size={16} />
+                                                </div>
+                                                <span className="text-sm font-bold">Profile</span>
+                                            </Link>
+
+                                            <div className="h-px bg-glass-border/50 my-2 mx-2" />
+
+                                            <button
+                                                onClick={handleLogout}
+                                                className="w-full flex items-center gap-3 px-4 py-1 rounded-2xl bg-red-500/20 text-text-secondary hover:text-red-500 transition-all group"
+                                            >
+                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all shadow-sm">
+                                                    <LogOut size={16} />
+                                                </div>
+                                                <span className="text-sm font-bold">Logout</span>
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     ) : (
                         <button
                             onClick={() => openAuthModal('signup')}
@@ -228,20 +322,47 @@ const Navbar = () => {
                                         <div>
                                             <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted font-bold mb-4 ml-2">Account</p>
                                             {user ? (
-                                                <Link
-                                                    to="/profile"
-                                                    className="flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all no-underline group"
-                                                    onClick={() => setIsMobileMenuOpen(false)}
-                                                >
-                                                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary border border-primary/20 shadow-inner group-hover:scale-105 transition-transform">
-                                                        {user.avatar}
-                                                    </div>
-                                                    <div className="flex flex-col flex-1">
-                                                        <span className="text-sm font-bold text-text-primary">{user.name}</span>
-                                                        <span className="text-[10px] text-primary font-bold uppercase tracking-wider">View Dashboard</span>
-                                                    </div>
-                                                    <ChevronRight size={16} className="text-text-muted group-hover:text-primary transition-colors" />
-                                                </Link>
+                                                <div className="flex flex-col gap-2">
+                                                    <Link
+                                                        to="/dashboard"
+                                                        className="flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all no-underline group"
+                                                        onClick={() => setIsMobileMenuOpen(false)}
+                                                    >
+                                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary border border-primary/20 shadow-inner group-hover:scale-105 transition-transform">
+                                                            <LayoutDashboard size={20} />
+                                                        </div>
+                                                        <div className="flex flex-col flex-1">
+                                                            <span className="text-sm font-bold text-text-primary">Dashboard</span>
+                                                            <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Control Center</span>
+                                                        </div>
+                                                        <ChevronRight size={16} className="text-text-muted group-hover:text-primary transition-colors" />
+                                                    </Link>
+
+                                                    <Link
+                                                        to="/profile"
+                                                        className="flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all no-underline group"
+                                                        onClick={() => setIsMobileMenuOpen(false)}
+                                                    >
+                                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary border border-primary/20 shadow-inner group-hover:scale-105 transition-transform">
+                                                            <User size={20} />
+                                                        </div>
+                                                        <div className="flex flex-col flex-1">
+                                                            <span className="text-sm font-bold text-text-primary">Profile</span>
+                                                            <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Founder Stats</span>
+                                                        </div>
+                                                        <ChevronRight size={16} className="text-text-muted group-hover:text-primary transition-colors" />
+                                                    </Link>
+
+                                                    <button
+                                                        onClick={handleLogout}
+                                                        className="flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border bg-red-500/30 hover:bg-red-500/20 transition-all group"
+                                                    >
+                                                        <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center text-text-secondary border border-glass-border group-hover:bg-red-500 group-hover:text-white transition-all">
+                                                            <LogOut size={20} />
+                                                        </div>
+                                                        <span className="text-sm font-bold text-text-primary group-hover:text-red-500">Sign Out</span>
+                                                    </button>
+                                                </div>
                                             ) : (
                                                 <button
                                                     onClick={() => { setIsMobileMenuOpen(false); openAuthModal('login'); }}

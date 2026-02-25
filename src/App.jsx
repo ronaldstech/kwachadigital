@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, ScrollRestoration, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -13,6 +13,8 @@ import AuthModal from './components/AuthModal';
 import Home from './pages/Home';
 import Marketplace from './pages/Marketplace';
 import ProductDetail from './pages/ProductDetail';
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 
 // Helper to scroll to top on navigation
 const ScrollToTop = () => {
@@ -21,6 +23,32 @@ const ScrollToTop = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
   return null;
+};
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+// Layout for Public Pages (with Navbar and Footer)
+const MainLayout = () => {
+  return (
+    <div className="min-h-screen bg-bg-main flex flex-col transition-colors duration-300">
+      <Navbar />
+      <main className="flex-grow">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
 };
 
 const App = () => {
@@ -39,28 +67,37 @@ const AuthConsumer = () => {
   return (
     <Router>
       <ScrollToTop />
-      <div className="min-h-screen bg-bg-main flex flex-col transition-colors duration-300">
-        <Toaster position="bottom-right" />
-        <Navbar />
-        <AuthModal
-          isOpen={isAuthModalOpen}
-          onClose={closeAuthModal}
-          initialMode={initialAuthMode}
-        />
+      <Toaster position="bottom-right" />
 
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/marketplace" element={<Marketplace />} />
-            <Route path="/product/:id" element={<ProductDetail />} />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        initialMode={initialAuthMode}
+      />
 
-            {/* Fallback */}
-            <Route path="*" element={<Home />} />
-          </Routes>
-        </main>
+      <Routes>
+        {/* Public Routes with Main Layout */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+        </Route>
 
-        <Footer />
-      </div>
+        {/* Independent Protected Routes (No Global Navbar/Footer) */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </Router>
   );
 };
