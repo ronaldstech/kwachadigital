@@ -6,7 +6,8 @@ import {
     signOut,
     updateProfile
 } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot as onSnapshotDoc, serverTimestamp } from 'firebase/firestore';
+
 import { auth, db } from '../firebase';
 import { toast } from 'react-hot-toast';
 
@@ -19,23 +20,56 @@ export const AuthProvider = ({ children }) => {
     const [initialAuthMode, setInitialAuthMode] = useState('login');
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        let unsubscribeDoc = null;
+
+        const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (unsubscribeDoc) {
+                unsubscribeDoc();
+                unsubscribeDoc = null;
+            }
+
             if (firebaseUser) {
-                setUser({
-                    uid: firebaseUser.uid,
-                    name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-                    email: firebaseUser.email,
-                    avatar: firebaseUser.displayName ? firebaseUser.displayName.slice(0, 2).toUpperCase() : 'KD',
-                    photoURL: firebaseUser.photoURL
+                // Fetch user data from Firestore
+                const userDocRef = doc(db, 'users', firebaseUser.uid);
+
+                // Set up a real-time listener for the user document
+                unsubscribeDoc = onSnapshotDoc(userDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        setUser({
+                            uid: firebaseUser.uid,
+                            email: firebaseUser.email,
+                            role: userData.role,
+                            ...userData,
+                            avatar: userData.avatar || (userData.name || firebaseUser.email).slice(0, 2).toUpperCase()
+                        });
+                    } else {
+                        // Fallback if doc doesn't exist yet (e.g., during signup)
+                        setUser({
+                            uid: firebaseUser.uid,
+                            email: firebaseUser.email,
+                            name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+                            role: 'user',
+                            avatar: 'KD'
+                        });
+                    }
+                    setLoading(false);
+                }, (error) => {
+                    console.error("Error listening to user doc:", error);
+                    setLoading(false);
                 });
             } else {
                 setUser(null);
+                setLoading(false);
             }
-            setLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeDoc) unsubscribeDoc();
+        };
     }, []);
+
 
     const loginWithEmail = async (email, password) => {
         try {
