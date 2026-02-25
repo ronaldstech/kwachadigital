@@ -1,222 +1,214 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     LayoutDashboard,
     ShoppingBag,
-    ArrowUpRight,
-    TrendingUp,
-    Clock,
-    CheckCircle2,
-    Briefcase,
-    Zap,
-    Download,
-    Eye
+    Menu,
+    X,
+    Settings as SettingsIcon,
+    Package,
+    LogOut,
+    Search,
+    Bell,
+    Zap
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
 
-const StatCard = ({ icon: Icon, label, value, trend, color }) => (
-    <motion.div
-        whileHover={{ y: -5 }}
-        className="glass-premium p-6 rounded-[32px] border-glass-border relative overflow-hidden group"
-    >
-        <div className={`absolute top-0 right-0 w-32 h-32 bg-${color}/10 rounded-full blur-[40px] -z-10 opacity-0 group-hover:opacity-100 transition-opacity`} />
+// Dashboard Sub-components
+import Overview from './Overview';
+import Products from './Products';
+import Orders from './Orders';
+import Settings from './Settings';
 
-        <div className="flex items-start justify-between mb-4">
-            <div className={`w-12 h-12 rounded-2xl bg-${color}/10 flex items-center justify-center text-${color} border border-${color}/20`}>
-                <Icon size={22} />
-            </div>
-            {trend && (
-                <div className="flex items-center gap-1 text-emerald-500 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20">
-                    <TrendingUp size={12} />
-                    {trend}
-                </div>
-            )}
-        </div>
-
-        <p className="text-xs font-bold text-text-muted uppercase tracking-widest mb-1">{label}</p>
-        <h3 className="text-2xl font-display font-black text-text-primary tracking-tight">{value}</h3>
-    </motion.div>
-);
-
-const ActivityItem = ({ icon: Icon, title, time, status, amount }) => (
-    <div className="flex items-center gap-4 p-4 hover:bg-white/5 rounded-2xl transition-all group border border-transparent hover:border-glass-border">
-        <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center text-text-secondary border border-glass-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">
-            <Icon size={20} />
-        </div>
-        <div className="flex-1">
-            <h4 className="text-sm font-bold text-text-primary mb-0.5">{title}</h4>
-            <div className="flex items-center gap-2">
-                <span className="text-[10px] text-text-muted flex items-center gap-1">
-                    <Clock size={10} />
-                    {time}
-                </span>
-                <span className="w-1 h-1 rounded-full bg-text-muted/30" />
-                <span className={`text-[10px] font-black uppercase tracking-widest ${status === 'Completed' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                    {status}
-                </span>
-            </div>
-        </div>
-        {amount && (
-            <div className="text-right">
-                <span className="text-sm font-black text-text-primary">{amount}</span>
-            </div>
-        )}
-    </div>
-);
+const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'products', label: 'Products', icon: Package },
+    { id: 'orders', label: 'Orders', icon: ShoppingBag },
+    { id: 'settings', label: 'Settings', icon: SettingsIcon },
+];
 
 const Dashboard = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/');
+    };
+
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'dashboard':
+                return <Overview user={user} />;
+            case 'products':
+                return <Products />;
+            case 'orders':
+                return <Orders />;
+            case 'settings':
+                return <Settings user={user} />;
+            default:
+                return <Overview user={user} />;
+        }
+    };
 
     return (
-        <div className="pt-32 pb-20 px-4 min-h-screen relative overflow-hidden">
-            {/* Background Blobs */}
-            <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -z-10 animate-pulse" />
-            <div className="absolute bottom-[10%] left-[-10%] w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] -z-10" />
+        <div className="min-h-screen bg-bg-main flex relative overflow-x-hidden">
+            {/* Background Blobs - Global for Dashboard */}
+            <div className="fixed top-[20%] right-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -z-10 animate-pulse pointer-events-none" />
+            <div className="fixed bottom-[10%] left-[-10%] w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
-            <div className="max-w-[1280px] mx-auto">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-                    <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                    >
-                        <h1 className="text-4xl md:text-5xl font-display font-black text-text-primary tracking-tight mb-2">
-                            Arcade <span className="text-primary italic">Control</span>
-                        </h1>
-                        <p className="text-text-muted font-bold flex items-center gap-2">
-                            <CheckCircle2 size={16} className="text-primary" />
-                            Welcome back, {user?.name}. Your digital assets are secure.
-                        </p>
-                    </motion.div>
+            {/* Sidebar - Desktop */}
+            <aside className="hidden lg:flex flex-col w-72 h-screen sticky top-0 border-r border-glass-border bg-bg-main/50 backdrop-blur-3xl z-40 p-6">
+                <Link to="/" className="flex items-center gap-3 mb-12 px-2 no-underline group">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg border border-white/20">
+                        <Zap size={22} className="text-white transform group-hover:rotate-12 transition-transform" />
+                    </div>
+                    <span className="text-xl font-display font-bold text-text-primary tracking-tight">
+                        Arcade<span className="text-primary">.</span>HQ
+                    </span>
+                </Link>
 
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex items-center gap-3"
-                    >
-                        <button className="btn btn-primary px-6 py-3 rounded-2xl flex items-center gap-2 shadow-[0_15px_30px_-10px_rgba(16,185,129,0.3)] group">
-                            <Zap size={18} />
-                            Deploy New Asset
-                            <ArrowUpRight size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <nav className="flex-1 space-y-2">
+                    {navItems.map((item) => (
+                        <button
+                            key={item.id}
+                            onClick={() => setActiveTab(item.id)}
+                            className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${activeTab === item.id
+                                    ? 'bg-primary/10 text-primary border border-primary/20 shadow-[0_10px_20px_-10px_rgba(16,185,129,0.2)]'
+                                    : 'text-text-muted hover:text-text-primary hover:bg-white/5 border border-transparent'
+                                }`}
+                        >
+                            <item.icon size={20} className={`transition-colors ${activeTab === item.id ? 'text-primary' : 'group-hover:text-text-primary'}`} />
+                            <span className="text-sm font-bold tracking-tight">{item.label}</span>
+                            {activeTab === item.id && (
+                                <motion.div layoutId="activeTabIndicator" className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                            )}
                         </button>
-                    </motion.div>
-                </div>
+                    ))}
+                </nav>
 
-                {/* Grid Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                    <StatCard
-                        icon={ShoppingBag}
-                        label="Total Acquisitions"
-                        value="12 Assets"
-                        trend="+24%"
-                        color="primary"
-                    />
-                    <StatCard
-                        icon={Briefcase}
-                        label="Active Licenses"
-                        value="08 Active"
-                        color="emerald-500"
-                    />
-                    <StatCard
-                        icon={Download}
-                        label="Stored Downloads"
-                        value="1.2 GB"
-                        trend="+5%"
-                        color="blue-500"
-                    />
-                    <StatCard
-                        icon={Eye}
-                        label="Profile Reach"
-                        value="2.4k Views"
-                        trend="+112%"
-                        color="purple-500"
-                    />
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Recent Activity */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="lg:col-span-2 glass-premium rounded-[40px] border-glass-border p-8"
+                <div className="mt-auto pt-6 border-t border-glass-border">
+                    <div className="flex items-center gap-3 mb-6 px-2">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary border border-primary/20">
+                            {user?.avatar}
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                            <span className="text-sm font-bold text-text-primary truncate">{user?.name}</span>
+                            <span className="text-[10px] text-text-muted font-bold uppercase tracking-widest">Master Admin</span>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20 group"
                     >
-                        <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-xl font-display font-black text-text-primary tracking-tight flex items-center gap-3">
-                                <Clock className="text-primary" size={22} />
-                                Binary Ledger
-                            </h2>
-                            <button className="text-[10px] uppercase tracking-widest font-black text-primary hover:underline">
-                                View Full History
-                            </button>
-                        </div>
-
-                        <div className="space-y-2">
-                            <ActivityItem
-                                icon={ShoppingBag}
-                                title="Modern UI Kit Pro Acquisition"
-                                time="2 hours ago"
-                                status="Completed"
-                                amount="$49.00"
-                            />
-                            <ActivityItem
-                                icon={Briefcase}
-                                title="SaaS Dashboard Template Access"
-                                time="Yesterday"
-                                status="Completed"
-                                amount="$79.00"
-                            />
-                            <ActivityItem
-                                icon={CheckCircle2}
-                                title="Security Protocol Update"
-                                time="2 days ago"
-                                status="Completed"
-                            />
-                            <ActivityItem
-                                icon={Zap}
-                                title="Beta Access Feature Unlock"
-                                time="3 days ago"
-                                status="Active"
-                            />
-                        </div>
-                    </motion.div>
-
-                    {/* Quick Access / Profile Info */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="glass-premium rounded-[40px] border-glass-border p-8"
-                    >
-                        <h2 className="text-xl font-display font-black text-text-primary tracking-tight mb-8">Quick Protocols</h2>
-
-                        <div className="space-y-4">
-                            <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-glass-border hover:bg-primary/10 hover:border-primary/30 transition-all group">
-                                <span className="text-sm font-bold text-text-primary">Global Settings</span>
-                                <ArrowUpRight size={18} className="text-text-muted group-hover:text-primary transition-all" />
-                            </button>
-                            <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-glass-border hover:bg-primary/10 hover:border-primary/30 transition-all group">
-                                <span className="text-sm font-bold text-text-primary">Link Hardware</span>
-                                <ArrowUpRight size={18} className="text-text-muted group-hover:text-primary transition-all" />
-                            </button>
-                            <button className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-glass-border hover:bg-primary/10 hover:border-primary/30 transition-all group">
-                                <span className="text-sm font-bold text-text-primary">Support Uplink</span>
-                                <ArrowUpRight size={18} className="text-text-muted group-hover:text-primary transition-all" />
-                            </button>
-
-                            <div className="mt-8 pt-8 border-t border-glass-border">
-                                <div className="p-6 rounded-[24px] bg-gradient-to-br from-primary/20 to-emerald-600/20 border border-primary/20 relative overflow-hidden">
-                                    <h4 className="text-sm font-black text-text-primary mb-2">Arcade+ Member</h4>
-                                    <p className="text-[10px] text-text-muted leading-relaxed uppercase tracking-wider font-bold">
-                                        You have premium access to all digital vaults until Dec 2026.
-                                    </p>
-                                    <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-primary/20 rounded-full blur-2xl" />
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
+                        <LogOut size={20} />
+                        <span className="text-sm font-bold">Terminate</span>
+                    </button>
                 </div>
+            </aside>
+
+            {/* Mobile Navigation Header */}
+            <div className="lg:hidden fixed top-0 left-0 right-0 h-20 glass-premium border-b border-glass-border z-50 px-6 flex items-center justify-between">
+                <Link to="/" className="flex items-center gap-2 no-underline">
+                    <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
+                        <Zap size={16} />
+                    </div>
+                    <span className="font-display font-bold text-lg text-text-primary">Arcade</span>
+                </Link>
+                <button
+                    onClick={() => setIsMobileMenuOpen(true)}
+                    className="p-2 glass rounded-xl border border-glass-border text-text-primary"
+                >
+                    <Menu size={24} />
+                </button>
             </div>
+
+            {/* Mobile Drawer */}
+            <AnimatePresence>
+                {isMobileMenuOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] lg:hidden"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ x: '-100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '-100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed top-0 left-0 bottom-0 w-80 bg-bg-main z-[70] lg:hidden p-8 flex flex-col border-r border-glass-border"
+                        >
+                            <div className="flex items-center justify-between mb-12">
+                                <span className="text-xl font-display font-bold text-text-primary tracking-tight">Arcade<span className="text-primary italic">.</span>HQ</span>
+                                <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 glass rounded-full border border-glass-border text-text-muted">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <nav className="flex-1 space-y-3">
+                                {navItems.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => { setActiveTab(item.id); setIsMobileMenuOpen(false); }}
+                                        className={`w-full flex items-center gap-5 px-6 py-4 rounded-2xl transition-all ${activeTab === item.id
+                                                ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                                : 'text-text-muted hover:bg-white/5 hover:text-text-primary'
+                                            }`}
+                                    >
+                                        <item.icon size={22} />
+                                        <span className="font-bold text-lg leading-none tracking-tight">{item.label}</span>
+                                    </button>
+                                ))}
+                            </nav>
+
+                            <div className="pt-8 border-t border-glass-border">
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl bg-red-500/10 text-red-500 font-bold"
+                                >
+                                    <LogOut size={22} />
+                                    <span>Logout Account</span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* Main Content Area */}
+            <main className="flex-1 min-h-screen pt-24 lg:pt-12 p-6 lg:p-12">
+                {/* Desktop Search & Notify Bar */}
+                <div className="hidden lg:flex items-center justify-between mb-12 max-w-[1280px]">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-muted">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        System Online: v4.0.2
+                    </div>
+                    <div className="flex items-center gap-6">
+                        <div className="relative w-80 group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={16} />
+                            <input
+                                type="text"
+                                placeholder="Global protocol search..."
+                                className="w-full pl-11 pr-4 py-2.5 glass border-glass-border rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-white/5"
+                            />
+                        </div>
+                        <button className="p-3 glass rounded-xl border border-glass-border text-text-muted hover:text-primary transition-colors relative">
+                            <Bell size={18} />
+                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-bg-main" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="max-w-[1280px]">
+                    {renderContent()}
+                </div>
+            </main>
         </div>
     );
 };
