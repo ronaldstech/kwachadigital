@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Search, LogIn, Menu, X, Rocket, Sun, Moon, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Search, LogIn, Menu, X, Rocket, Sun, Moon, ChevronRight, Home, Store, Briefcase } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { user } = useAuth();
+    const { user, logout, openAuthModal } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const location = useLocation();
 
@@ -21,9 +21,9 @@ const Navbar = () => {
     }, []);
 
     const navLinks = [
-        { name: 'Home', path: '/' },
-        { name: 'Marketplace', path: '/marketplace' },
-        { name: 'Services', path: '/marketplace?type=services' },
+        { name: 'Home', path: '/', icon: Home },
+        { name: 'Marketplace', path: '/marketplace', icon: Store },
+        { name: 'Services', path: '/marketplace?type=services', icon: Briefcase },
     ];
 
     const isActive = (path) => {
@@ -40,10 +40,10 @@ const Navbar = () => {
                     pointer-events-auto
                     flex items-center justify-between
                     transition-all duration-700 cubic-bezier(0.23, 1, 0.32, 1)
-                    w-full
+                    w-full max-w-[1280px]
                     ${isScrolled
-                        ? 'max-w-[1100px] rounded-full glass glass-premium px-4 md:px-8 py-2.5 md:py-3 shadow-2xl'
-                        : 'max-w-[1280px] rounded-2xl glass px-6 md:px-10 py-4 md:py-5 translate-y-2'
+                        ? 'rounded-full glass glass-premium px-8 md:px-10 py-3 shadow-2xl translate-y-2'
+                        : 'rounded-2xl glass px-8 md:px-10 py-5 translate-y-2'
                     }
                 `}
             >
@@ -66,9 +66,10 @@ const Navbar = () => {
                         <Link
                             key={link.name}
                             to={link.path}
-                            className="relative group py-2"
+                            className={`relative group py-2 flex items-center gap-2.5 transition-all duration-300 ${isActive(link.path) ? 'scale-105' : 'hover:scale-105'}`}
                         >
-                            <span className={`text-[12px] lg:text-[13px] font-bold uppercase tracking-wider transition-colors ${isActive(link.path) ? 'text-primary' : 'text-text-secondary group-hover:text-text-primary'}`}>
+                            <link.icon size={16} className={`transition-colors duration-300 ${isActive(link.path) ? 'text-primary' : 'text-text-muted group-hover:text-primary'}`} />
+                            <span className={`text-[12px] lg:text-[13px] font-black uppercase tracking-wider transition-colors duration-300 ${isActive(link.path) ? 'text-primary' : 'text-text-secondary group-hover:text-text-primary'}`}>
                                 {link.name}
                             </span>
                             {isActive(link.path) && (
@@ -110,9 +111,12 @@ const Navbar = () => {
                             </div>
                         </Link>
                     ) : (
-                        <Link to="/login" className="btn btn-primary hidden sm:flex py-1.5 md:py-2 px-4 md:px-6 text-[11px] md:text-xs rounded-full ml-1 md:ml-2">
+                        <button
+                            onClick={() => openAuthModal('signup')}
+                            className="btn btn-primary hidden sm:flex py-1.5 md:py-2 px-4 md:px-6 text-[11px] md:text-xs rounded-full ml-1 md:ml-2"
+                        >
                             Join Now
-                        </Link>
+                        </button>
                     )}
 
                     {/* Mobile Menu Toggle */}
@@ -186,8 +190,10 @@ const Navbar = () => {
                                                 className={`group text-lg font-display font-bold no-underline flex items-center justify-between py-4 px-4 rounded-2xl transition-all ${isActive(link.path) ? 'bg-primary/10 text-primary border border-primary/10' : 'text-text-primary hover:bg-white/5 border border-transparent'}`}
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                             >
-                                                <div className="flex items-center gap-3">
-                                                    <span className={`w-1.5 h-1.5 rounded-full bg-primary transition-transform duration-300 ${isActive(link.path) ? 'scale-100' : 'scale-0 group-hover:scale-100'}`} />
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isActive(link.path) ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-surface-2 text-text-muted group-hover:bg-primary/10 group-hover:text-primary'}`}>
+                                                        <link.icon size={20} />
+                                                    </div>
                                                     {link.name}
                                                 </div>
                                                 <ChevronRight size={18} className={`transition-transform duration-300 ${isActive(link.path) ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'}`} />
@@ -238,7 +244,7 @@ const Navbar = () => {
                                                 </Link>
                                             ) : (
                                                 <button
-                                                    onClick={() => { setIsMobileMenuOpen(false); /* Navigate to login */ }}
+                                                    onClick={() => { setIsMobileMenuOpen(false); openAuthModal('login'); }}
                                                     className="w-full flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all group"
                                                 >
                                                     <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center text-text-secondary border border-glass-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">

@@ -1,4 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    updateProfile
+} from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import { toast } from 'react-hot-toast';
 
 const AuthContext = createContext();
@@ -6,46 +15,98 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [initialAuthMode, setInitialAuthMode] = useState('login');
 
     useEffect(() => {
-        // Check for saved user in localStorage
-        const savedUser = localStorage.getItem('kd_user');
-        if (savedUser) {
-            setUser(JSON.parse(savedUser));
-        }
-        setLoading(false);
+        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            if (firebaseUser) {
+                setUser({
+                    uid: firebaseUser.uid,
+                    name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+                    email: firebaseUser.email,
+                    avatar: firebaseUser.displayName ? firebaseUser.displayName.slice(0, 2).toUpperCase() : 'KD',
+                    photoURL: firebaseUser.photoURL
+                });
+            } else {
+                setUser(null);
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
     }, []);
 
-    const login = (credentials) => {
-        // Mock login logic
-        const mockUser = {
-            id: '1',
-            name: 'Chimwemwe Kachali',
-            email: 'chimwemwe@kwacha.digital',
-            handle: '@chimwemwe_kd',
-            role: 'Marketer & Creator',
-            avatar: 'CK'
-        };
-        setUser(mockUser);
-        localStorage.setItem('kd_user', JSON.stringify(mockUser));
-        toast.success('Successfully logged in!', {
-            style: {
-                background: 'var(--text-1)',
-                color: '#fff',
-                borderRadius: 'var(--radius-md)',
-            }
-        });
+    const loginWithEmail = async (email, password) => {
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            toast.success('Access Granted. Welcome to the Arcade.', {
+                style: { background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }
+            });
+        } catch (error) {
+            throw error;
+        }
     };
 
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem('kd_user');
-        toast.success('Signed out successfully');
+    const signupWithEmail = async (email, password, name) => {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Update Auth Profile
+            await updateProfile(user, { displayName: name });
+
+            // Create Firestore Document
+            await setDoc(doc(db, 'users', user.uid), {
+                uid: user.uid,
+                name: name,
+                email: email,
+                role: 'user', // Default role
+                createdAt: serverTimestamp(),
+                lastLogin: serverTimestamp(),
+                avatar: name.slice(0, 2).toUpperCase()
+            });
+
+            setUser(prev => ({ ...prev, name }));
+            toast.success('Founder ID Created. Welcome to Kwacha Digital.', {
+                style: { background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }
+            });
+        } catch (error) {
+            throw error;
+        }
     };
+
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            toast.success('Session terminated securelly.', {
+                style: { background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }
+            });
+        } catch (error) {
+            toast.error('Failed to logout');
+        }
+    };
+
+    const openAuthModal = (mode = 'login') => {
+        setInitialAuthMode(mode);
+        setIsAuthModalOpen(true);
+    };
+
+    const closeAuthModal = () => setIsAuthModalOpen(false);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
-            {children}
+        <AuthContext.Provider value={{
+            user,
+            loading,
+            loginWithEmail,
+            signupWithEmail,
+            logout,
+            isAuthModalOpen,
+            openAuthModal,
+            closeAuthModal,
+            initialAuthMode
+        }}>
+            {!loading && children}
         </AuthContext.Provider>
     );
 };

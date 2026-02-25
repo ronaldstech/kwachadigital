@@ -1,12 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, ScrollRestoration, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
 // Components
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import AuthModal from './components/AuthModal';
 
 // Pages
 import Home from './pages/Home';
@@ -26,28 +27,41 @@ const App = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-          <ScrollToTop />
-          <div className="min-h-screen bg-bg-main flex flex-col transition-colors duration-300">
-            <Toaster position="bottom-right" />
-            <Navbar />
-
-            <main className="flex-grow">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/marketplace" element={<Marketplace />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-
-                {/* Fallback */}
-                <Route path="*" element={<Home />} />
-              </Routes>
-            </main>
-
-            <Footer />
-          </div>
-        </Router>
+        <AuthConsumer />
       </AuthProvider>
     </ThemeProvider>
+  );
+};
+
+const AuthConsumer = () => {
+  const { isAuthModalOpen, closeAuthModal, initialAuthMode } = useAuth();
+
+  return (
+    <Router>
+      <ScrollToTop />
+      <div className="min-h-screen bg-bg-main flex flex-col transition-colors duration-300">
+        <Toaster position="bottom-right" />
+        <Navbar />
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={closeAuthModal}
+          initialMode={initialAuthMode}
+        />
+
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+
+            {/* Fallback */}
+            <Route path="*" element={<Home />} />
+          </Routes>
+        </main>
+
+        <Footer />
+      </div>
+    </Router>
   );
 };
 
