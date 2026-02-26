@@ -11,6 +11,8 @@ import { doc, setDoc, getDoc, onSnapshot as onSnapshotDoc, serverTimestamp } fro
 import { auth, db } from '../firebase';
 import { toast } from 'react-hot-toast';
 
+import SystemLoader from '../components/SystemLoader';
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -140,7 +142,7 @@ export const AuthProvider = ({ children }) => {
             closeAuthModal,
             initialAuthMode
         }}>
-            {!loading && children}
+            {loading ? <SystemLoader /> : children}
         </AuthContext.Provider>
     );
 };
