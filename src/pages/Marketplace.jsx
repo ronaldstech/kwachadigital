@@ -140,7 +140,7 @@ const Marketplace = () => {
                             onClick={() => handleTabChange('services')}
                             className={`relative z-10 flex-1 md:flex-none px-6 md:px-8 py-2.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-colors duration-500 ${activeTab === 'services' ? 'text-white' : 'text-text-secondary hover:text-text-primary'}`}
                         >
-                            Services
+                            Yazam
                         </button>
                     </div>
                 </div>

@@ -272,7 +272,7 @@ const Navbar = () => {
                             </div>
 
                             {/* Drawer Header */}
-                            <div className="p-6 pt-10 flex items-center justify-between border-b border-glass-border">
+                            <div className="p-4 pt-5 flex items-center justify-between border-b border-glass-border">
                                 <Link to="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
                                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg">
                                         <Rocket size={16} className="text-white" />
@@ -287,7 +287,7 @@ const Navbar = () => {
                                 </button>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
                                 <div className="flex flex-col gap-1">
                                     {navLinks.map((link, i) => (
                                         <motion.div
@@ -298,7 +298,7 @@ const Navbar = () => {
                                         >
                                             <Link
                                                 to={link.path}
-                                                className={`group text-lg font-display font-bold no-underline flex items-center justify-between py-4 px-4 rounded-2xl transition-all ${isActive(link.path) ? 'bg-primary/10 text-primary border border-primary/10' : 'text-text-primary hover:bg-white/5 border border-transparent'}`}
+                                                className={`group text-lg font-display font-bold no-underline flex items-center justify-between py-2 px-2 rounded-2xl transition-all ${isActive(link.path) ? 'bg-primary/10 text-primary border border-primary/10' : 'text-text-primary hover:bg-white/5 border border-transparent'}`}
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                             >
                                                 <div className="flex items-center gap-4">
@@ -339,10 +339,10 @@ const Navbar = () => {
                                         <div>
                                             <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted font-bold mb-4 ml-2">Account</p>
                                             {user ? (
-                                                <div className="flex flex-col gap-2">
+                                                <div className="flex flex-col gap-1">
                                                     <Link
                                                         to="/dashboard"
-                                                        className="flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all no-underline group"
+                                                        className="flex items-center gap-2 p-2 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all no-underline group"
                                                         onClick={() => setIsMobileMenuOpen(false)}
                                                     >
                                                         <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary border border-primary/20 shadow-inner group-hover:scale-105 transition-transform">
@@ -357,7 +357,7 @@ const Navbar = () => {
 
                                                     <Link
                                                         to="/profile"
-                                                        className="flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all no-underline group"
+                                                        className="flex items-center gap-2 p-2 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all no-underline group"
                                                         onClick={() => setIsMobileMenuOpen(false)}
                                                     >
                                                         <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary border border-primary/20 shadow-inner group-hover:scale-105 transition-transform">
@@ -370,9 +370,29 @@ const Navbar = () => {
                                                         <ChevronRight size={16} className="text-text-muted group-hover:text-primary transition-colors" />
                                                     </Link>
 
+                                                    <Link
+                                                        to="/favorites"
+                                                        className="flex items-center gap-2 p-2 glass rounded-2xl border border-glass-border hover:bg-secondary/5 transition-all no-underline group"
+                                                        onClick={() => setIsMobileMenuOpen(false)}
+                                                    >
+                                                        <div className="relative w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner group-hover:scale-105 transition-transform">
+                                                            <Heart size={20} />
+                                                            {favorites.length > 0 && (
+                                                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-secondary text-[9px] font-bold text-white flex items-center justify-center rounded-full border border-white/20">
+                                                                    {favorites.length}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col flex-1">
+                                                            <span className="text-sm font-bold text-text-primary">Favorites</span>
+                                                            <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Saved Assets</span>
+                                                        </div>
+                                                        <ChevronRight size={16} className="text-text-muted group-hover:text-secondary transition-colors" />
+                                                    </Link>
+
                                                     <button
                                                         onClick={handleLogout}
-                                                        className="flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border bg-red-500/30 hover:bg-red-500/20 transition-all group"
+                                                        className="flex items-center gap-2 p-2 glass rounded-2xl border border-glass-border bg-red-500/30 hover:bg-red-500/20 transition-all group"
                                                     >
                                                         <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center text-text-secondary border border-glass-border group-hover:bg-red-500 group-hover:text-white transition-all">
                                                             <LogOut size={20} />
@@ -381,18 +401,39 @@ const Navbar = () => {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <button
-                                                    onClick={() => { setIsMobileMenuOpen(false); openAuthModal('login'); }}
-                                                    className="w-full flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all group"
-                                                >
-                                                    <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center text-text-secondary border border-glass-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">
-                                                        <LogIn size={22} />
-                                                    </div>
-                                                    <div className="flex flex-col items-start translate-y-[-1px]">
-                                                        <span className="text-sm font-bold text-text-primary">Sign In</span>
-                                                        <span className="text-[10px] text-text-muted">Access your digital vault</span>
-                                                    </div>
-                                                </button>
+                                                <div className="flex flex-col gap-2">
+                                                    <Link
+                                                        to="/favorites"
+                                                        className="flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-secondary/5 transition-all no-underline group"
+                                                        onClick={() => setIsMobileMenuOpen(false)}
+                                                    >
+                                                        <div className="relative w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner group-hover:scale-105 transition-transform">
+                                                            <Heart size={20} />
+                                                            {favorites.length > 0 && (
+                                                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-secondary text-[9px] font-bold text-white flex items-center justify-center rounded-full border border-white/20">
+                                                                    {favorites.length}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col flex-1">
+                                                            <span className="text-sm font-bold text-text-primary">Favorites</span>
+                                                            <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Saved Assets</span>
+                                                        </div>
+                                                        <ChevronRight size={16} className="text-text-muted group-hover:text-secondary transition-colors" />
+                                                    </Link>
+                                                    <button
+                                                        onClick={() => { setIsMobileMenuOpen(false); openAuthModal('login'); }}
+                                                        className="w-full flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all group"
+                                                    >
+                                                        <div className="w-12 h-12 rounded-xl bg-surface-2 flex items-center justify-center text-text-secondary border border-glass-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">
+                                                            <LogIn size={22} />
+                                                        </div>
+                                                        <div className="flex flex-col items-start translate-y-[-1px]">
+                                                            <span className="text-sm font-bold text-text-primary">Sign In</span>
+                                                            <span className="text-[10px] text-text-muted">Access your digital vault</span>
+                                                        </div>
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
 
