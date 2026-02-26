@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, SlidersHorizontal, Grid, List as ListIcon, Sparkles, Zap, ArrowUpDown, ChevronDown } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, Grid, List as ListIcon, Sparkles, Zap, ArrowUpDown, ChevronDown, Loader2 } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { PRESENTATIONS, SERVICES } from '../constants';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const Marketplace = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -28,27 +29,66 @@ const Marketplace = () => {
     const max = 1000000;
     const percentage = ((priceRange - min) / (max - min)) * 100;
 
+    const [products, setProducts] = useState({ products: [], services: [] });
+    const [loading, setLoading] = useState(true);
+
+    // Fetch live products
+    useEffect(() => {
+        const q = query(
+            collection(db, 'products'),
+            where('status', '==', 'Approved')
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetchedItems = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                // Map Firestore schema to ProductCard schema
+                name: doc.data().title,
+                image: doc.data().imageUrl || null,
+                category: doc.data().category || 'General',
+                price: doc.data().price || 0,
+                rating: '4.9', // Default mock for now
+                reviews: '24'  // Default mock for now
+            }));
+
+            // Optional: If you eventually have types (products vs services) in DB, you can split them here.
+            // For now, we put everything in 'products' and leave 'services' empty or duplicate if needed based on category.
+            // Assuming for now everything fetched is a product unless categorized as service.
+            setProducts({
+                products: fetchedItems,
+                services: [] // Add service filtering logic here if needed
+            });
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching marketplace items:", error);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
     const categories = useMemo(() => {
-        const items = activeTab === 'products' ? PRESENTATIONS : SERVICES;
-        return ['All', ...new Set(items.map(item => item.category))];
-    }, [activeTab]);
+        const items = activeTab === 'products' ? products.products : products.services;
+        const uniqueCats = ['All', ...new Set(items.map(item => item.category))];
+        return uniqueCats;
+    }, [activeTab, products]);
 
     const filteredItems = useMemo(() => {
-        const items = activeTab === 'products' ? PRESENTATIONS : SERVICES;
+        const items = activeTab === 'products' ? products.products : products.services;
         return items.filter(item => {
-            const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = String(item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                String(item.description || '').toLowerCase().includes(searchQuery.toLowerCase());
             const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
 
-            // Fix: Parse price string (remove commas) and compare with priceRange
             const numericPrice = typeof item.price === 'string'
-                ? parseInt(item.price.replace(/,/g, ''), 10)
-                : item.price;
+                ? parseFloat(item.price.replace(/,/g, ''))
+                : Number(item.price) || 0;
 
             const matchesPrice = numericPrice <= priceRange;
             return matchesSearch && matchesCategory && matchesPrice;
         });
-    }, [activeTab, searchQuery, selectedCategory, priceRange]);
+    }, [activeTab, searchQuery, selectedCategory, priceRange, products]);
 
     return (
         <div className="relative min-h-screen pt-32 lg:pt-40 pb-32 overflow-hidden bg-bg-main">
@@ -264,7 +304,17 @@ const Marketplace = () => {
 
                         {/* Staggered Grid */}
                         <AnimatePresence mode="wait">
-                            {filteredItems.length > 0 ? (
+                            {loading ? (
+                                <motion.div
+                                    key="loading"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="flex items-center justify-center min-h-[400px]"
+                                >
+                                    <Loader2 className="animate-spin text-primary w-12 h-12" />
+                                </motion.div>
+                            ) : filteredItems.length > 0 ? (
                                 <motion.div
                                     key={activeTab + selectedCategory + priceRange}
                                     initial={{ opacity: 0, y: 30 }}
