@@ -18,6 +18,7 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Cart from './pages/Cart';
 import Favorites from './pages/Favorites';
+import Orders from './pages/Orders';
 
 // Helper to scroll to top on navigation
 const ScrollToTop = () => {
@@ -88,6 +89,11 @@ const AuthConsumer = () => {
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />
+          <Route path="/orders" element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          } />
         </Route>
 
         {/* Independent Protected Routes (No Global Navbar/Footer) */}

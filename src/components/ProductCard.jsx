@@ -45,8 +45,8 @@ const ProductCard = ({ item, type }) => {
                     <div className="relative w-full h-full overflow-hidden rounded-2xl md:rounded-[24px]">
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10 opacity-60 group-hover:opacity-100 transition-opacity duration-700" />
                         <img
-                            src={item.image || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"}
-                            alt={item.name}
+                            src={item.imageUrl || item.image || "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=800"}
+                            alt={item.title || item.name}
                             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                             loading="lazy"
                         />
@@ -95,7 +95,7 @@ const ProductCard = ({ item, type }) => {
 
                     <Link to={`/product/${item.id}`} className="no-underline group/title">
                         <h3 className="text-xl md:text-2xl font-display font-black text-text-primary mb-3 line-clamp-2 leading-[1.1] transition-all duration-500 group-hover/title:translate-x-1">
-                            {item.name}
+                            {item.title || item.name}
                         </h3>
                     </Link>
 

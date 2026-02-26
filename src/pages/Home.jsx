@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Zap, Shield, Globe, Rocket, CheckCircle, Star, CreditCard, Target, Inbox } from 'lucide-react';
+import { ArrowRight, Zap, Shield, Globe, Rocket, CheckCircle, Star, CreditCard, Target, Inbox, Loader2 } from 'lucide-react';
 const LucideIcons = { CreditCard, Target, Inbox, Zap, Star, Shield, Globe, Rocket, CheckCircle };
 import ProductCard from '../components/ProductCard';
-import { PRESENTATIONS, SERVICES, TICKER_ITEMS } from '../constants';
+import { TICKER_ITEMS } from '../constants';
+import { db } from '../firebase';
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 
 const FloatingAsset = ({ icon: Icon, color, delay = 0, x = 0, y = 0, scale = 1 }) => (
     <motion.div
@@ -47,7 +49,44 @@ const TickerItem = ({ item, isReverse = false }) => {
     );
 };
 
+const CardSkeleton = () => (
+    <div className="glass-premium rounded-[32px] overflow-hidden border border-white/5 animate-pulse">
+        <div className="aspect-[4/3] bg-surface-2" />
+        <div className="p-6 space-y-3">
+            <div className="h-4 bg-surface-2 rounded-full w-3/4" />
+            <div className="h-3 bg-surface-2 rounded-full w-1/2" />
+            <div className="h-8 bg-surface-2 rounded-xl w-full mt-4" />
+        </div>
+    </div>
+);
+
 const Home = () => {
+    const [products, setProducts] = useState([]);
+    const [services, setServices] = useState([]);
+    const [loadingProducts, setLoadingProducts] = useState(true);
+    const [loadingServices, setLoadingServices] = useState(true);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const q = query(
+                    collection(db, 'products'),
+                    where('status', '==', 'Approved'),
+                    orderBy('createdAt', 'desc'),
+                    limit(4)
+                );
+                const snap = await getDocs(q);
+                setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            } catch (err) {
+                console.error('Error fetching products:', err);
+            } finally {
+                setLoadingProducts(false);
+            }
+        };
+
+        fetchProducts();
+    }, []);
+
     return (
         <div className="overflow-x-hidden">
             {/* Hero Section */}
@@ -208,17 +247,25 @@ const Home = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {PRESENTATIONS.slice(0, 4).map((item, i) => (
-                        <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ delay: i * 0.1, duration: 0.5 }}
-                        >
-                            <ProductCard item={item} type="product" />
-                        </motion.div>
-                    ))}
+                    {loadingProducts ? (
+                        Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
+                    ) : products.length > 0 ? (
+                        products.map((item, i) => (
+                            <motion.div
+                                key={item.id}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: "-100px" }}
+                                transition={{ delay: i * 0.1, duration: 0.5 }}
+                            >
+                                <ProductCard item={item} type="product" />
+                            </motion.div>
+                        ))
+                    ) : (
+                        <div className="col-span-4 text-center py-16 text-text-muted font-bold uppercase tracking-widest text-xs">
+                            No products available yet. Check back soon!
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -272,45 +319,6 @@ const Home = () => {
                             </motion.div>
                         ))}
                     </div>
-                </div>
-            </section>
-
-            {/* Services Grid Section - Diagonal Cut */}
-            <section className="py-5 container relative">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
-                    <div className="max-w-2xl">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true }}
-                            className="flex items-center gap-3 mb-5"
-                        >
-                            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary shadow-lg border border-secondary/20">
-                                <Rocket size={20} />
-                            </div>
-                            <span className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">Elite Talent</span>
-                        </motion.div>
-                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-text-primary tracking-tight">On-Demand Expertise</h2>
-                        <p className="text-text-secondary text-lg md:text-xl mt-6 font-medium">Connect with top-tier Malawian professionals for your next big project.</p>
-                    </div>
-                    <Link to="/marketplace?type=services" className="group flex items-center gap-3 text-sm font-bold text-text-primary py-3 px-8 rounded-full h-fit glass border border-glass-border hover:bg-secondary/10 hover:border-secondary/30 transition-all">
-                        Browse Full Directory
-                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {SERVICES.slice(0, 4).map((item, i) => (
-                        <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ delay: i * 0.1, duration: 0.5 }}
-                        >
-                            <ProductCard item={item} type="service" />
-                        </motion.div>
-                    ))}
                 </div>
             </section>
 

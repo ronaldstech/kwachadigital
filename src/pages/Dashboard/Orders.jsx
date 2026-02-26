@@ -1,100 +1,208 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     ShoppingBag,
     Calendar,
-    Download,
     CheckCircle2,
     Clock,
-    ArrowUpRight,
     Search,
-    ExternalLink,
-    Shield
+    User,
+    Package,
+    AlertCircle,
+    ChevronDown,
+    DollarSign,
+    MoreVertical,
+    CheckCircle,
+    XCircle,
+    Truck
 } from 'lucide-react';
+import { db } from '../../firebase';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
-const OrderCard = ({ order }) => (
-    <div className="glass-premium p-6 rounded-[32px] border-glass-border hover:border-primary/20 transition-all group relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[40px] -z-10" />
+const OrderCard = ({ order, currentUserId }) => {
+    const [isUpdating, setIsUpdating] = useState(false);
 
-        <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-surface-2 flex items-center justify-center text-primary border border-glass-border group-hover:bg-primary/10 transition-all">
-                    <ShoppingBag size={24} />
+    // Filter items to show only those belonging to this seller
+    const sellerItems = order.items?.filter(item => item.sellerId === currentUserId) || [];
+    const sellerSubtotal = sellerItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+
+    const handleStatusUpdate = async (newStatus) => {
+        setIsUpdating(true);
+        try {
+            const orderRef = doc(db, 'orders', order.id);
+            // In a real multi-vendor system, we might update a specific 'sellerStatus' field
+            // for just this seller's items. For now, we update the global order status
+            // if we assume 1 vendor per order or that vendors manage the whole order status.
+            // The user requested "manage the orders from the customers".
+            await updateDoc(orderRef, {
+                status: newStatus,
+                updatedAt: serverTimestamp()
+            });
+            toast.success(`Order marked as ${newStatus}`);
+        } catch (err) {
+            console.error("Error updating order:", err);
+            toast.error("Failed to update status");
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const statusStyles = {
+        pending: "text-amber-400 bg-amber-400/10 border-amber-400/20 shadow-[0_0_15px_rgba(251,191,36,0.1)]",
+        approved: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20 shadow-[0_0_15px_rgba(52,211,153,0.1)]",
+        completed: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+        cancelled: "text-red-400 bg-red-400/10 border-red-400/20",
+        shipped: "text-blue-400 bg-blue-400/10 border-blue-400/20"
+    };
+
+    const currentStatusStyle = statusStyles[order.status?.toLowerCase()] || statusStyles.pending;
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-premium p-6 rounded-[32px] border border-white/10 hover:border-primary/20 transition-all group relative overflow-hidden flex flex-col h-full"
+        >
+            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] -z-10 opacity-20 ${order.status === 'approved' ? 'bg-emerald-500' : 'bg-primary'}`} />
+
+            {/* Header: Customer Info & Status */}
+            <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-surface-2 flex items-center justify-center text-primary border border-glass-border group-hover:bg-primary/10 transition-all">
+                        <User size={24} />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-display font-black text-text-primary tracking-tight mb-0.5 truncate max-w-[150px]">
+                            {order.userName || 'Unknown Customer'}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-text-muted font-bold flex items-center gap-1.5 uppercase tracking-wider">
+                                <Calendar size={12} />
+                                {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : 'Recent'}
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="text-lg font-display font-black text-text-primary tracking-tight mb-1">{order.productName}</h3>
-                    <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-text-muted font-bold flex items-center gap-1.5 uppercase tracking-wider">
-                            <Calendar size={12} />
-                            {order.date}
-                        </span>
-                        <span className="h-1 w-1 rounded-full bg-text-muted/30" />
-                        <span className="text-[10px] text-primary font-black uppercase tracking-widest">{order.orderId}</span>
+                <div className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border ${currentStatusStyle}`}>
+                    {order.status?.toLowerCase() === 'approved' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+                    {order.status || 'Pending'}
+                </div>
+            </div>
+
+            {/* Order Content */}
+            <div className="flex-grow space-y-4 mb-6">
+                <div className="space-y-2">
+                    <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Purchased Assets ({sellerItems.length})</p>
+                    <div className="space-y-2">
+                        {sellerItems.map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-3 p-3 glass rounded-2xl border border-white/5">
+                                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-white/10">
+                                    {item.imageUrl ? (
+                                        <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-surface-2">
+                                            <Package size={16} className="text-text-muted" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-bold text-text-primary truncate uppercase">{item.title}</p>
+                                    <p className="text-[10px] text-primary font-black uppercase tracking-widest">MK {Number(item.price).toLocaleString()}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="p-4 glass rounded-2xl border border-white/5 bg-primary/5">
+                    <div className="flex justify-between items-center">
+                        <div className="flex flex-col">
+                            <span className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">Settlement Value</span>
+                            <span className="text-xl font-display font-black text-text-primary">MK {sellerSubtotal.toLocaleString()}</span>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">Order ID</span>
+                            <p className="text-[10px] font-mono font-bold text-primary">#{order.id.slice(0, 8).toUpperCase()}</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border ${order.status === 'Completed'
-                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                    : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                }`}>
-                {order.status === 'Completed' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
-                {order.status}
-            </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="p-4 glass rounded-2xl border border-glass-border">
-                <p className="text-[10px] uppercase font-black text-text-muted mb-1">Acquisition Price</p>
-                <p className="text-base font-black text-text-primary">{order.price}</p>
+            {/* Seller Actions */}
+            <div className="flex gap-2">
+                {order.status !== 'approved' && order.status !== 'completed' && (
+                    <button
+                        onClick={() => handleStatusUpdate('approved')}
+                        disabled={isUpdating}
+                        className="flex-1 btn btn-primary py-3.5 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        {isUpdating ? <Clock className="animate-spin" size={14} /> : <CheckCircle size={14} />}
+                        Approve Order
+                    </button>
+                )}
+                {(order.status === 'approved' || order.status === 'pending') && (
+                    <button
+                        onClick={() => handleStatusUpdate('cancelled')}
+                        disabled={isUpdating}
+                        className="p-3.5 glass border-glass-border rounded-2xl text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-all disabled:opacity-50"
+                        title="Cancel Order"
+                    >
+                        <XCircle size={18} />
+                    </button>
+                )}
+                <button className="p-3.5 glass border-glass-border rounded-2xl text-text-muted hover:text-primary hover:bg-white/5 transition-all">
+                    <MoreVertical size={18} />
+                </button>
             </div>
-            <div className="p-4 glass rounded-2xl border border-glass-border">
-                <p className="text-[10px] uppercase font-black text-text-muted mb-1">License Type</p>
-                <p className="text-base font-black text-text-primary">{order.license}</p>
-            </div>
-        </div>
-
-        <div className="flex gap-3">
-            <button className="flex-1 btn btn-primary py-3.5 rounded-2xl flex items-center justify-center gap-2 text-xs shadow-lg shadow-primary/20 group/btn">
-                <Download size={16} />
-                Access Vault
-            </button>
-            <button className="p-3.5 glass border-glass-border rounded-2xl text-text-muted hover:text-text-primary hover:bg-white/5 transition-all">
-                <ExternalLink size={18} />
-            </button>
-        </div>
-    </div>
-);
+        </motion.div>
+    );
+};
 
 const Orders = () => {
-    const orders = [
-        {
-            id: 1,
-            orderId: 'KW-9281-X',
-            productName: 'Modern UI Kit Pro',
-            date: 'Feb 24, 2026',
-            price: '$49.00',
-            status: 'Completed',
-            license: 'Commercial'
-        },
-        {
-            id: 2,
-            orderId: 'KW-4412-A',
-            productName: 'SaaS Dashboard Template',
-            date: 'Feb 22, 2026',
-            price: '$79.00',
-            status: 'Completed',
-            license: 'Single Use'
-        },
-        {
-            id: 3,
-            orderId: 'KW-1033-Q',
-            productName: 'Mobile App Wireframe Kit',
-            date: 'Feb 15, 2026',
-            price: '$35.00',
-            status: 'Processing',
-            license: 'Personal'
-        },
-    ];
+    const { user } = useAuth();
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        if (!user) return;
+
+        // Query orders where sellerIds array contains the current user ID
+        const q = query(
+            collection(db, 'orders'),
+            where('sellerIds', 'array-contains', user.uid),
+            orderBy('createdAt', 'desc')
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const ordersData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setOrders(ordersData);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching seller orders:", error);
+            // Handle error (maybe toast)
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
+    const filteredOrders = orders.filter(order =>
+        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.items?.some(item => item.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    const totalRevenue = orders.reduce((sum, order) => {
+        const sellerItems = order.items?.filter(item => item.sellerId === user.uid) || [];
+        return sum + sellerItems.reduce((s, i) => s + (Number(i.price) || 0), 0);
+    }, 0);
 
     return (
         <motion.div
@@ -105,20 +213,20 @@ const Orders = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl md:text-5xl font-display font-black text-text-primary tracking-tight mb-2">
-                        Acquisition <span className="text-primary italic">Logs</span>
+                    <h1 className="text-4xl md:text-5xl font-display font-black text-text-primary tracking-tight mb-2 uppercase">
+                        Client <span className="text-primary italic">Requests</span>
                     </h1>
                     <p className="text-text-muted font-bold flex items-center gap-2">
                         <ShoppingBag size={16} className="text-primary" />
-                        Review your digital inventory and download original assets.
+                        Manage customer purchases and approve digital disbursements.
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3 glass px-5 py-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5">
-                    <Shield size={18} className="text-emerald-500" />
+                <div className="flex items-center gap-3 glass px-5 py-3 rounded-2xl border border-primary/20 bg-primary/5">
+                    <DollarSign size={18} className="text-primary" />
                     <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Total Spent</span>
-                        <span className="text-sm font-black text-text-primary">$163.00</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">Pending Clearance</span>
+                        <span className="text-sm font-black text-text-primary">MK {totalRevenue.toLocaleString()}</span>
                     </div>
                 </div>
             </div>
@@ -128,26 +236,34 @@ const Orders = () => {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
                 <input
                     type="text"
-                    placeholder="Search by order ID or product name..."
-                    className="w-full pl-12 pr-4 py-3.5 glass border-glass-border rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-white/5"
+                    placeholder="Search by customer name or order ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3.5 glass border-glass-border rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-white/5 placeholder:text-text-muted/40"
                 />
             </div>
 
-            {/* Orders Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-8">
-                {orders.map((order) => (
-                    <OrderCard key={order.id} order={order} />
-                ))}
-            </div>
-
-            {/* Empty State */}
-            {orders.length === 0 && (
-                <div className="py-20 flex flex-col items-center justify-center text-center opacity-50">
-                    <div className="w-20 h-20 rounded-3xl bg-surface-2 flex items-center justify-center text-text-muted mb-6 border border-glass-border">
-                        <ShoppingBag size={40} />
+            {/* Loading State */}
+            {loading ? (
+                <div className="py-20 flex flex-col items-center justify-center text-center">
+                    <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
+                    <p className="text-sm text-text-muted font-bold uppercase tracking-widest">Scanning Network...</p>
+                </div>
+            ) : filteredOrders.length === 0 ? (
+                <div className="py-20 flex flex-col items-center justify-center text-center opacity-70">
+                    <div className="w-24 h-24 rounded-[40px] bg-surface-2 flex items-center justify-center text-text-muted mb-8 border border-glass-border shadow-xl">
+                        <AlertCircle size={40} />
                     </div>
-                    <h3 className="text-xl font-bold text-text-primary mb-2">No acquisitions found</h3>
-                    <p className="max-w-xs text-sm text-text-muted font-bold">Start exploring the marketplace to build your digital inventory.</p>
+                    <h3 className="text-2xl font-display font-black text-text-primary mb-3">No Request Streams</h3>
+                    <p className="max-w-sm text-sm text-text-muted font-medium leading-relaxed">
+                        {searchTerm ? "No orders match your search criteria." : "You don't have any customer requests yet. Make sure your assets are active in the Digital Vault."}
+                    </p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-8">
+                    {filteredOrders.map((order) => (
+                        <OrderCard key={order.id} order={order} currentUserId={user.uid} />
+                    ))}
                 </div>
             )}
         </motion.div>

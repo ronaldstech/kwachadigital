@@ -69,6 +69,7 @@ export const StoreProvider = ({ children }) => {
     const addToCart = async (product) => {
         const item = {
             productId: product.id,
+            sellerId: product.userId,
             title: product.title || product.name,
             price: product.price,
             imageUrl: product.imageUrl || product.image || null,

@@ -17,7 +17,7 @@ import {
     User,
     LogOut,
     ChevronDown,
-    Heart
+    Heart, ShoppingBag
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -195,6 +195,17 @@ const Navbar = () => {
                                             </Link>
 
                                             <Link
+                                                to="/orders"
+                                                className="flex items-center gap-3 px-4 py-1 rounded-2xl hover:bg-emerald-500/10 text-text-secondary hover:text-emerald-500 transition-all group no-underline"
+                                                onClick={() => setIsProfileOpen(false)}
+                                            >
+                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
+                                                    <ShoppingBag size={16} />
+                                                </div>
+                                                <span className="text-sm font-bold">My Orders</span>
+                                            </Link>
+
+                                            <Link
                                                 to="/favorites"
                                                 className="flex items-center gap-3 px-4 py-1 rounded-2xl hover:bg-secondary/10 text-text-secondary hover:text-secondary transition-all group no-underline"
                                                 onClick={() => setIsProfileOpen(false)}
@@ -368,6 +379,21 @@ const Navbar = () => {
                                                             <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Founder Stats</span>
                                                         </div>
                                                         <ChevronRight size={16} className="text-text-muted group-hover:text-primary transition-colors" />
+                                                    </Link>
+
+                                                    <Link
+                                                        to="/orders"
+                                                        className="flex items-center gap-2 p-2 glass rounded-2xl border border-glass-border hover:bg-emerald-500/5 transition-all no-underline group"
+                                                        onClick={() => setIsMobileMenuOpen(false)}
+                                                    >
+                                                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-lg font-bold text-emerald-500 border border-emerald-500/20 shadow-inner group-hover:scale-105 transition-transform">
+                                                            <ShoppingBag size={20} />
+                                                        </div>
+                                                        <div className="flex flex-col flex-1">
+                                                            <span className="text-sm font-bold text-text-primary">My Orders</span>
+                                                            <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Purchase History</span>
+                                                        </div>
+                                                        <ChevronRight size={16} className="text-text-muted group-hover:text-emerald-500 transition-colors" />
                                                     </Link>
 
                                                     <Link
