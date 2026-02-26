@@ -26,9 +26,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const profileRef = useRef(null);
+    const prevScrollY = useRef(0);
+
     const { user, logout, openAuthModal } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const { cart, favorites } = useStore();
@@ -37,15 +40,28 @@ const Navbar = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 40);
+            const currentScrollY = window.scrollY;
+
+            // Check if user is scrolled past top (for styling)
+            setIsScrolled(currentScrollY > 40);
+
+            // Hide on scroll down, show on scroll up
+            if (currentScrollY > prevScrollY.current && currentScrollY > 150) {
+                setIsVisible(false);
+            } else {
+                setIsVisible(true);
+            }
+
+            prevScrollY.current = currentScrollY;
         };
+
         const handleClickOutside = (event) => {
             if (profileRef.current && !profileRef.current.contains(event.target)) {
                 setIsProfileOpen(false);
             }
         };
 
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
             window.removeEventListener('scroll', handleScroll);
@@ -71,7 +87,18 @@ const Navbar = () => {
     };
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-3 md:pt-6 px-4 pointer-events-none">
+        <motion.header
+            initial={{ y: 0 }}
+            animate={{
+                y: isVisible ? 0 : -120,
+                opacity: isVisible ? 1 : 0
+            }}
+            transition={{
+                duration: 0.4,
+                ease: [0.23, 1, 0.32, 1]
+            }}
+            className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-3 md:pt-6 px-4 pointer-events-none"
+        >
             <motion.nav
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -483,7 +510,7 @@ const Navbar = () => {
                     </>
                 )}
             </AnimatePresence>
-        </header>
+        </motion.header>
     );
 };
 
