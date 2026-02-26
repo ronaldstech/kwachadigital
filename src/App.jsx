@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, Outlet }
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { StoreProvider } from './context/StoreContext';
 
 // Components
 import Navbar from './components/Navbar';
@@ -15,6 +16,8 @@ import Marketplace from './pages/Marketplace';
 import ProductDetail from './pages/ProductDetail';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import Cart from './pages/Cart';
+import Favorites from './pages/Favorites';
 
 // Helper to scroll to top on navigation
 const ScrollToTop = () => {
@@ -55,7 +58,9 @@ const App = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AuthConsumer />
+        <StoreProvider>
+          <AuthConsumer />
+        </StoreProvider>
       </AuthProvider>
     </ThemeProvider>
   );
@@ -81,6 +86,8 @@ const AuthConsumer = () => {
           <Route path="/" element={<Home />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/favorites" element={<Favorites />} />
         </Route>
 
         {/* Independent Protected Routes (No Global Navbar/Footer) */}

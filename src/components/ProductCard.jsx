@@ -1,9 +1,11 @@
 import React from 'react';
 import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
-import { Star, ShoppingCart, ArrowUpRight, ShieldCheck, Zap } from 'lucide-react';
+import { Star, ShoppingCart, ArrowUpRight, ShieldCheck, Zap, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useStore } from '../context/StoreContext';
 
 const ProductCard = ({ item, type }) => {
+    const { addToCart, toggleFavorite, isInCart, isInFavorites } = useStore();
     // Mouse tracking for spotlight effect
     let mouseX = useMotionValue(0);
     let mouseY = useMotionValue(0);
@@ -64,6 +66,14 @@ const ProductCard = ({ item, type }) => {
                         )}
                     </div>
 
+                    {/* Favorites Toggle */}
+                    <button
+                        onClick={(e) => { e.preventDefault(); toggleFavorite(item); }}
+                        className={`absolute top-4 right-4 z-20 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 backdrop-blur-md border ${isInFavorites(item.id) ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-black/20 border-white/10 text-white hover:bg-white/10'}`}
+                    >
+                        <Heart size={18} className={isInFavorites(item.id) ? 'fill-primary' : ''} />
+                    </button>
+
                     {/* Elite Action Button */}
                     <Link to={`/product/${item.id}`} className="absolute bottom-4 right-4 z-20 w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black opacity-0 translate-y-4 translate-x-4 scale-75 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0 group-hover:scale-100 transition-all duration-700 hover:bg-primary hover:text-white shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)]">
                         <ArrowUpRight size={24} />
@@ -95,7 +105,6 @@ const ProductCard = ({ item, type }) => {
 
                     <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
                         <div className="flex flex-col">
-                            <span className="text-[10px] text-text-muted uppercase font-black tracking-[0.2em] mb-1">Ownership Entry</span>
                             <div className="flex items-baseline gap-1">
                                 <span className="text-[13px] font-black text-text-primary opacity-60">MK</span>
                                 <span className="text-2xl font-display font-black text-primary tracking-tighter">
@@ -103,9 +112,11 @@ const ProductCard = ({ item, type }) => {
                                 </span>
                             </div>
                         </div>
-                        <button className="group/btn relative p-4 bg-gradient-to-br from-primary to-emerald-600 rounded-2xl border border-white/20 transition-all duration-500 flex-shrink-0 shadow-xl active:scale-95 hover:scale-110 hover:shadow-primary/20">
-                            <div className="absolute inset-0 bg-white opacity-0 group-hover/btn:opacity-20 rounded-2xl transition-opacity" />
-                            <ShoppingCart size={20} className="relative z-10 text-white" />
+                        <button
+                            onClick={(e) => { e.preventDefault(); addToCart(item); }}
+                            className={`group/btn relative p-4 rounded-2xl border border-white/20 transition-all duration-500 flex-shrink-0 shadow-xl active:scale-95 hover:scale-110 hover:shadow-primary/20 ${isInCart(item.id) ? 'bg-primary' : 'bg-white/5'}`}
+                        >
+                            <ShoppingCart size={20} className={`relative z-10 ${isInCart(item.id) ? 'text-white' : 'text-text-primary'}`} />
                         </button>
                     </div>
                 </div>

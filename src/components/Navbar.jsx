@@ -16,10 +16,12 @@ import {
     LayoutDashboard,
     User,
     LogOut,
-    ChevronDown
+    ChevronDown,
+    Heart
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useStore } from '../context/StoreContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = () => {
@@ -29,6 +31,7 @@ const Navbar = () => {
     const profileRef = useRef(null);
     const { user, logout, openAuthModal } = useAuth();
     const { isDark, toggleTheme } = useTheme();
+    const { cart, favorites } = useStore();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -53,7 +56,7 @@ const Navbar = () => {
     const navLinks = [
         { name: 'Home', path: '/', icon: Home },
         { name: 'Marketplace', path: '/marketplace', icon: Store },
-        { name: 'Services', path: '/marketplace?type=services', icon: Briefcase },
+        { name: 'Yazam', path: '/marketplace?type=services', icon: Briefcase },
     ];
 
     const isActive = (path) => {
@@ -136,8 +139,22 @@ const Navbar = () => {
 
                     <Link to="/cart" className="relative p-1.5 md:p-2.5 text-text-secondary hover:text-primary transition-colors flex items-center justify-center rounded-full hover:bg-white/5">
                         <ShoppingCart size={18} className="md:w-[20px]" />
-                        <span className="absolute top-1 md:top-1.5 right-1 md:right-1.5 w-3.5 md:w-4 h-3.5 md:h-4 bg-primary text-[8px] md:text-[9px] font-bold text-white flex items-center justify-center rounded-full border border-white/20">0</span>
+                        {cart.length > 0 && (
+                            <span className="absolute top-1 md:top-1.5 right-1 md:right-1.5 w-3.5 md:w-4 h-3.5 md:h-4 bg-primary text-[8px] md:text-[9px] font-bold text-white flex items-center justify-center rounded-full border border-white/20">
+                                {cart.length}
+                            </span>
+                        )}
                     </Link>
+
+                    <Link to="/favorites" className="relative hidden sm:flex p-1.5 md:p-2.5 text-text-secondary hover:text-secondary transition-colors items-center justify-center rounded-full hover:bg-white/5">
+                        <Heart size={18} className="md:w-[20px]" />
+                        {favorites.length > 0 && (
+                            <span className="absolute top-1 md:top-1.5 right-1 md:right-1.5 w-3.5 md:w-4 h-3.5 md:h-4 bg-secondary text-[8px] md:text-[9px] font-bold text-white flex items-center justify-center rounded-full border border-white/20">
+                                {favorites.length}
+                            </span>
+                        )}
+                    </Link>
+
 
                     {user ? (
                         <div className="relative" ref={profileRef}>
@@ -158,7 +175,7 @@ const Navbar = () => {
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="absolute top-full right-0 mt-3 w-64 glass-premium rounded-[28px] border border-glass-border shadow-2xl overflow-hidden py-3 p-2 pointer-events-auto"
+                                        className="absolute top-full right-0 mt-3 w-64 z-50 bg-bg-main/100 backdrop-blur-2xl rounded-[28px] border border-glass-border shadow-2xl overflow-hidden py-3 p-2 pointer-events-auto"
                                     >
                                         <div className="px-4 py-3 mb-2 border-b border-glass-border/50">
                                             <p className="text-[10px] uppercase tracking-widest font-black text-text-muted mb-1">Signed in as</p>
@@ -178,14 +195,14 @@ const Navbar = () => {
                                             </Link>
 
                                             <Link
-                                                to="/profile"
-                                                className="flex items-center gap-3 px-4 py-1 rounded-2xl hover:bg-primary/10 text-text-secondary hover:text-primary transition-all group no-underline"
+                                                to="/favorites"
+                                                className="flex items-center gap-3 px-4 py-1 rounded-2xl hover:bg-secondary/10 text-text-secondary hover:text-secondary transition-all group no-underline"
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
-                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                                                    <User size={16} />
+                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-secondary group-hover:text-white transition-all shadow-sm">
+                                                    <Heart size={16} />
                                                 </div>
-                                                <span className="text-sm font-bold">Profile</span>
+                                                <span className="text-sm font-bold">Favorites</span>
                                             </Link>
 
                                             <div className="h-px bg-glass-border/50 my-2 mx-2" />
