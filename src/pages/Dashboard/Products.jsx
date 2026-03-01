@@ -341,6 +341,7 @@ const Products = () => {
                 category: formData.get('category'),
                 description: formData.get('description'),
                 price: parseFloat(formData.get('price')),
+                originalPrice: parseFloat(formData.get('originalPrice')) || 0,
                 externalLink: formData.get('externalLink') || '',
                 imageUrl,
                 updatedAt: serverTimestamp()
@@ -394,6 +395,7 @@ const Products = () => {
                 category: formData.get('category'),
                 description: formData.get('description'),
                 price: parseFloat(formData.get('price')),
+                originalPrice: parseFloat(formData.get('originalPrice')) || 0,
                 externalLink: formData.get('externalLink') || '',
                 status: 'Pending',
                 userId: user.uid,
@@ -590,6 +592,15 @@ const Products = () => {
                                         </div>
                                     </div>
                                     <div className="space-y-3">
+                                        <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary ml-1">Original Price (optional)</label>
+                                        <div className="relative group">
+                                            <div className="absolute left-1 top-1 bottom-1 w-12 flex items-center justify-center rounded-xl bg-surface-3 text-text-muted font-black">
+                                                K
+                                            </div>
+                                            <input name="originalPrice" type="number" className="w-full pl-16 pr-6 py-4 bg-surface-2/50 border border-white/5 rounded-2xl focus:outline-none focus:border-primary/50 transition-all text-text-muted font-black text-lg" placeholder="0.00" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
                                         <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary ml-1">Link (optional)</label>
                                         <div className="relative">
                                             <div className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted/50">
@@ -747,6 +758,15 @@ const Products = () => {
                                                 K
                                             </div>
                                             <input required name="price" type="number" defaultValue={productToEdit.price} className="w-full pl-16 pr-6 py-4 bg-surface-2/50 border border-white/5 rounded-2xl focus:outline-none focus:border-primary/50 transition-all text-text-primary font-black text-lg" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary ml-1">Original Price (optional)</label>
+                                        <div className="relative group">
+                                            <div className="absolute left-1 top-1 bottom-1 w-12 flex items-center justify-center rounded-xl bg-surface-3 text-text-muted font-black">
+                                                K
+                                            </div>
+                                            <input name="originalPrice" type="number" defaultValue={productToEdit.originalPrice} className="w-full pl-16 pr-6 py-4 bg-surface-2/50 border border-white/5 rounded-2xl focus:outline-none focus:border-primary/50 transition-all text-text-muted font-black text-lg" />
                                         </div>
                                     </div>
                                     <div className="space-y-3">

@@ -5,6 +5,7 @@ import { ArrowRight, Zap, Shield, Globe, Rocket, CheckCircle, Star, CreditCard, 
 const LucideIcons = { CreditCard, Target, Inbox, Zap, Star, Shield, Globe, Rocket, CheckCircle };
 import ProductCard from '../components/ProductCard';
 import ProductCarousel from '../components/ProductCarousel';
+import SmartHeroSlideshow from '../components/SmartHeroSlideshow';
 import { TICKER_ITEMS } from '../constants';
 import { db } from '../firebase';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
@@ -161,42 +162,8 @@ const Home = () => {
                             </div>
                         </motion.div>
 
-                        {/* Animated Hero Graphic */}
-                        <div className="flex-1 relative w-full h-[400px] lg:h-[600px] hidden sm:block">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                {/* Orbiting Rings */}
-                                <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                                    className="absolute w-[450px] h-[450px] border border-primary/20 rounded-full border-dashed opacity-30"
-                                />
-                                <motion.div
-                                    animate={{ rotate: -360 }}
-                                    transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-                                    className="absolute w-[300px] h-[300px] border border-accent/20 rounded-full border-dashed opacity-20"
-                                />
-
-                                {/* Center Piece */}
-                                <motion.div
-                                    initial={{ scale: 0.8, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    className="relative z-20 glass-premium p-10 rounded-[40px] border border-white/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] backdrop-blur-3xl"
-                                >
-                                    <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-primary to-emerald-700 flex items-center justify-center shadow-inner">
-                                        <Rocket size={64} className="text-white animate-float" />
-                                    </div>
-                                    <div className="absolute -top-4 -right-4 bg-accent p-3 rounded-2xl shadow-xl border border-white/20">
-                                        <Zap size={24} className="text-white" />
-                                    </div>
-                                </motion.div>
-
-                                {/* Floating Elements */}
-                                <FloatingAsset icon={Shield} color="#10b981" x="15%" y="20%" delay={0.2} scale={1.1} />
-                                <FloatingAsset icon={Globe} color="#3b82f6" x="75%" y="15%" delay={0.4} scale={0.9} />
-                                <FloatingAsset icon={Zap} color="#f59e0b" x="10%" y="70%" delay={0.6} scale={0.8} />
-                                <FloatingAsset icon={Star} color="#ec4899" x="80%" y="75%" delay={0.8} scale={1} />
-                            </div>
-                        </div>
+                        {/* Animated Hero Graphic - Now a Smart Product Slideshow */}
+                        <SmartHeroSlideshow />
                     </div>
                 </div>
             </section>
