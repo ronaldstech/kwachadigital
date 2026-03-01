@@ -16,7 +16,8 @@ import {
     Moon,
     Users as UsersIcon,
     Wallet,
-    User
+    User,
+    Presentation
 } from 'lucide-react';
 import {
     collection,
@@ -38,10 +39,12 @@ import Orders from './Orders';
 import Settings from './Settings';
 import Users from './Users';
 import Redemptions from './Redemptions';
+import Yazam from './Yazam';
 
 const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'products', label: 'Products', icon: Package },
+    { id: 'yazam', label: 'Yazam', icon: Presentation },
     { id: 'orders', label: 'Orders', icon: ShoppingBag },
     { id: 'users', label: 'Users', icon: UsersIcon, adminOnly: true },
     { id: 'redemptions', label: 'Redemptions', icon: Wallet, adminOnly: true },
@@ -99,6 +102,8 @@ const Dashboard = () => {
                 return <Overview user={user} />;
             case 'products':
                 return <Products />;
+            case 'yazam':
+                return <Yazam />;
             case 'orders':
                 return <Orders />;
             case 'users':
