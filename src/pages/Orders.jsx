@@ -223,9 +223,33 @@ const Orders = () => {
                                                     <div className="min-w-0 flex-1">
                                                         <p className="text-sm font-bold text-text-primary truncate">{item.title}</p>
                                                         <div className="flex justify-between items-center mt-0.5">
-                                                            <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider">{item.category}</p>
-                                                            <p className="text-xs font-black text-primary">MK {Number(item.price).toLocaleString()}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider">{item.category}</p>
+                                                                {item.userName && (
+                                                                    <>
+                                                                        <span className="w-1 h-1 rounded-full bg-glass-border" />
+                                                                        <p className="text-[10px] text-text-muted/70 font-bold uppercase tracking-wider line-clamp-1 flex-1">By {item.userName}</p>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-xs font-black text-primary ml-2 shrink-0">MK {Number(item.price).toLocaleString()}</p>
                                                         </div>
+                                                        {order.status === 'approved' && item.fileUrl && (
+                                                            <div className="mt-3">
+                                                                <a
+                                                                    href={item.fileUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 glass rounded-lg text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 hover:border-primary/30 transition-all shadow-sm border border-glass-border"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                    }}
+                                                                >
+                                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                                                    Download
+                                                                </a>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}

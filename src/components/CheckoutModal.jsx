@@ -70,9 +70,11 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                 items: cart.map(item => ({
                     productId: item.productId,
                     sellerId: item.sellerId || null,
+                    sellerName: item.sellerName || item.userName || 'Unknown Vendor',
                     title: item.title,
                     price: item.price,
                     imageUrl: item.imageUrl || null,
+                    fileUrl: item.fileUrl || null,
                     category: item.category || null,
                 })),
                 sellerIds: [...new Set(cart.map(item => item.sellerId).filter(id => id))],

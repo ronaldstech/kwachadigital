@@ -116,9 +116,25 @@ const OrderCard = ({ order, currentUserId, isAdmin }) => {
                                     <div className="flex items-center justify-between">
                                         <p className="text-[10px] text-primary font-black uppercase tracking-widest">MK {Number(item.price).toLocaleString()}</p>
                                         {isAdmin && item.sellerId && (
-                                            <span className="text-[8px] text-text-muted font-bold uppercase">Vendor: {item.sellerId.slice(0, 5)}</span>
+                                            <span className="text-[8px] text-text-muted font-bold uppercase">Vendor: {item.sellerName || item.sellerId.slice(0, 5)}</span>
                                         )}
                                     </div>
+                                    {order.status === 'approved' && item.fileUrl && (
+                                        <div className="mt-2 text-right">
+                                            <a
+                                                href={item.fileUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 glass rounded-lg text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 hover:border-primary/30 transition-all shadow-sm border border-glass-border"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                }}
+                                            >
+                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                                Download
+                                            </a>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}

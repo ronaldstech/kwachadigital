@@ -82,9 +82,11 @@ export const StoreProvider = ({ children }) => {
         const item = {
             productId: product.id,
             sellerId: product.userId,
+            sellerName: product.sellerName || product.userName || 'Unknown Vendor',
             title: product.title || product.name,
             price: product.price,
             imageUrl: product.imageUrl || product.image || null,
+            fileUrl: product.fileUrl || null,
             category: product.category || null,
             addedAt: new Date().toISOString()
         };

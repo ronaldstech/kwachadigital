@@ -35,10 +35,17 @@ const PresentationCard = ({ item }) => {
                     </span>
                 </div>
 
-                {/* Rating */}
-                <div className="absolute top-4 right-4 px-3 py-1 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center gap-1.5">
-                    <Star size={10} className="fill-secondary text-secondary" />
-                    <span className="text-[10px] font-black text-white">{item.rating || '5.0'}</span>
+                {/* Rating & Reviews */}
+                <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                    <div className="px-3 py-1 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center gap-1.5">
+                        <Star size={10} className="fill-secondary text-secondary" />
+                        <span className="text-[10px] font-black text-white">{(item.rating || 5.0).toFixed(1)}</span>
+                    </div>
+                    {item.reviews > 0 && (
+                        <div className="px-3 py-1 bg-primary/20 backdrop-blur-md border border-primary/20 rounded-full flex items-center gap-1.5">
+                            <span className="text-[8px] font-black text-primary-light uppercase tracking-widest">{item.reviews} Reviews</span>
+                        </div>
+                    )}
                 </div>
             </Link>
 
@@ -92,8 +99,8 @@ const PresentationCard = ({ item }) => {
                             <button
                                 onClick={() => addToCart(item)}
                                 className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-2xl ${isInCart(item.id)
-                                        ? 'bg-primary text-white shadow-primary/20'
-                                        : 'bg-white/5 hover:bg-primary border border-white/10 hover:border-primary text-text-primary hover:text-white'
+                                    ? 'bg-primary text-white shadow-primary/20'
+                                    : 'bg-white/5 hover:bg-primary border border-white/10 hover:border-primary text-text-primary hover:text-white'
                                     }`}
                             >
                                 {isInCart(item.id) ? <ShoppingBag size={20} /> : <ShoppingCart size={20} />}
