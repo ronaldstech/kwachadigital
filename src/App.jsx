@@ -19,6 +19,7 @@ import Profile from './pages/Profile';
 import Cart from './pages/Cart';
 import Favorites from './pages/Favorites';
 import Orders from './pages/Orders';
+import Yazam from './pages/Yazam';
 
 // Helper to scroll to top on navigation
 const ScrollToTop = () => {
@@ -86,6 +87,7 @@ const AuthConsumer = () => {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/yazam" element={<Yazam />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />

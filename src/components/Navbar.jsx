@@ -72,7 +72,7 @@ const Navbar = () => {
     const navLinks = [
         { name: 'Home', path: '/', icon: Home },
         { name: 'Marketplace', path: '/marketplace', icon: Store },
-        { name: 'Yazam', path: '/marketplace?type=services', icon: Briefcase },
+        { name: 'Yazam', path: '/yazam', icon: Briefcase },
     ];
 
     const isActive = (path) => {
