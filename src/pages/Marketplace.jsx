@@ -205,28 +205,6 @@ const Marketplace = () => {
                     <h1 className="text-4xl font-bold text-text-primary">
                         Marketplace
                     </h1>
-
-                    <div className="flex gap-2 bg-surface-2 p-1 rounded-xl border border-white/10">
-                        <button
-                            onClick={() => handleTabChange('products')}
-                            className={`px-6 py-2 rounded-lg text-sm transition ${activeTab === 'products'
-                                ? 'bg-primary text-white'
-                                : 'text-text-secondary'
-                                }`}
-                        >
-                            Products
-                        </button>
-
-                        <button
-                            onClick={() => handleTabChange('services')}
-                            className={`px-6 py-2 rounded-lg text-sm transition ${activeTab === 'services'
-                                ? 'bg-primary text-white'
-                                : 'text-text-secondary'
-                                }`}
-                        >
-                            Services
-                        </button>
-                    </div>
                 </div>
 
                 {/* Loading */}

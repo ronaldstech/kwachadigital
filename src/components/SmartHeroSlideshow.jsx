@@ -107,7 +107,7 @@ const SmartHeroSlideshow = () => {
     const Icon = currentSlide.icon;
 
     return (
-        <div className="flex-1 relative w-full h-[400px] lg:h-[600px] hidden sm:block">
+        <div className="flex-1 relative w-full h-[400px] lg:h-[600px]">
             <div className="absolute inset-0 flex items-center justify-center">
                 <AnimatePresence mode="wait">
                     <motion.div
@@ -120,7 +120,7 @@ const SmartHeroSlideshow = () => {
                             ease: [0.16, 1, 0.3, 1],
                             opacity: { duration: 0.4 }
                         }}
-                        className="relative z-20 glass-premium p-4 md:p-6 rounded-[40px] border border-white/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] backdrop-blur-3xl w-[320px] md:w-[400px]"
+                        className="relative z-20 glass-premium p-4 md:p-6 rounded-[32px] md:rounded-[40px] border border-white/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] backdrop-blur-3xl w-[90%] max-w-[320px] md:max-w-[400px]"
                     >
                         {/* Image Container */}
                         <motion.div
