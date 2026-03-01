@@ -21,21 +21,22 @@ import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, serverTi
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
 
-const OrderCard = ({ order, currentUserId }) => {
+const OrderCard = ({ order, currentUserId, isAdmin }) => {
     const [isUpdating, setIsUpdating] = useState(false);
 
-    // Filter items to show only those belonging to this seller
-    const sellerItems = order.items?.filter(item => item.sellerId === currentUserId) || [];
-    const sellerSubtotal = sellerItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+    // If admin, show all items. Otherwise, show only items belonging to this seller.
+    const displayItems = isAdmin
+        ? (order.items || [])
+        : (order.items?.filter(item => item.sellerId === currentUserId) || []);
+
+    const displaySubtotal = isAdmin
+        ? (order.total || 0)
+        : displayItems.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
 
     const handleStatusUpdate = async (newStatus) => {
         setIsUpdating(true);
         try {
             const orderRef = doc(db, 'orders', order.id);
-            // In a real multi-vendor system, we might update a specific 'sellerStatus' field
-            // for just this seller's items. For now, we update the global order status
-            // if we assume 1 vendor per order or that vendors manage the whole order status.
-            // The user requested "manage the orders from the customers".
             await updateDoc(orderRef, {
                 status: newStatus,
                 updatedAt: serverTimestamp()
@@ -95,9 +96,11 @@ const OrderCard = ({ order, currentUserId }) => {
             {/* Order Content */}
             <div className="flex-grow space-y-4 mb-6">
                 <div className="space-y-2">
-                    <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Purchased Assets ({sellerItems.length})</p>
+                    <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">
+                        {isAdmin ? 'Full Order Assets' : 'Your Assets'} ({displayItems.length})
+                    </p>
                     <div className="space-y-2">
-                        {sellerItems.map((item, idx) => (
+                        {displayItems.map((item, idx) => (
                             <div key={idx} className="flex items-center gap-3 p-3 glass rounded-2xl border border-white/5">
                                 <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-white/10">
                                     {item.imageUrl ? (
@@ -110,7 +113,12 @@ const OrderCard = ({ order, currentUserId }) => {
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <p className="text-xs font-bold text-text-primary truncate uppercase">{item.title}</p>
-                                    <p className="text-[10px] text-primary font-black uppercase tracking-widest">MK {Number(item.price).toLocaleString()}</p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] text-primary font-black uppercase tracking-widest">MK {Number(item.price).toLocaleString()}</p>
+                                        {isAdmin && item.sellerId && (
+                                            <span className="text-[8px] text-text-muted font-bold uppercase">Vendor: {item.sellerId.slice(0, 5)}</span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -120,8 +128,8 @@ const OrderCard = ({ order, currentUserId }) => {
                 <div className="p-4 glass rounded-2xl border border-white/5 bg-primary/5">
                     <div className="flex justify-between items-center">
                         <div className="flex flex-col">
-                            <span className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">Settlement Value</span>
-                            <span className="text-xl font-display font-black text-text-primary">MK {sellerSubtotal.toLocaleString()}</span>
+                            <span className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">{isAdmin ? 'Order Total' : 'Settlement Value'}</span>
+                            <span className="text-xl font-display font-black text-text-primary">MK {displaySubtotal.toLocaleString()}</span>
                         </div>
                         <div className="text-right">
                             <span className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">Order ID</span>
@@ -131,7 +139,7 @@ const OrderCard = ({ order, currentUserId }) => {
                 </div>
             </div>
 
-            {/* Seller Actions */}
+            {/* Admin/Seller Actions */}
             <div className="flex gap-2">
                 {order.status !== 'approved' && order.status !== 'completed' && (
                     <button
@@ -167,15 +175,19 @@ const Orders = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
+    const isAdmin = user?.role === 'admin';
+
     useEffect(() => {
         if (!user) return;
 
-        // Query orders where sellerIds array contains the current user ID
-        const q = query(
-            collection(db, 'orders'),
-            where('sellerIds', 'array-contains', user.uid),
-            orderBy('createdAt', 'desc')
-        );
+        // If admin, fetch ALL orders. Otherwise, fetch only where user is a seller.
+        const q = isAdmin
+            ? query(collection(db, 'orders'), orderBy('createdAt', 'desc'))
+            : query(
+                collection(db, 'orders'),
+                where('sellerIds', 'array-contains', user.uid),
+                orderBy('createdAt', 'desc')
+            );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const ordersData = snapshot.docs.map(doc => ({
@@ -185,13 +197,12 @@ const Orders = () => {
             setOrders(ordersData);
             setLoading(false);
         }, (error) => {
-            console.error("Error fetching seller orders:", error);
-            // Handle error (maybe toast)
+            console.error("Error fetching orders:", error);
             setLoading(false);
         });
 
         return () => unsubscribe();
-    }, [user]);
+    }, [user, isAdmin]);
 
     const filteredOrders = orders.filter(order =>
         order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -200,6 +211,9 @@ const Orders = () => {
     );
 
     const totalRevenue = orders.reduce((sum, order) => {
+        if (isAdmin) {
+            return sum + (Number(order.total) || 0);
+        }
         const sellerItems = order.items?.filter(item => item.sellerId === user.uid) || [];
         return sum + sellerItems.reduce((s, i) => s + (Number(i.price) || 0), 0);
     }, 0);
@@ -214,7 +228,7 @@ const Orders = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <h1 className="text-4xl md:text-5xl font-display font-black text-text-primary tracking-tight mb-2 uppercase">
-                        Client <span className="text-primary italic">Requests</span>
+                        {isAdmin ? 'Global' : 'Client'} <span className="text-primary italic">Requests</span>
                     </h1>
                     <p className="text-text-muted font-bold flex items-center gap-2">
                         <ShoppingBag size={16} className="text-primary" />
@@ -262,7 +276,7 @@ const Orders = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-8">
                     {filteredOrders.map((order) => (
-                        <OrderCard key={order.id} order={order} currentUserId={user.uid} />
+                        <OrderCard key={order.id} order={order} currentUserId={user.uid} isAdmin={isAdmin} />
                     ))}
                 </div>
             )}

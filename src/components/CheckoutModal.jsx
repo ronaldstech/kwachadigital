@@ -4,7 +4,7 @@ import { X, CheckCircle, Loader2, ShieldCheck, CreditCard, Zap, ArrowRight, Pack
 import { useStore } from '../context/StoreContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc, increment, updateDoc } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 
 const PAYMENT_METHODS = [
@@ -14,7 +14,7 @@ const PAYMENT_METHODS = [
 ];
 
 const CheckoutModal = ({ isOpen, onClose }) => {
-    const { cart, removeFromCart, loading: storeLoading } = useStore();
+    const { cart, removeFromCart, referrerId, loading: storeLoading } = useStore();
     const { user } = useAuth();
 
     const [step, setStep] = useState(1);
@@ -76,6 +76,8 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                     category: item.category || null,
                 })),
                 sellerIds: [...new Set(cart.map(item => item.sellerId).filter(id => id))],
+                referrerId: referrerId || null,
+                referralCommission: referrerId ? (total * 0.10) : 0,
                 total,
                 paymentMethod: selectedMethod,
                 paymentDetails: selectedMethod === 'bank'
@@ -85,7 +87,33 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                 createdAt: serverTimestamp(),
             });
 
-            for (const item of cart) { await removeFromCart(item.productId); }
+            for (const item of cart) {
+                await removeFromCart(item.productId);
+                // Increment salesCount for each product purchased
+                try {
+                    const productRef = doc(db, 'products', item.productId);
+                    await updateDoc(productRef, {
+                        salesCount: increment(1)
+                    });
+                } catch (salesErr) {
+                    console.error("Error incrementing salesCount:", salesErr);
+                }
+            }
+
+            // Attribute 10% commission to referrer if one exists
+            if (referrerId) {
+                const commissionAmount = total * 0.10;
+                try {
+                    const referrerRef = doc(db, 'users', referrerId);
+                    await setDoc(referrerRef, {
+                        points: increment(commissionAmount)
+                    }, { merge: true });
+                } catch (commissionErr) {
+                    console.error('Failed to attribute commission:', commissionErr);
+                    // We don't want to block the success screen if this part fails
+                }
+            }
+
             setSuccess(true);
         } catch (err) {
             console.error('Checkout error:', err);

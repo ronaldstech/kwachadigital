@@ -12,6 +12,7 @@ const Marketplace = () => {
     const [activeTab, setActiveTab] = useState(searchParams.get('type') === 'services' ? 'services' : 'products');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [priceRange, setPriceRange] = useState(1000000); // 1M as max default
+    const [discoveryFilter, setDiscoveryFilter] = useState('New'); // New, Best, Hot
     const [isFilterOpen, setIsFilterOpen] = useState(true);
 
     // Sync tab state with URL parameters
@@ -76,7 +77,7 @@ const Marketplace = () => {
 
     const filteredItems = useMemo(() => {
         const items = activeTab === 'products' ? products.products : products.services;
-        return items.filter(item => {
+        let filtered = items.filter(item => {
             const matchesSearch = String(item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
                 String(item.description || '').toLowerCase().includes(searchQuery.toLowerCase());
             const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
@@ -88,7 +89,22 @@ const Marketplace = () => {
             const matchesPrice = numericPrice <= priceRange;
             return matchesSearch && matchesCategory && matchesPrice;
         });
-    }, [activeTab, searchQuery, selectedCategory, priceRange, products]);
+
+        // Apply discovery filtering/sorting
+        if (discoveryFilter === 'New') {
+            filtered = [...filtered].sort((a, b) => {
+                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                return dateB - dateA;
+            });
+        } else if (discoveryFilter === 'Best') {
+            filtered = [...filtered].sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
+        } else if (discoveryFilter === 'Hot') {
+            filtered = [...filtered].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+        }
+
+        return filtered;
+    }, [activeTab, searchQuery, selectedCategory, priceRange, discoveryFilter, products]);
 
     return (
         <div className="relative min-h-screen pt-32 lg:pt-40 pb-32 overflow-hidden bg-bg-main">
@@ -218,6 +234,25 @@ const Marketplace = () => {
                                 <div className="flex items-center gap-3 text-text-primary font-black uppercase tracking-widest text-[12px] border-b border-white/5 pb-4">
                                     <SlidersHorizontal size={16} className="text-primary" />
                                     <span>Advanced Filters</span>
+                                </div>
+
+                                {/* Discovery Mode */}
+                                <div>
+                                    <h4 className="text-[10px] uppercase font-black tracking-[0.2em] text-text-muted mb-6">Discovery Mode</h4>
+                                    <div className="flex glass p-1 rounded-2xl border-glass-border shadow-lg relative overflow-hidden mb-2">
+                                        {['New', 'Best', 'Hot'].map((mode) => (
+                                            <button
+                                                key={mode}
+                                                onClick={() => setDiscoveryFilter(mode)}
+                                                className={`relative z-10 flex-1 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${discoveryFilter === mode ? 'text-white bg-primary shadow-lg shadow-primary/20' : 'text-text-secondary hover:text-text-primary'}`}
+                                            >
+                                                {mode === 'New' && 'Arrivals'}
+                                                {mode === 'Best' && 'Sellers'}
+                                                {mode === 'Hot' && 'Trending'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[9px] text-text-muted font-bold px-2 italic">Sort items by popularity, sales, or date.</p>
                                 </div>
 
                                 {/* Category Section */}

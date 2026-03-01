@@ -13,7 +13,10 @@ import {
     Bell,
     Zap,
     Sun,
-    Moon
+    Moon,
+    Users as UsersIcon,
+    Wallet,
+    User
 } from 'lucide-react';
 import {
     collection,
@@ -33,12 +36,16 @@ import Overview from './Overview';
 import Products from './Products';
 import Orders from './Orders';
 import Settings from './Settings';
+import Users from './Users';
+import Redemptions from './Redemptions';
 
 const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'products', label: 'Products', icon: Package },
     { id: 'orders', label: 'Orders', icon: ShoppingBag },
-    { id: 'settings', label: 'Settings', icon: SettingsIcon },
+    { id: 'users', label: 'Users', icon: UsersIcon, adminOnly: true },
+    { id: 'redemptions', label: 'Redemptions', icon: Wallet, adminOnly: true },
+    { id: 'settings', label: 'Profile', icon: User },
 ];
 
 const Dashboard = () => {
@@ -47,22 +54,37 @@ const Dashboard = () => {
     const { isDark, toggleTheme } = useTheme();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [pendingCount, setPendingCount] = useState(0);
+    const [pendingRedemptions, setPendingRedemptions] = useState(0);
 
     const navigate = useNavigate();
 
     useEffect(() => {
         if (user?.role !== 'admin') return;
 
-        const q = query(
+        // Listen for Pending Products
+        const qProducts = query(
             collection(db, 'products'),
             where('status', '==', 'Pending')
         );
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const unsubProducts = onSnapshot(qProducts, (snapshot) => {
             setPendingCount(snapshot.size);
         });
 
-        return () => unsubscribe();
+        // Listen for Pending Redemptions
+        const qRedemptions = query(
+            collection(db, 'redemptions'),
+            where('status', '==', 'pending')
+        );
+
+        const unsubRedemptions = onSnapshot(qRedemptions, (snapshot) => {
+            setPendingRedemptions(snapshot.size);
+        });
+
+        return () => {
+            unsubProducts();
+            unsubRedemptions();
+        };
     }, [user]);
 
 
@@ -79,6 +101,10 @@ const Dashboard = () => {
                 return <Products />;
             case 'orders':
                 return <Orders />;
+            case 'users':
+                return <Users />;
+            case 'redemptions':
+                return <Redemptions />;
             case 'settings':
                 return <Settings user={user} />;
             default:
@@ -104,7 +130,7 @@ const Dashboard = () => {
                 </Link>
 
                 <nav className="flex-1 space-y-2">
-                    {navItems.map((item) => (
+                    {navItems.filter(item => !item.adminOnly || user?.role === 'admin').map((item) => (
                         <button
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
@@ -115,20 +141,46 @@ const Dashboard = () => {
                         >
                             <item.icon size={20} className={`transition-colors ${activeTab === item.id ? 'text-primary' : 'group-hover:text-text-primary'}`} />
                             <span className="text-sm font-bold tracking-tight">{item.label}</span>
+
+                            {/* Product Badge */}
                             {item.id === 'products' && pendingCount > 0 && user?.role === 'admin' && (
-                                <span className="ml-2 px-2 py-0.5 bg-primary text-white text-[10px] font-black rounded-full shadow-lg shadow-primary/20 animate-pulse">
+                                <span className="ml-auto px-2 py-0.5 bg-primary text-white text-[10px] font-black rounded-full shadow-lg shadow-primary/20 animate-pulse">
                                     {pendingCount}
                                 </span>
                             )}
-                            {activeTab === item.id && (
 
-                                <motion.div layoutId="activeTabIndicator" className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                            {/* Redemption Badge */}
+                            {item.id === 'redemptions' && pendingRedemptions > 0 && user?.role === 'admin' && (
+                                <span className="ml-auto px-2 py-0.5 bg-amber-500 text-white text-[10px] font-black rounded-full shadow-lg shadow-amber-500/20 animate-pulse">
+                                    {pendingRedemptions}
+                                </span>
+                            )}
+
+                            {activeTab === item.id && (
+                                <motion.div layoutId="activeTabIndicator" className={`${(item.id === 'products' || item.id === 'redemptions') && user?.role === 'admin' ? 'hidden' : 'ml-auto'} w-1.5 h-1.5 rounded-full bg-primary`} />
                             )}
                         </button>
                     ))}
                 </nav>
 
                 <div className="mt-auto space-y-4">
+                    {/* Wallet/Points Quick Info */}
+                    <Link to="/profile" onClick={() => setActiveTab('settings')} className="block group no-underline">
+                        <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 hover:border-primary/40 transition-all relative overflow-hidden">
+                            <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-110 transition-transform">
+                                <Wallet size={64} className="text-primary" />
+                            </div>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
+                                <Wallet size={12} /> Wallet Balance
+                            </p>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-[10px] font-black text-text-muted">MK</span>
+                                <span className="text-xl font-display font-black text-text-primary">
+                                    {(user?.points || 0).toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
+                    </Link>
                     {/* Theme Toggle Button - Desktop */}
                     <button
                         onClick={toggleTheme}
@@ -224,7 +276,7 @@ const Dashboard = () => {
                             </div>
 
                             <nav className="flex-1 space-y-3">
-                                {navItems.map((item) => (
+                                {navItems.filter(item => !item.adminOnly || user?.role === 'admin').map((item) => (
                                     <button
                                         key={item.id}
                                         onClick={() => { setActiveTab(item.id); setIsMobileMenuOpen(false); }}
@@ -237,17 +289,39 @@ const Dashboard = () => {
                                         <span className="font-bold text-lg leading-none tracking-tight flex-1 flex items-center justify-between">
                                             {item.label}
                                             {item.id === 'products' && pendingCount > 0 && user?.role === 'admin' && (
-                                                <span className="px-2 py-1 bg-white text-primary text-[10px] font-black rounded-full">
+                                                <span className="px-2 py-1 bg-white text-primary text-[10px] font-black rounded-full shadow-lg">
                                                     {pendingCount}
+                                                </span>
+                                            )}
+                                            {item.id === 'redemptions' && pendingRedemptions > 0 && user?.role === 'admin' && (
+                                                <span className="px-2 py-1 bg-white text-amber-500 text-[10px] font-black rounded-full shadow-lg">
+                                                    {pendingRedemptions}
                                                 </span>
                                             )}
                                         </span>
                                     </button>
-
                                 ))}
                             </nav>
 
-                            <div className="pt-8 border-t border-glass-border">
+                            <div className="mt-8 space-y-4">
+                                {/* Wallet Quick Info - Mobile */}
+                                <div className="p-6 rounded-3xl bg-primary/10 border border-primary/20 relative overflow-hidden">
+                                    <div className="absolute -right-4 -top-4 opacity-10">
+                                        <Wallet size={80} className="text-primary" />
+                                    </div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2 flex items-center gap-2">
+                                        <Wallet size={14} /> Wallet Balance
+                                    </p>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-xs font-black text-text-muted">MK</span>
+                                        <span className="text-3xl font-display font-black text-text-primary">
+                                            {(user?.points || 0).toLocaleString()}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-8 mt-auto border-t border-glass-border">
                                 <button
                                     onClick={handleLogout}
                                     className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl bg-red-500/10 text-red-500 font-bold"
@@ -267,7 +341,7 @@ const Dashboard = () => {
                     {renderContent()}
                 </div>
             </main>
-        </div>
+        </div >
     );
 };
 

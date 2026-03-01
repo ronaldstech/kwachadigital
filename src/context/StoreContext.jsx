@@ -18,10 +18,22 @@ export const StoreProvider = ({ children }) => {
     const { user } = useAuth();
     const [cart, setCart] = useState([]);
     const [favorites, setFavorites] = useState([]);
+    const [referrerId, setReferrerId] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Initial load from localStorage for guests
+    // Initial load from localStorage for guests & Referral capturing
     useEffect(() => {
+        // Capture referral ID from URL
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref) {
+            setReferrerId(ref);
+            sessionStorage.setItem('kd_referrer', ref);
+        } else {
+            const savedRef = sessionStorage.getItem('kd_referrer');
+            if (savedRef) setReferrerId(savedRef);
+        }
+
         if (!user) {
             const localCart = JSON.parse(localStorage.getItem('kd_cart') || '[]');
             const localFavs = JSON.parse(localStorage.getItem('kd_favorites') || '[]');
@@ -162,6 +174,7 @@ export const StoreProvider = ({ children }) => {
     const value = {
         cart,
         favorites,
+        referrerId,
         loading,
         addToCart,
         removeFromCart,

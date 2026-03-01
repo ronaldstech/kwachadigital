@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, Shield, Globe, Rocket, CheckCircle, Star, CreditCard, Target, Inbox, Loader2 } from 'lucide-react';
 const LucideIcons = { CreditCard, Target, Inbox, Zap, Star, Shield, Globe, Rocket, CheckCircle };
 import ProductCard from '../components/ProductCard';
+import ProductCarousel from '../components/ProductCarousel';
 import { TICKER_ITEMS } from '../constants';
 import { db } from '../firebase';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
@@ -322,52 +323,35 @@ const Home = () => {
                 </div>
             </section>
 
-            {/* Premium Immersive CTA */}
-            <section className="py-10 container">
-                <motion.div
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="relative p-12 md:p-24 rounded-[60px] overflow-hidden text-center glass-premium border border-white/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)]"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-transparent -z-10 animate-pulse" />
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-
-                    <div className="relative z-10">
-                        <motion.div
-                            animate={{ y: [0, -15, 0] }}
-                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                            className="w-24 h-24 md:w-32 md:h-32 rounded-[40px] bg-bg-main glass border border-white/20 flex items-center justify-center mx-auto mb-12 shadow-2xl overflow-hidden"
-                        >
-                            <Rocket size={64} className="text-primary" />
-                        </motion.div>
-
-                        <h2 className="text-5xl md:text-7xl lg:text-8xl font-display font-[900] text-text-primary mb-8 leading-[0.95] tracking-tighter">
-                            Your <span className="text-gradient">Legacy</span> <br className="hidden md:block" />
-                            Starts Today.
-                        </h2>
-
-                        <p className="text-xl md:text-2xl text-text-secondary mb-16 max-w-2xl mx-auto font-medium leading-relaxed opacity-90">
-                            Join the fastest-growing digital ecosystem in Malawi. <br className="hidden md:block" />
-                            The future is here, and it's built by you.
-                        </p>
-
-                        <div className="flex flex-col sm:flex-row justify-center gap-6">
-                            <Link to="/signup" className="btn btn-primary px-14 py-6 text-xl rounded-[24px] shadow-[0_25px_50px_-12px_rgba(16,185,129,0.5)] font-[900] tracking-tight group">
-                                Open Your Digital Shop
-                                <motion.span
-                                    animate={{ x: [0, 5, 0] }}
-                                    transition={{ duration: 1.5, repeat: Infinity }}
-                                >
-                                    <ArrowRight size={24} />
-                                </motion.span>
-                            </Link>
-                            <Link to="/marketplace" className="btn btn-outline px-14 py-6 text-xl rounded-[24px] font-bold border-glass-border hover:bg-white/5">
-                                Exploration Mode
-                            </Link>
+            {/* Top performing assets Carousel */}
+            <section className="py-24 relative overflow-hidden">
+                <div className="container relative z-10 px-4 md:px-12">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
+                        <div>
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                className="flex items-center gap-3 mb-5"
+                            >
+                                <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary shadow-lg border border-secondary/20 font-black">
+                                    <Zap size={20} />
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">Trending Ecosystem</span>
+                            </motion.div>
+                            <h2 className="text-4xl md:text-5xl lg:text-7xl font-display font-[900] text-text-primary tracking-tighter leading-[0.9]">
+                                Explore Our <br />
+                                <span className="text-gradient">Elite Gems</span>.
+                            </h2>
                         </div>
+                        <Link to="/marketplace" className="group flex items-center gap-3 text-sm font-bold text-text-primary py-4 px-10 rounded-[22px] h-fit glass border border-glass-border hover:bg-primary/10 hover:border-primary/30 transition-all font-display uppercase tracking-widest active:scale-95">
+                            Enter the Arcade
+                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </Link>
                     </div>
-                </motion.div>
+
+                    <ProductCarousel />
+                </div>
             </section>
         </div>
     );

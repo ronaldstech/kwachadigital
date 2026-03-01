@@ -3,12 +3,18 @@ import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
 import { Star, ShoppingCart, ArrowUpRight, ShieldCheck, Zap, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const ProductCard = ({ item, type }) => {
     const { addToCart, toggleFavorite, isInCart, isInFavorites } = useStore();
+    const { user } = useAuth();
+
     // Mouse tracking for spotlight effect
     let mouseX = useMotionValue(0);
     let mouseY = useMotionValue(0);
+
+
 
     function handleMouseMove({ currentTarget, clientX, clientY }) {
         let { left, top } = currentTarget.getBoundingClientRect();
@@ -58,6 +64,31 @@ const ProductCard = ({ item, type }) => {
                             <Zap size={10} className="fill-primary" />
                             {item.category}
                         </span>
+
+                        {/* New / Hot Badges */}
+                        {(() => {
+                            const createdDate = item.createdAt?.toDate ? item.createdAt.toDate() : new Date(item.createdAt || 0);
+                            const isNew = (Date.now() - createdDate.getTime()) < 7 * 24 * 60 * 60 * 1000;
+                            const isHot = (item.salesCount > 10) || (item.viewCount > 100);
+
+                            return (
+                                <>
+                                    {isNew && (
+                                        <span className="glass-premium px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-emerald-400 border border-emerald-400/30 backdrop-blur-2xl shadow-xl flex items-center gap-1.5">
+                                            <Star size={10} className="fill-emerald-400" />
+                                            New Arrival
+                                        </span>
+                                    )}
+                                    {isHot && (
+                                        <span className="glass-premium px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-orange-400 border border-orange-400/30 backdrop-blur-2xl shadow-xl flex items-center gap-1.5">
+                                            <Zap size={10} className="fill-orange-400 text-orange-400 animate-pulse" />
+                                            Hot Item
+                                        </span>
+                                    )}
+                                </>
+                            );
+                        })()}
+
                         {type === 'service' && (
                             <span className="glass px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#3b82f6] border border-[#3b82f6]/30 backdrop-blur-2xl shadow-xl flex items-center gap-1.5">
                                 <ShieldCheck size={10} className="fill-[#3b82f6]/20" />
@@ -66,13 +97,15 @@ const ProductCard = ({ item, type }) => {
                         )}
                     </div>
 
-                    {/* Favorites Toggle */}
-                    <button
-                        onClick={(e) => { e.preventDefault(); toggleFavorite(item); }}
-                        className={`absolute top-4 right-4 z-20 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 backdrop-blur-md border ${isInFavorites(item.id) ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-black/20 border-white/10 text-white hover:bg-white/10'}`}
-                    >
-                        <Heart size={18} className={isInFavorites(item.id) ? 'fill-primary' : ''} />
-                    </button>
+                    {/* Elite Action Suite */}
+                    <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
+                        <button
+                            onClick={(e) => { e.preventDefault(); toggleFavorite(item); }}
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 backdrop-blur-md border ${isInFavorites(item.id) ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-black/20 border-white/10 text-white hover:bg-white/10'}`}
+                        >
+                            <Heart size={18} className={isInFavorites(item.id) ? 'fill-primary' : ''} />
+                        </button>
+                    </div>
 
                     {/* Elite Action Button */}
                     <Link to={`/product/${item.id}`} className="absolute bottom-4 right-4 z-20 w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black opacity-0 translate-y-4 translate-x-4 scale-75 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0 group-hover:scale-100 transition-all duration-700 hover:bg-primary hover:text-white shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)]">

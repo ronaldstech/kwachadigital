@@ -5,7 +5,7 @@ import { ArrowLeft, ShoppingCart, ShieldCheck, Download, Clock, Star, Users, Mes
 import { Star as StarIcon } from 'lucide-react';
 import Rating from '../components/Rating';
 import { toast } from 'react-hot-toast';
-import { doc, getDoc, setDoc, deleteDoc, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
@@ -51,6 +51,11 @@ const ProductDetail = () => {
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     setProduct({ id: docSnap.id, ...docSnap.data() });
+
+                    // Increment viewCount asynchronously
+                    updateDoc(docRef, {
+                        viewCount: increment(1)
+                    }).catch(err => console.error("Error incrementing viewCount:", err));
                 } else {
                     toast.error('Product not found.');
                     navigate('/marketplace');
@@ -106,6 +111,50 @@ const ProductDetail = () => {
         setFavLoading(true);
         await toggleFavorite(product);
         setFavLoading(false);
+    };
+
+    const handleShare = () => {
+        if (!user) {
+            toast.error('Sign in to earn 10% on referrals!', { icon: '💸' });
+            return;
+        }
+        const link = `${window.location.origin}/product/${id}?ref=${user.uid}`;
+
+        // Universal copy that works on HTTP and all mobile browsers
+        const copyViaTextarea = () => {
+            const el = document.createElement('textarea');
+            el.value = link;
+            el.setAttribute('readonly', '');
+            el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+            document.body.appendChild(el);
+            el.focus();
+            el.select();
+            el.setSelectionRange(0, 99999);
+            const ok = document.execCommand('copy');
+            document.body.removeChild(el);
+            if (ok) {
+                toast.success('Affiliate link copied! Earn 10% on success.', {
+                    icon: '💰',
+                    style: { background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }
+                });
+            } else {
+                toast.error('Could not copy automatically. Please copy this link: ' + link);
+            }
+        };
+
+        // Use native share sheet if available (HTTPS mobile), otherwise copy
+        if (navigator.share) {
+            navigator.share({
+                title: product?.title || 'Check out this product on Kwacha Digital',
+                text: 'Get this asset! I earn 10% if you buy through my link.',
+                url: link,
+            }).catch(() => {
+                // User dismissed the share sheet — fall back to copy
+                copyViaTextarea();
+            });
+        } else {
+            copyViaTextarea();
+        }
     };
 
     const handlePurchase = handleCartToggle;
@@ -243,6 +292,28 @@ const ProductDetail = () => {
                                 </div>
                             </a>
                         )}
+
+                        {/* ── Affiliate Share Button (below image, always visible) ── */}
+                        <motion.button
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            onClick={handleShare}
+                            className="w-full flex items-center justify-between p-5 glass rounded-2xl border border-primary/20 hover:border-primary/50 transition-all group bg-primary/5"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                    <Send size={18} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-[10px] uppercase font-black tracking-widest text-primary mb-1">Refer & Earn MK {(numericPrice * 0.1).toLocaleString()}</p>
+                                    <p className="text-xs font-bold text-text-primary">Share your unique affiliate link</p>
+                                </div>
+                            </div>
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                <Link2 size={16} />
+                            </div>
+                        </motion.button>
                     </motion.div>
 
                     {/* Elite Information Column */}
@@ -350,7 +421,6 @@ const ProductDetail = () => {
                                 {isInFavorites(id) ? 'Favorited' : 'Add to Favorites'}
                             </button>
                         </div>
-
                         {/* Creator Footprint */}
                         <div className="mt-12 pt-8 border-t border-glass-border flex items-center justify-between">
                             <div className="flex items-center gap-5">
