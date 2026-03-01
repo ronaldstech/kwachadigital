@@ -28,6 +28,8 @@ const SmartHeroSlideshow = () => {
                     price: Number(doc.data().price) || 0,
                     originalPrice: Number(doc.data().originalPrice) || 0,
                     viewCount: Number(doc.data().viewCount) || 0,
+                    rating: Number(doc.data().rating) || 0,
+                    reviews: Number(doc.data().reviews) || 0,
                 }));
 
                 if (items.length === 0) {

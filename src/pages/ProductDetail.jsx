@@ -168,18 +168,33 @@ const ProductDetail = () => {
         setIsSubmitting(true);
         try {
             const reviewsRef = collection(db, 'products', id, 'reviews');
-            await addDoc(reviewsRef, {
+            const newReview = {
                 name: reviewerName.trim(),
-                rating,
+                rating: Number(rating),
                 comment: reviewComment.trim(),
                 avatar: reviewerName.trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
                 userId: user?.uid || null,
                 createdAt: serverTimestamp()
+            };
+
+            await addDoc(reviewsRef, newReview);
+
+            // Calculate new aggregates
+            const totalReviews = reviews.length + 1;
+            const currentSum = reviews.reduce((acc, rev) => acc + (Number(rev.rating) || 0), 0);
+            const newAverage = ((currentSum + Number(rating)) / totalReviews).toFixed(1);
+
+            // Update product document with denormalized data
+            const productRef = doc(db, 'products', id);
+            await updateDoc(productRef, {
+                rating: Number(newAverage),
+                reviews: totalReviews
             });
+
             setRating(0);
             setReviewComment('');
             if (!user?.name) setReviewerName('');
-            toast.success('Review published! Thank you for your feedback.', {
+            toast.success('Review published! Rating updated.', {
                 style: { background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }
             });
         } catch (err) {

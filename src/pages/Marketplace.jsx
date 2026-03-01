@@ -54,6 +54,8 @@ const Marketplace = () => {
                     price: Number(data.price) || 0,
                     originalPrice: Number(data.originalPrice) || Number(data.price) || 0,
                     viewCount: Number(data.viewCount) || 0,
+                    rating: Number(data.rating) || 0,
+                    reviews: Number(data.reviews) || 0,
                     category: data.category || 'General',
                     type: data.type || 'product'
                 };

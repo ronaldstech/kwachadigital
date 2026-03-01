@@ -46,8 +46,8 @@ const ProductCard = ({ item, type }) => {
                 <button
                     onClick={(e) => { e.preventDefault(); toggleFavorite(item); }}
                     className={`absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-md border transition-all ${isInFavorites(item.id)
-                            ? 'bg-primary/20 border-primary text-primary'
-                            : 'bg-black/30 border-white/10 text-white hover:bg-white/10'
+                        ? 'bg-primary/20 border-primary text-primary'
+                        : 'bg-black/30 border-white/10 text-white hover:bg-white/10'
                         }`}
                 >
                     <Heart size={14} className={isInFavorites(item.id) ? 'fill-primary' : ''} />
@@ -60,8 +60,8 @@ const ProductCard = ({ item, type }) => {
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-1 text-xs font-semibold text-text-secondary">
                         <Star size={14} className="text-secondary fill-secondary" />
-                        {item.rating || '4.9'}
-                        <span className="opacity-50">({item.reviews || '24'})</span>
+                        {item.rating ? Number(item.rating).toFixed(1) : '0.0'}
+                        <span className="opacity-50">({item.reviews || '0'})</span>
                     </div>
 
                     <span className="text-[9px] uppercase tracking-widest font-mono text-primary/70">
@@ -97,8 +97,8 @@ const ProductCard = ({ item, type }) => {
                     <button
                         onClick={(e) => { e.preventDefault(); addToCart(item); }}
                         className={`p-2.5 rounded-lg border transition-all ${isInCart(item.id)
-                                ? 'bg-primary border-primary text-white'
-                                : 'bg-white/5 border-white/10 hover:bg-primary/20 hover:border-primary/40'
+                            ? 'bg-primary border-primary text-white'
+                            : 'bg-white/5 border-white/10 hover:bg-primary/20 hover:border-primary/40'
                             }`}
                     >
                         <ShoppingCart size={16} />
