@@ -17,7 +17,8 @@ import {
     User,
     LogOut,
     ChevronDown,
-    Heart, ShoppingBag
+    Heart, ShoppingBag,
+    Sparkle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -73,6 +74,7 @@ const Navbar = () => {
         { name: 'Home', path: '/', icon: Home },
         { name: 'Marketplace', path: '/marketplace', icon: Store },
         { name: 'Yazam', path: '/yazam', icon: Briefcase },
+        { name: 'AI Tools', path: '/ai-tools', icon: Sparkle },
     ];
 
     const isActive = (path) => {
