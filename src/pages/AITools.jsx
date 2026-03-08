@@ -184,7 +184,7 @@ const AITools = () => {
                         initial={{ opacity: 0, y: 60 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                        className="text-7xl md:text-9xl lg:text-[10rem] font-display font-[950] text-text-primary tracking-tighter leading-[0.8] mb-12"
+                        className="text-5xl md:text-7xl lg:text-[6rem] font-display font-[950] text-text-primary tracking-tighter leading-[0.8] mb-12"
                     >
                         AI <span className="text-primary italic relative">Research
                             <svg className="absolute -bottom-4 left-0 w-full h-4 text-primary/20" viewBox="0 0 100 10" preserveAspectRatio="none">
@@ -199,7 +199,7 @@ const AITools = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5, duration: 1 }}
-                            className="text-xl md:text-2xl text-text-secondary font-medium max-w-2xl lowercase tracking-tight leading-relaxed opacity-50"
+                            className="text-xl md:text-xl text-text-secondary font-medium max-w-2xl lowercase tracking-tight leading-relaxed opacity-50"
                         >
                             Proprietary neural environments engineered to redefine academic excellence and strategic visualization. Select a deployment to begin synchronization.
                         </motion.p>
