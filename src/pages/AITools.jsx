@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
     Sparkles,
     GraduationCap,
@@ -16,46 +16,17 @@ import {
 } from 'lucide-react';
 
 const ToolCard = ({ tool, index }) => {
-    const x = useMotionValue(0);
-    const y = useMotionValue(0);
 
-    const mouseXSpring = useSpring(x);
-    const mouseYSpring = useSpring(y);
-
-    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["10deg", "-10deg"]);
-    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-10deg", "10deg"]);
-
-    const handleMouseMove = (e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const width = rect.width;
-        const height = rect.height;
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        const xPct = mouseX / width - 0.5;
-        const yPct = mouseY / height - 0.5;
-        x.set(xPct);
-        y.set(yPct);
-    };
-
-    const handleMouseLeave = () => {
-        x.set(0);
-        y.set(0);
-    };
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.15, duration: 0.8, type: "spring", bounce: 0.4 }}
-            className="perspective-1000 group relative h-full"
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            style={{ rotateX, rotateY }}
+            className="group relative h-full"
         >
             <div className="relative h-full bg-surface-1/60 rounded-[56px] border border-white/10 p-10 flex flex-col transition-all duration-700 hover:border-primary/50 hover:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8),0_20px_40px_-15px_rgba(0,0,0,0.5)] shadow-2xl overflow-hidden">
-                {/* Dynamic Mesh Background */}
-                <div className={`absolute -top-32 -right-32 w-80 h-80 blur-[120px] rounded-full opacity-0 group-hover:opacity-30 transition-opacity duration-1000 ${tool.color}`} />
-                <div className={`absolute -bottom-32 -left-32 w-64 h-64 blur-[100px] rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-1000 ${tool.color}`} />
+
 
                 {/* Status Badge & Actions */}
                 <div className="flex items-start justify-between mb-12">
@@ -128,17 +99,17 @@ const AITools = () => {
             name: "Dissertation Assistant",
             description: "Advanced neural architecture optimized for complex academic research synthesis, structural logic, and bibliographic precision.",
             icon: GraduationCap,
-            externalUrl: "https://anonemasid.netlify.app",
+            externalUrl: "https://anonemasi.vercel.app/dissertation",
             status: "CALIBRATING",
             color: "bg-emerald-500",
             iconColor: "text-emerald-400",
             features: ["Research Synthesis", "Structure Analysis", "Citation Engine"]
         },
         {
-            name: "Deck Architect",
+            name: "PowerPoint Presentation",
             description: "High-impact visual strategy engine. Transform raw data into cinematic presentation narratives with intelligent flow.",
             icon: Presentation,
-            externalUrl: "https://anonemasip.netlify.app",
+            externalUrl: "https://anonemasi.vercel.app/powerpoint",
             status: "DEPLOYING",
             color: "bg-blue-600",
             iconColor: "text-blue-400",
@@ -148,7 +119,7 @@ const AITools = () => {
             name: "Essay Catalyst",
             description: "Unlocking linguistic depth. Intelligent drafting protocols designed for creative resonance and rigorous analytical precision.",
             icon: PenTool,
-            externalUrl: "https://anonemasie.netlify.app",
+            externalUrl: "https://anonemasi.vercel.app/essay",
             status: "EVOLVING",
             color: "bg-purple-600",
             iconColor: "text-purple-400",
@@ -319,9 +290,7 @@ const AITools = () => {
             </div>
 
             <style jsx>{`
-                .perspective-1000 {
-                    perspective: 1000px;
-                }
+
                 @keyframes scan {
                     0% { transform: translateY(-100%); }
                     100% { transform: translateY(800px); }
