@@ -12,18 +12,23 @@ import {
     Calendar,
     CreditCard,
     CreditCard as DebitCard,
-    Smartphone
+    Smartphone,
+    Zap,
+    Loader2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
+import { reverifyTransaction } from '../services/paychangu';
+import { toast } from 'react-hot-toast';
 
 const Orders = () => {
     const { user } = useAuth();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // all, pending, completed, cancelled
+    const [verifyingId, setVerifyingId] = useState(null);
 
     useEffect(() => {
         if (!user) {
@@ -58,6 +63,30 @@ const Orders = () => {
         if (filter === 'cancelled') return order.status === 'failed' || order.status === 'timeout';
         return order.status === filter;
     });
+
+    const handleVerify = async (order) => {
+        if (!order.chargeId) {
+            toast.error("Insufficient transaction data for verification.");
+            return;
+        }
+
+        setVerifyingId(order.id);
+        try {
+            const result = await reverifyTransaction(order);
+            if (result.status === 'success') {
+                toast.success(result.message || "Payment verified successfully!");
+            } else if (result.status === 'pending') {
+                toast.loading(result.message || "Payment still pending...", { duration: 3000 });
+            } else {
+                toast.error(result.message || "Verification failed or payment not found.");
+            }
+        } catch (err) {
+            console.error("Verification error:", err);
+            toast.error("An error occurred during verification.");
+        } finally {
+            setVerifyingId(null);
+        }
+    };
 
     const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
@@ -212,6 +241,26 @@ const Orders = () => {
                                         <button className="w-full mt-8 py-3 rounded-xl bg-surface-2 text-text-muted hover:text-text-primary hover:bg-glass border border-glass-border transition-all text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
                                             Detail Log <ChevronRight size={14} />
                                         </button>
+
+                                        {(order.status === 'pending' || order.status === 'timeout' || order.status === 'failed') && (
+                                            <button
+                                                onClick={() => handleVerify(order)}
+                                                disabled={verifyingId === order.id}
+                                                className="w-full mt-2 py-3 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/20 transition-all text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {verifyingId === order.id ? (
+                                                    <>
+                                                        <Loader2 size={14} className="animate-spin" />
+                                                        Verifying...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Zap size={14} />
+                                                        Verify Payment
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
                                     </div>
 
                                     {/* Order Items */}
@@ -232,8 +281,10 @@ const Orders = () => {
                                                     <div className="min-w-0 flex-1">
                                                         <p className="text-sm font-bold text-text-primary truncate">{item.title}</p>
                                                         <div className="flex justify-between items-center mt-0.5">
-                                                            <div className="flex items-center gap-2">
-                                                                <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider">{item.category}</p>
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider shrink-0">{item.category}</p>
+                                                                <span className="w-1 h-1 rounded-full bg-glass-border shrink-0" />
+                                                                <p className="text-[10px] text-text-muted/70 font-bold uppercase tracking-wider truncate">By {item.sellerName || 'Unknown Seller'}</p>
                                                             </div>
                                                             <p className="text-xs font-black text-primary ml-2 shrink-0">MK {Number(item.price).toLocaleString()}</p>
                                                         </div>

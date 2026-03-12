@@ -76,6 +76,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
             price: typeof item.price === 'string' ? parseFloat(item.price.replace(/,/g, '')) : Number(item.price) || 0,
             productId: item.productId,
             sellerId: item.sellerId || null,
+            sellerName: item.sellerName || item.userName || 'Unknown Seller',
             title: item.title,
         }));
         const sellerIds = [...new Set(cart.map(item => item.sellerId).filter(id => id))];
