@@ -4,7 +4,9 @@ import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
-    updateProfile
+    updateProfile,
+    GoogleAuthProvider,
+    signInWithPopup
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, onSnapshot as onSnapshotDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -112,6 +114,47 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const loginWithGoogle = async () => {
+        try {
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            // Check if user exists in Firestore
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userDocRef);
+
+            if (!userDoc.exists()) {
+                // Create Firestore Document for new Google user
+                await setDoc(userDocRef, {
+                    uid: user.uid,
+                    name: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    role: 'user',
+                    createdAt: serverTimestamp(),
+                    lastLogin: serverTimestamp(),
+                    avatar: (user.displayName || user.email).slice(0, 2).toUpperCase(),
+                    bio: ''
+                });
+            } else {
+                // Update last login
+                await setDoc(userDocRef, {
+                    lastLogin: serverTimestamp()
+                }, { merge: true });
+            }
+
+            toast.success('Access Granted. Profile synchronized.', {
+                style: { background: '#111', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' }
+            });
+        } catch (error) {
+            console.error("Google Auth Error:", error);
+            if (error.code !== 'auth/popup-closed-by-user') {
+                toast.error('Google authentication failed.');
+            }
+            throw error;
+        }
+    };
+
     const logout = async () => {
         try {
             await signOut(auth);
@@ -136,6 +179,7 @@ export const AuthProvider = ({ children }) => {
             loading,
             loginWithEmail,
             signupWithEmail,
+            loginWithGoogle,
             logout,
             isAuthModalOpen,
             openAuthModal,

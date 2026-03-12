@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, Github, Chrome, ArrowRight, Loader2, Rocket, CheckCircle2, ShieldCheck, Fingerprint } from 'lucide-react';
+import { X, Mail, Lock, User, Chrome, ArrowRight, Loader2, Rocket, CheckCircle2, ShieldCheck, Fingerprint } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 
@@ -44,7 +44,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     const [isSuccess, setIsSuccess] = useState(false);
     const [shake, setShake] = useState(false);
 
-    const { loginWithEmail, signupWithEmail } = useAuth();
+    const { loginWithEmail, signupWithEmail, loginWithGoogle } = useAuth();
 
     // Reset success state on open
     useEffect(() => {
@@ -67,6 +67,26 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     const triggerShake = () => {
         setShake(true);
         setTimeout(() => setShake(false), 500);
+    };
+
+    const handleSocialLogin = async (provider) => {
+        setIsSubmitting(true);
+        try {
+            if (provider === 'google') {
+                await loginWithGoogle();
+                setIsSuccess(true);
+                setTimeout(() => {
+                    onClose();
+                }, 1800);
+            }
+        } catch (error) {
+            console.error(error);
+            if (error.code !== 'auth/popup-closed-by-user') {
+                toast.error(error.message || `Failed to sign in with ${provider}.`);
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -190,18 +210,20 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                                     </div>
 
                                     <StaggeredChildren>
-                                        {/* Social Integration */}
                                         <FadeInItem>
-                                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                                <button className="relative group overflow-hidden flex items-center justify-center gap-3 py-4 glass border-glass-border rounded-2xl transition-all active:scale-95">
-                                                    <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    <Chrome size={18} className="text-text-primary group-hover:text-blue-400 transition-colors" />
-                                                    <span className="text-xs font-black uppercase tracking-widest text-text-primary">Google</span>
-                                                </button>
-                                                <button className="relative group overflow-hidden flex items-center justify-center gap-3 py-4 glass border-glass-border rounded-2xl transition-all active:scale-95">
-                                                    <div className="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    <Github size={18} className="text-text-primary group-hover:text-purple-400 transition-colors" />
-                                                    <span className="text-xs font-black uppercase tracking-widest text-text-primary">Github</span>
+                                            <div className="mb-6">
+                                                <button 
+                                                    onClick={() => handleSocialLogin('google')}
+                                                    disabled={isSubmitting}
+                                                    className="w-full relative group overflow-hidden flex items-center justify-center gap-4 py-4.5 glass border-glass-border rounded-2xl transition-all active:scale-[0.98] disabled:opacity-50"
+                                                >
+                                                    <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0">
+                                                        <Chrome size={20} className="text-[#4285F4]" />
+                                                    </div>
+                                                    <span className="text-sm font-black uppercase tracking-[0.15em] text-text-primary">
+                                                        {isSubmitting ? 'Connecting...' : 'Continue with Google'}
+                                                    </span>
                                                 </button>
                                             </div>
                                         </FadeInItem>
