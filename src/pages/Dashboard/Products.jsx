@@ -209,6 +209,45 @@ const Products = () => {
     const [productToEdit, setProductToEdit] = useState(null);
     const [productToDecline, setProductToDecline] = useState(null);
 
+    // File Upload States
+    const [deckFile, setDeckFile] = useState(null);
+    const [uploadStatus, setUploadStatus] = useState('');
+    const [coverProgress, setCoverProgress] = useState(0);
+    const [deckProgress, setDeckProgress] = useState(0);
+
+    const uploadFileWithProgress = (file, url, onProgress) => {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('file', file);
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded * 100) / e.total);
+                    onProgress(percent);
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.error) reject(new Error(response.error));
+                        else resolve(response);
+                    } catch (e) {
+                        reject(new Error('Invalid server response'));
+                    }
+                } else {
+                    reject(new Error(`Upload failed with status ${xhr.status}`));
+                }
+            });
+
+            xhr.addEventListener('error', () => reject(new Error('Network error')));
+            xhr.open('POST', url);
+            xhr.send(formData);
+        });
+    };
+
     useEffect(() => {
         const isAdmin = user.role === 'admin';
         const q = isAdmin
@@ -313,27 +352,38 @@ const Products = () => {
         if (!user || !productToEdit) return;
 
         setIsSubmitting(true);
+        setCoverProgress(0);
+        setDeckProgress(0);
 
         try {
             const formData = new FormData(e.target);
             let imageUrl = productToEdit.imageUrl;
+            let fileUrl = productToEdit.fileUrl || '';
 
+            // 1. Upload Cover Image (Optional for update)
             if (selectedFile) {
-                const uploadData = new FormData();
-                uploadData.append('file', selectedFile);
+                setUploadStatus('Updating cover image...');
+                const coverResult = await uploadFileWithProgress(
+                    selectedFile,
+                    'https://unimarket-mw.com/kwachadigital/api/upload.php',
+                    (p) => setCoverProgress(p)
+                );
+                imageUrl = coverResult.url;
+            } else {
+                setCoverProgress(100);
+            }
 
-                const response = await fetch('https://unimarket-mw.com/kwachadigital/api/upload.php', {
-                    method: 'POST',
-                    body: uploadData,
-                });
-
-                const result = await response.json();
-
-                if (result.error) {
-                    throw new Error(result.error);
-                }
-
-                imageUrl = result.url;
+            // 2. Upload Source File (Optional for update)
+            if (deckFile) {
+                setUploadStatus('Updating source file...');
+                const deckResult = await uploadFileWithProgress(
+                    deckFile,
+                    'https://unimarket-mw.com/kwachadigital/api/upload_deck.php',
+                    (p) => setDeckProgress(p)
+                );
+                fileUrl = deckResult.url;
+            } else {
+                setDeckProgress(100);
             }
 
             const updatedData = {
@@ -344,6 +394,7 @@ const Products = () => {
                 originalPrice: parseFloat(formData.get('originalPrice')) || 0,
                 externalLink: formData.get('externalLink') || '',
                 imageUrl,
+                fileUrl,
                 updatedAt: serverTimestamp()
             };
 
@@ -353,11 +404,14 @@ const Products = () => {
             setProductToEdit(null);
             setPreviewImage(null);
             setSelectedFile(null);
+            setDeckFile(null);
             toast.success('Asset updated successfully');
         } catch (error) {
             console.error("Error updating product:", error.message || error);
             setIsSubmitting(false);
             toast.error(error.message || 'Failed to update asset');
+        } finally {
+            setUploadStatus('');
         }
     };
 
@@ -365,31 +419,44 @@ const Products = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!user) return;
+        
+        if (!deckFile) {
+            toast.error('Please upload the product source file');
+            return;
+        }
 
         setIsSubmitting(true);
+        setCoverProgress(0);
+        setDeckProgress(0);
 
         try {
             const formData = new FormData(e.target);
             let imageUrl = '';
+            let fileUrl = '';
 
+            // 1. Upload Cover Image (Optional)
             if (selectedFile) {
-                const uploadData = new FormData();
-                uploadData.append('file', selectedFile);
-
-                const response = await fetch('https://unimarket-mw.com/kwachadigital/api/upload.php', {
-                    method: 'POST',
-                    body: uploadData,
-                });
-
-                const result = await response.json();
-
-                if (result.error) {
-                    throw new Error(result.error);
-                }
-
-                imageUrl = result.url;
+                setUploadStatus('Uploading cover image...');
+                const coverResult = await uploadFileWithProgress(
+                    selectedFile,
+                    'https://unimarket-mw.com/kwachadigital/api/upload.php',
+                    (p) => setCoverProgress(p)
+                );
+                imageUrl = coverResult.url;
+            } else {
+                setCoverProgress(100);
             }
 
+            // 2. Upload Source File (Mandatory)
+            setUploadStatus('Uploading source file...');
+            const deckResult = await uploadFileWithProgress(
+                deckFile,
+                'https://unimarket-mw.com/kwachadigital/api/upload_deck.php',
+                (p) => setDeckProgress(p)
+            );
+            fileUrl = deckResult.url;
+
+            setUploadStatus('Finalizing product...');
             const productData = {
                 title: formData.get('title'),
                 category: formData.get('category'),
@@ -401,9 +468,11 @@ const Products = () => {
                 userId: user.uid,
                 userName: user.name,
                 imageUrl,
+                fileUrl,
+                fileType: deckFile.name.split('.').pop().toUpperCase(),
+                fileName: deckFile.name,
                 createdAt: serverTimestamp()
             };
-
 
             await addDoc(collection(db, 'products'), productData);
 
@@ -411,13 +480,14 @@ const Products = () => {
             setShowUpload(false);
             setPreviewImage(null);
             setSelectedFile(null);
-            toast.success('Product uploaded for review.', {
-                style: { background: '#111', color: '#fff', border: '1px solid rgba(245,158,11,0.2)' }
-            });
+            setDeckFile(null);
+            toast.success('Product uploaded for review.');
         } catch (error) {
             console.error("Error uploading product:", error.message || error);
             setIsSubmitting(false);
             toast.error(error.message || 'Failed to upload asset');
+        } finally {
+            setUploadStatus('');
         }
     };
 
@@ -532,7 +602,7 @@ const Products = () => {
                                 <div className="flex items-center justify-between relative z-10">
                                     <div>
                                         <h2 className="text-3xl font-black text-text-primary tracking-tighter italic uppercase">
-                                            Deploy <span className="text-primary">Asset</span>
+                                            Upload <span className="text-primary">Product</span>
                                         </h2>
                                     </div>
                                     <button
@@ -550,7 +620,7 @@ const Products = () => {
                                 {/* Main Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-3">
-                                        <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary ml-1">Asset Identity</label>
+                                        <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary ml-1">Product Name</label>
                                         <input
                                             required
                                             name="title"
@@ -559,7 +629,7 @@ const Products = () => {
                                         />
                                     </div>
                                     <div className="space-y-3">
-                                        <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary ml-1">Classification</label>
+                                        <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary ml-1">Category</label>
                                         <div className="relative">
                                             <select required name="category" className="w-full px-6 py-4 bg-surface-2/50 border border-white/5 rounded-2xl focus:outline-none focus:border-primary/50 transition-all text-text-primary font-bold appearance-none cursor-pointer">
                                                 {Categories.map(cat => <option key={cat} value={cat} className="bg-surface-1">{cat}</option>)}
@@ -571,7 +641,7 @@ const Products = () => {
 
                                 {/* Description */}
                                 <div className="space-y-3">
-                                    <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary ml-1">Asset Description</label>
+                                    <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary ml-1">Product Description</label>
                                     <textarea
                                         required
                                         name="description"
@@ -601,7 +671,7 @@ const Products = () => {
                                         </div>
                                     </div>
                                     <div className="space-y-3">
-                                        <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary ml-1">Link (optional)</label>
+                                        <label className="text-[10px] uppercase tracking-[0.2em] font-black text-primary ml-1">Website Link (optional)</label>
                                         <div className="relative">
                                             <div className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted/50">
                                                 <Link2 size={18} />
@@ -636,6 +706,35 @@ const Products = () => {
                                                     </div>
                                                 </div>
                                             )}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] uppercase tracking-[0.2em] font-black text-secondary ml-1">Product Source File (Mandatory)</label>
+                                        <div className="relative h-[160px] group/upload">
+                                            <input type="file" required onChange={(e) => setDeckFile(e.target.files[0])} className="absolute inset-0 w-full opacity-0 cursor-pointer z-20" />
+                                            <div className={`absolute inset-0 flex flex-col items-center justify-center border-2 border-dashed rounded-[32px] transition-all duration-500 ${deckFile ? 'border-secondary bg-secondary/10 shadow-[inset_0_0_40px_rgba(var(--secondary-rgb),0.1)]' : 'border-white/10 bg-white/5 group-hover/upload:border-secondary/40 group-hover/upload:bg-secondary/5'}`}>
+                                                {deckFile ? (
+                                                    <div className="relative flex flex-col items-center">
+                                                        <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-white shadow-2xl mb-3">
+                                                            <Package size={24} />
+                                                        </div>
+                                                        <span className="text-[10px] font-black text-secondary uppercase tracking-wider mb-1 px-3 py-1 bg-secondary/20 rounded-lg max-w-[200px] truncate">{deckFile.name}</span>
+                                                        <span className="text-[9px] font-bold text-text-muted uppercase tracking-widest">{(deckFile.size / (1024 * 1024)).toFixed(2)} MB • {deckFile.name.split('.').pop().toUpperCase()}</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col items-center gap-4">
+                                                        <div className="w-14 h-14 rounded-3xl bg-surface-3 flex items-center justify-center text-text-muted group-hover/upload:scale-110 group-hover/upload:text-secondary transition-all duration-500 shadow-xl">
+                                                            <Upload size={24} />
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <p className="text-[10px] font-black text-text-primary uppercase tracking-[0.2em]">Select Deployment Payload</p>
+                                                            <p className="text-[9px] text-text-muted font-bold mt-1 opacity-50">SOURCE CODE, E-BOOKS, ASSETS (MAX 50MB)</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -794,6 +893,29 @@ const Products = () => {
                                                 <div className="flex flex-col items-center gap-4">
                                                     <Upload size={24} className="text-text-muted transition-transform group-hover/upload:-translate-y-1" />
                                                     <p className="text-[10px] font-black text-text-primary uppercase tracking-[0.2em]">Swap Core File</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-[10px] uppercase tracking-[0.2em] font-black text-secondary ml-1">Update Source File (optional)</label>
+                                    <div className="relative h-[160px] group/upload">
+                                        <input type="file" onChange={(e) => setDeckFile(e.target.files[0])} className="absolute inset-0 w-full opacity-0 cursor-pointer z-20" />
+                                        <div className={`absolute inset-0 flex flex-col items-center justify-center border-2 border-dashed rounded-[32px] transition-all duration-500 ${deckFile || productToEdit.fileUrl ? 'border-secondary bg-secondary/10' : 'border-white/10 bg-white/5 group-hover/upload:border-secondary/40'}`}>
+                                            {(deckFile || productToEdit.fileUrl) ? (
+                                                <div className="relative flex flex-col items-center">
+                                                    <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-white mb-2 shadow-xl">
+                                                        <Package size={24} />
+                                                    </div>
+                                                    <span className="text-[10px] font-black text-secondary uppercase tracking-wider mb-1 px-3 py-1 bg-secondary/20 rounded-lg max-w-[200px] truncate">{deckFile ? deckFile.name : (productToEdit.fileName || 'Existing File')}</span>
+                                                    <span className="text-[9px] font-bold text-text-muted uppercase tracking-[0.3em]">Payload Linked</span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center gap-4">
+                                                    <Upload size={24} className="text-text-muted transition-transform group-hover/upload:-translate-y-1" />
+                                                    <p className="text-[10px] font-black text-text-primary uppercase tracking-[0.2em]">Swap Payload File</p>
                                                 </div>
                                             )}
                                         </div>
