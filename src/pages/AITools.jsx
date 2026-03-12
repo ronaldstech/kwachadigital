@@ -11,7 +11,6 @@ import {
     BrainCircuit,
     Layers,
     History,
-    CreditCard,
     ArrowUpRight
 } from 'lucide-react';
 
@@ -67,23 +66,16 @@ const ToolCard = ({ tool, index }) => {
                 </div>
 
                 {/* Main Actions Layer */}
-                <div className="grid grid-cols-2 gap-4 mt-auto relative z-10">
+                <div className="mt-auto relative z-10">
                     <a
                         href={tool.externalUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group/btn flex items-center justify-center gap-3 py-5 bg-primary text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all duration-300"
+                        className="group/btn flex items-center justify-center gap-3 py-6 bg-primary text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300"
                     >
-                        <span>Launch</span>
-                        <ArrowUpRight size={16} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+                        <span>Launch Project</span>
+                        <ArrowUpRight size={18} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
                     </a>
-
-                    <button
-                        className="group/price flex items-center justify-center gap-3 py-5 bg-white/5 border border-white/10 text-text-primary rounded-3xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white/10 transition-all duration-300"
-                    >
-                        <CreditCard size={16} className="text-primary group-hover/price:rotate-12 transition-transform" />
-                        <span>Pricing</span>
-                    </button>
                 </div>
 
                 {/* Visual Polish: Scanning line */}

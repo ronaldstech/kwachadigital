@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle, Loader2, ShieldCheck, CreditCard, Zap, ArrowRight, Package, Lock } from 'lucide-react';
+import { X, CheckCircle, Loader2, ShieldCheck, CreditCard, Zap, ArrowRight, Package, Lock, Smartphone } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, doc, setDoc, increment, updateDoc } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
+import { detectOperator, processPayment } from '../services/paychangu';
 
 const PAYMENT_METHODS = [
-    { id: 'airtel', name: 'Airtel Money', description: 'Enter your Airtel number to pay', logo: '/airtel.svg', accent: '#ef4444' },
-    { id: 'tnm', name: 'TNM Mpamba', description: 'Enter your TNM number to pay', logo: '/tnm.svg', accent: '#10b981' },
-    { id: 'bank', name: 'Debit / Credit Card', description: 'Pay securely with your card', logo: null, icon: CreditCard, accent: '#3b82f6' },
+    { id: 'mobile_money', name: 'Mobile Money', description: 'Airtel Money or TNM Mpamba', icon: Smartphone, accent: '#10b981' },
+    { id: 'bank', name: 'Debit / Credit Card', description: 'Pay securely with your card', icon: CreditCard, accent: '#3b82f6' },
 ];
 
 const CheckoutModal = ({ isOpen, onClose }) => {
@@ -30,7 +30,9 @@ const CheckoutModal = ({ isOpen, onClose }) => {
     const [cardCvv, setCardCvv] = useState('');
 
     const [paying, setPaying] = useState(false);
+    const [pollingStatus, setPollingStatus] = useState(null); // { attempt, total }
     const [success, setSuccess] = useState(false);
+    const [detectedOp, setDetectedOp] = useState(null);
 
     const total = cart.reduce((sum, item) => {
         const price = typeof item.price === 'string' ? parseFloat(item.price.replace(/,/g, '')) : Number(item.price) || 0;
@@ -50,9 +52,16 @@ const CheckoutModal = ({ isOpen, onClose }) => {
         setStep(2);
     };
 
+    const handlePhoneChange = (val) => {
+        const cleaned = val.replace(/\D/g, '').slice(0, 10);
+        setPhoneNumber(cleaned);
+        const detection = detectOperator(cleaned);
+        setDetectedOp(detection);
+    };
+
     const handlePay = async () => {
-        if ((selectedMethod === 'airtel' || selectedMethod === 'tnm') && phoneNumber.replace(/\D/g, '').length < 9) {
-            toast.error('Please enter a valid phone number.'); return;
+        if (selectedMethod === 'mobile_money') {
+            if (!detectedOp) { toast.error('Please enter a valid Airtel or TNM number.'); return; }
         }
         if (selectedMethod === 'bank') {
             if (cardName.trim().length < 2) { toast.error('Please enter the cardholder name.'); return; }
@@ -61,37 +70,65 @@ const CheckoutModal = ({ isOpen, onClose }) => {
             if (cardCvv.replace(/\D/g, '').length < 3) { toast.error('Please enter a valid CVV.'); return; }
         }
 
+        const items = cart.map(item => ({
+            category: item.category || 'Digital Product',
+            imageUrl: item.imageUrl || null,
+            price: typeof item.price === 'string' ? parseFloat(item.price.replace(/,/g, '')) : Number(item.price) || 0,
+            productId: item.productId,
+            sellerId: item.sellerId || null,
+            title: item.title,
+        }));
+        const sellerIds = [...new Set(cart.map(item => item.sellerId).filter(id => id))];
+
         setPaying(true);
         try {
-            await addDoc(collection(db, 'orders'), {
-                userId: user?.uid || 'guest',
-                userEmail: user?.email || 'guest',
-                userName: user?.name || cardName || 'Guest',
-                items: cart.map(item => ({
-                    productId: item.productId,
-                    sellerId: item.sellerId || null,
-                    sellerName: item.sellerName || item.userName || 'Unknown Vendor',
-                    title: item.title,
-                    price: item.price,
-                    imageUrl: item.imageUrl || null,
-                    fileUrl: item.fileUrl || null,
-                    category: item.category || null,
-                })),
-                sellerIds: [...new Set(cart.map(item => item.sellerId).filter(id => id))],
-                referrerId: referrerId || null,
-                referralCommission: referrerId ? (total * 0.10) : 0,
-                total,
-                paymentMethod: selectedMethod,
+            if (selectedMethod === 'mobile_money') {
+                const names = (user?.name || 'Guest User').split(' ');
+                const res = await processPayment({
+                    phone: phoneNumber,
+                    email: user?.email || 'guest@kwachadigital.com',
+                    firstName: names[0] || 'Guest',
+                    lastName: names[1] || 'User',
+                    operator: detectedOp.operator,
+                    resourceType: 'marketplace',
+                    resourceId: 'cart',
+                    userId: user?.uid || 'guest',
+                    amount: total,
+                    items,      // Pass items for traceability
+                    sellerIds,  // Pass sellerIds for traceability
+                    onStatusUpdate: (status) => setPollingStatus(status)
+                });
+
+                if (res !== 'success') {
+                    throw new Error(res === 'timeout' ? 'Payment timed out. Please check your phone.' : 'Payment failed.');
+                }
+            }
+
+            // Prepare Order Data as requested
+            const referralCommission = referrerId ? (total * 0.10) : 0;
+
+            const orderData = {
+                createdAt: serverTimestamp(),
+                items,
                 paymentDetails: selectedMethod === 'bank'
                     ? { cardName, lastFour: cardNumber.replace(/\s/g, '').slice(-4) }
-                    : { phoneNumber },
-                status: 'pending',
-                createdAt: serverTimestamp(),
-            });
+                    : { phoneNumber, operator: detectedOp?.operator },
+                paymentMethod: selectedMethod,
+                referralCommission,
+                referrerId: referrerId || null,
+                sellerIds,
+                status: 'completed', // Marked as completed upon success
+                total,
+                userEmail: user?.email || 'guest',
+                userId: user?.uid || 'guest',
+                userName: user?.name || cardName || 'Guest',
+            };
 
+            await addDoc(collection(db, 'orders'), orderData);
+
+            // Housekeeping: Clear cart and update sales count
             for (const item of cart) {
                 await removeFromCart(item.productId);
-                // Increment salesCount for each product purchased
                 try {
                     const productRef = doc(db, 'products', item.productId);
                     await updateDoc(productRef, {
@@ -102,32 +139,33 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                 }
             }
 
-            // Attribute 10% commission to referrer if one exists
+            // Affiliate/Referral logic
             if (referrerId) {
-                const commissionAmount = total * 0.10;
                 try {
                     const referrerRef = doc(db, 'users', referrerId);
                     await setDoc(referrerRef, {
-                        points: increment(commissionAmount)
+                        points: increment(referralCommission)
                     }, { merge: true });
                 } catch (commissionErr) {
                     console.error('Failed to attribute commission:', commissionErr);
-                    // We don't want to block the success screen if this part fails
                 }
             }
 
             setSuccess(true);
         } catch (err) {
             console.error('Checkout error:', err);
-            toast.error('Something went wrong. Please try again.');
+            toast.error(err.message || 'Something went wrong. Please try again.');
         } finally {
             setPaying(false);
+            setPollingStatus(null);
         }
     };
 
     const handleClose = () => {
+        if (paying) return; // Prevent closing while payment is in progress
         setSuccess(false); setSelectedMethod(null); setStep(1);
         setPhoneNumber(''); setCardName(''); setCardNumber(''); setCardExpiry(''); setCardCvv('');
+        setDetectedOp(null); setPollingStatus(null);
         onClose();
     };
 
@@ -308,29 +346,36 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                                                     </div>
                                                 )}
 
-                                                {/* ── MOBILE MONEY (Airtel / TNM) ── */}
-                                                {(selectedMethod === 'airtel' || selectedMethod === 'tnm') && (
+                                                {/* ── MOBILE MONEY (Airtel / TNM Auto Detection) ── */}
+                                                {selectedMethod === 'mobile_money' && (
                                                     <div className="mb-6">
                                                         <label className="text-[9px] font-black uppercase tracking-[0.2em] text-text-muted block mb-3">
-                                                            {selectedMethod === 'airtel' ? 'Airtel Money' : 'TNM Mpamba'} Number
+                                                            Mobile Money Number
                                                         </label>
                                                         <div className="relative">
                                                             <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2.5">
-                                                                <img src={selectedMethodData?.logo} alt="" className="w-5 h-5 object-contain" />
+                                                                {detectedOp ? (
+                                                                    <img src={detectedOp.info.logo} alt="" className="w-5 h-5 object-contain" />
+                                                                ) : (
+                                                                    <Smartphone size={18} className="text-text-muted" />
+                                                                )}
                                                                 <span className="text-text-secondary font-black text-sm">+265</span>
                                                                 <div className="w-px h-5 bg-glass-border" />
                                                             </div>
                                                             <input
                                                                 type="tel"
                                                                 value={phoneNumber}
-                                                                onChange={e => setPhoneNumber(e.target.value)}
-                                                                placeholder={selectedMethod === 'airtel' ? '991 234 567' : '881 234 567'}
+                                                                onChange={e => handlePhoneChange(e.target.value)}
+                                                                placeholder="991 234 567"
                                                                 className="w-full glass border border-glass-border focus:border-primary/60 rounded-2xl pl-28 pr-5 py-5 text-text-primary text-sm font-bold bg-transparent outline-none placeholder:text-text-muted/40 transition-colors"
                                                                 maxLength={12}
                                                             />
                                                         </div>
                                                         <p className="text-[10px] text-text-muted mt-2 font-medium leading-relaxed">
-                                                            You will receive a push notification on your {selectedMethod === 'airtel' ? 'Airtel' : 'TNM'} number. Approve it to complete payment.
+                                                            {detectedOp 
+                                                                ? `You will receive a push notification on your ${detectedOp.info.name} number. Approve it to complete payment.`
+                                                                : "Enter your phone number. We'll automatically detect your operator."
+                                                            }
                                                         </p>
                                                     </div>
                                                 )}
@@ -423,7 +468,14 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                                                         background: selectedMethodData ? `linear-gradient(135deg, ${selectedMethodData.accent}, ${selectedMethodData.accent}bb)` : '#10b981',
                                                         boxShadow: selectedMethodData ? `0 15px 40px -10px ${selectedMethodData.accent}50` : undefined,
                                                     }}>
-                                                    {paying ? <><Loader2 size={18} className="animate-spin" /> Processing...</> : <><Zap size={18} /> Pay MK {total.toLocaleString()}</>}
+                                                    {paying ? (
+                                                        <>
+                                                            <Loader2 size={18} className="animate-spin" />
+                                                            {pollingStatus ? `Waiting... (${pollingStatus.attempt}/${pollingStatus.total})` : "Initializing..."}
+                                                        </>
+                                                    ) : (
+                                                        <><Zap size={18} /> Pay MK {total.toLocaleString()}</>
+                                                    )}
                                                 </button>
 
                                                 <div className="flex items-center justify-center gap-2 mt-5">

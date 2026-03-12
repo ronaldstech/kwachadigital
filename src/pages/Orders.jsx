@@ -32,7 +32,7 @@ const Orders = () => {
         }
 
         const q = query(
-            collection(db, 'orders'),
+            collection(db, 'transactions'),
             where('userId', '==', user.uid),
             orderBy('createdAt', 'desc')
         );
@@ -45,7 +45,7 @@ const Orders = () => {
             setOrders(ordersData);
             setLoading(false);
         }, (error) => {
-            console.error("Error fetching orders:", error);
+            console.error("Error fetching transactions:", error);
             setLoading(false);
         });
 
@@ -54,14 +54,19 @@ const Orders = () => {
 
     const filteredOrders = orders.filter(order => {
         if (filter === 'all') return true;
+        if (filter === 'approved') return order.status === 'success' || order.status === 'completed';
+        if (filter === 'cancelled') return order.status === 'failed' || order.status === 'timeout';
         return order.status === filter;
     });
 
     const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
             case 'pending': return 'text-orange-500 bg-orange-500/10 border-orange-500/20';
+            case 'success':
             case 'completed':
             case 'approved': return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+            case 'failed':
+            case 'timeout':
             case 'cancelled': return 'text-red-500 bg-red-500/10 border-red-500/20';
             default: return 'text-text-muted bg-surface-2 border-glass-border';
         }
@@ -70,8 +75,11 @@ const Orders = () => {
     const getStatusIcon = (status) => {
         switch (status?.toLowerCase()) {
             case 'pending': return <Clock size={14} />;
+            case 'success':
             case 'completed':
             case 'approved': return <CheckCircle2 size={14} />;
+            case 'failed':
+            case 'timeout':
             case 'cancelled': return <XCircle size={14} />;
             default: return <Package size={14} />;
         }
@@ -80,7 +88,8 @@ const Orders = () => {
     const getPaymentIcon = (method) => {
         switch (method?.toLowerCase()) {
             case 'airtel':
-            case 'tnm': return <Smartphone size={16} />;
+            case 'tnm':
+            case 'mobile_money': return <Smartphone size={16} />;
             case 'bank': return <DebitCard size={16} />;
             default: return <CreditCard size={16} />;
         }
@@ -91,7 +100,7 @@ const Orders = () => {
             <div className="pt-32 pb-20 px-4 min-h-screen flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                    <p className="text-text-muted font-bold uppercase tracking-widest text-xs">Loading Orders...</p>
+                    <p className="text-text-muted font-bold uppercase tracking-widest text-xs">Syncing Transactions...</p>
                 </div>
             </div>
         );
@@ -108,10 +117,10 @@ const Orders = () => {
                 >
                     <div>
                         <h1 className="text-4xl md:text-5xl font-display font-black text-text-primary tracking-tight mb-3">
-                            My <span className="text-gradient">Orders</span>
+                            Transaction <span className="text-gradient">History</span>
                         </h1>
                         <p className="text-text-muted font-medium max-w-xl">
-                            Track your digital assets, downloads, and purchase history in one place.
+                            Track your marketplace payments, digital assets, and purchase synchronization status.
                         </p>
                     </div>
 
@@ -125,7 +134,7 @@ const Orders = () => {
                                     : 'glass text-text-muted border border-glass-border hover:border-primary/40'
                                     }`}
                             >
-                                {f}
+                                {f === 'approved' ? 'Success' : f === 'cancelled' ? 'Failed' : f}
                             </button>
                         ))}
                     </div>
@@ -141,11 +150,11 @@ const Orders = () => {
                     <div className="w-24 h-24 rounded-full bg-surface-2 border border-glass-border flex items-center justify-center mx-auto mb-8">
                         <ShoppingBag size={40} className="text-text-muted opacity-50" />
                     </div>
-                    <h2 className="text-2xl font-display font-black text-text-primary mb-4 tracking-tight">No Orders Found</h2>
+                    <h2 className="text-2xl font-display font-black text-text-primary mb-4 tracking-tight">No Transactions Found</h2>
                     <p className="text-text-secondary font-medium mb-12 max-w-md mx-auto leading-relaxed">
                         {filter === 'all'
-                            ? "You haven't placed any orders yet. Explore our marketplace to find premium digital assets."
-                            : `You don't have any ${filter} orders at the moment.`}
+                            ? "You haven't initiated any purchases yet. Explore our marketplace to find premium digital assets."
+                            : `You don't have any ${filter} transactions at the moment.`}
                     </p>
                     <Link
                         to="/marketplace"
@@ -184,24 +193,24 @@ const Orders = () => {
 
                                         <div className="space-y-4">
                                             <div>
-                                                <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] mb-1">Order ID</p>
-                                                <p className="text-sm font-bold text-text-primary truncate">#{order.id.slice(0, 8).toUpperCase()}</p>
+                                                <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] mb-1">Transaction ID</p>
+                                                <p className="text-sm font-bold text-text-primary truncate">#{order.chargeId?.slice(-8).toUpperCase() || order.id.slice(0, 8).toUpperCase()}</p>
                                             </div>
                                             <div>
                                                 <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] mb-1">Total Amount</p>
-                                                <p className="text-xl font-display font-black text-primary">MK {Number(order.total).toLocaleString()}</p>
+                                                <p className="text-xl font-display font-black text-primary">MK {Number(order.amount || order.total).toLocaleString()}</p>
                                             </div>
                                             <div>
                                                 <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] mb-1">Payment</p>
                                                 <div className="flex items-center gap-2 text-text-secondary">
-                                                    {getPaymentIcon(order.paymentMethod)}
-                                                    <span className="text-xs font-bold capitalize">{order.paymentMethod}</span>
+                                                    {getPaymentIcon(order.operator || order.paymentMethod)}
+                                                    <span className="text-xs font-bold capitalize">{order.operator || order.paymentMethod}</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <button className="w-full mt-8 py-3 rounded-xl bg-surface-2 text-text-muted hover:text-text-primary hover:bg-glass border border-glass-border transition-all text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
-                                            Invoice <ChevronRight size={14} />
+                                            Detail Log <ChevronRight size={14} />
                                         </button>
                                     </div>
 
@@ -225,25 +234,16 @@ const Orders = () => {
                                                         <div className="flex justify-between items-center mt-0.5">
                                                             <div className="flex items-center gap-2">
                                                                 <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider">{item.category}</p>
-                                                                {item.userName && (
-                                                                    <>
-                                                                        <span className="w-1 h-1 rounded-full bg-glass-border" />
-                                                                        <p className="text-[10px] text-text-muted/70 font-bold uppercase tracking-wider line-clamp-1 flex-1">By {item.userName}</p>
-                                                                    </>
-                                                                )}
                                                             </div>
                                                             <p className="text-xs font-black text-primary ml-2 shrink-0">MK {Number(item.price).toLocaleString()}</p>
                                                         </div>
-                                                        {order.status === 'approved' && item.fileUrl && (
+                                                        {(order.status === 'success' || order.status === 'completed') && item.fileUrl && (
                                                             <div className="mt-3">
                                                                 <a
                                                                     href={item.fileUrl}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
                                                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 glass rounded-lg text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 hover:border-primary/30 transition-all shadow-sm border border-glass-border"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                    }}
                                                                 >
                                                                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                                                                     Download
