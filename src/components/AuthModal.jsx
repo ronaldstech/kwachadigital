@@ -1,38 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, Chrome, ArrowRight, Loader2, Rocket, CheckCircle2, ShieldCheck, Fingerprint } from 'lucide-react';
+import { X, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { toast } from 'react-hot-toast';
 
-const StaggeredChildren = ({ children, delay = 0 }) => (
-    <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={{
-            hidden: { opacity: 0 },
-            visible: {
-                opacity: 1,
-                transition: {
-                    staggerChildren: 0.1,
-                    delayChildren: delay
-                }
-            }
-        }}
-    >
-        {children}
-    </motion.div>
-);
-
-const FadeInItem = ({ children }) => (
-    <motion.div
-        variants={{
-            hidden: { opacity: 0, y: 15, scale: 0.95 },
-            visible: { opacity: 1, y: 0, scale: 1 }
-        }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-    >
-        {children}
-    </motion.div>
+const GoogleIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
+        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+        <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+        <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+        <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+    </svg>
 );
 
 const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
@@ -40,49 +19,39 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [shake, setShake] = useState(false);
 
     const { loginWithEmail, signupWithEmail, loginWithGoogle } = useAuth();
+    const { isDark } = useTheme();
 
-    // Reset success state on open
     useEffect(() => {
         if (isOpen) {
             setIsSuccess(false);
             setMode(initialMode);
+            setEmail('');
+            setPassword('');
+            setName('');
         }
     }, [isOpen, initialMode]);
-
-    const getPasswordStrength = () => {
-        if (!password) return 0;
-        let strength = 0;
-        if (password.length > 6) strength += 1;
-        if (/[A-Z]/.test(password)) strength += 1;
-        if (/[0-9]/.test(password)) strength += 1;
-        if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-        return strength;
-    };
 
     const triggerShake = () => {
         setShake(true);
         setTimeout(() => setShake(false), 500);
     };
 
-    const handleSocialLogin = async (provider) => {
+    const handleSocialLogin = async () => {
         setIsSubmitting(true);
         try {
-            if (provider === 'google') {
-                await loginWithGoogle();
-                setIsSuccess(true);
-                setTimeout(() => {
-                    onClose();
-                }, 1800);
-            }
+            await loginWithGoogle();
+            setIsSuccess(true);
+            setTimeout(onClose, 2000);
         } catch (error) {
             console.error(error);
             if (error.code !== 'auth/popup-closed-by-user') {
-                toast.error(error.message || `Failed to sign in with ${provider}.`);
+                toast.error(error.message || "Failed to sign in with Google.");
             }
         } finally {
             setIsSubmitting(false);
@@ -96,23 +65,15 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
             if (mode === 'login') {
                 await loginWithEmail(email, password);
             } else {
-                if (password.length < 6) {
-                    throw new Error("Password must be at least 6 characters.");
-                }
+                if (password.length < 6) throw new Error("Password must be at least 6 characters.");
                 await signupWithEmail(email, password, name);
             }
-
-            // Success Flow
             setIsSuccess(true);
-            setTimeout(() => {
-                onClose();
-            }, 1800);
-
+            setTimeout(onClose, 2000);
         } catch (error) {
-            console.error(error);
             triggerShake();
-            toast.error(error.message || `Failed to ${mode}. Please retry.`, {
-                style: { background: '#111', color: '#fff', border: '1px solid rgba(255,50,50,0.2)' }
+            toast.error(error.message || `Failed to ${mode}.`, {
+                style: { background: isDark ? '#18181b' : '#fff', color: isDark ? '#fff' : '#18181b', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` }
             });
         } finally {
             setIsSubmitting(false);
@@ -130,224 +91,166 @@ const AuthModal = ({ isOpen, onClose, initialMode = 'login' }) => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
-                    className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 />
 
                 {/* Modal Container */}
                 <motion.div
-                    initial={{ scale: 0.9, opacity: 0, y: 40 }}
-                    animate={{
-                        scale: 1,
-                        opacity: 1,
+                    initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                    animate={{ 
+                        scale: 1, 
+                        opacity: 1, 
                         y: 0,
-                        x: shake ? [-5, 5, -5, 5, 0] : 0
+                        x: shake ? [-4, 4, -4, 4, 0] : 0
                     }}
-                    exit={{ scale: 0.9, opacity: 0, y: 40 }}
-                    transition={{
-                        type: 'spring',
-                        damping: 20,
-                        stiffness: 150,
-                        x: { duration: 0.4 }
-                    }}
-                    className="relative w-full max-w-[460px] glass-premium rounded-[48px] border-glass-border overflow-hidden shadow-[0_32px_80px_-20px_rgba(0,0,0,0.5)] bg-bg-main/70 backdrop-blur-[40px]"
+                    exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    className={`relative w-full max-w-md ${isDark ? 'bg-zinc-900 border-white/10' : 'bg-white border-zinc-200'} border rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl`}
                 >
-                    {/* Glass Shimmer Effect */}
-                    <motion.div
-                        initial={{ x: '-100%' }}
-                        animate={{ x: '200%' }}
-                        transition={{ repeat: Infinity, duration: 3, ease: 'linear', repeatDelay: 5 }}
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-20deg] pointer-events-none -z-10"
-                    />
-
-                    {/* Background Decorative Elements */}
-                    <div className="absolute top-[-20%] right-[-20%] w-64 h-64 bg-primary/20 rounded-full blur-[100px] -z-10 animate-pulse" />
-                    <div className="absolute bottom-[-20%] left-[-20%] w-64 h-64 bg-secondary/15 rounded-full blur-[100px] -z-10" />
-
-                    <div className="relative p-8 md:p-12">
-                        {/* Status Check Switch */}
+                    <div className="p-8 md:p-10">
                         <AnimatePresence mode="wait">
                             {isSuccess ? (
                                 <motion.div
-                                    key="success-screen"
-                                    initial={{ opacity: 0, y: 20 }}
+                                    key="success"
+                                    initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="flex flex-col items-center justify-center py-12"
+                                    className="flex flex-col items-center justify-center py-10 text-center"
                                 >
-                                    <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1, rotate: [0, 15, 0] }}
-                                        transition={{ type: 'spring', damping: 12, stiffness: 200 }}
-                                        className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mb-8 border border-primary/30"
-                                    >
-                                        <CheckCircle2 size={48} className="text-primary" />
-                                    </motion.div>
-                                    <h2 className="text-3xl font-display font-black text-text-primary mb-3">Identity Verified</h2>
-                                    <p className="text-text-muted font-bold text-center max-w-[200px]">
-                                        Mapping neural connection... Welcome to the Arcade.
-                                    </p>
+                                    <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-500/20">
+                                        <CheckCircle2 size={40} className="text-emerald-500" />
+                                    </div>
+                                    <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'} mb-2`}>Success!</h2>
+                                    <p className={isDark ? 'text-zinc-400' : 'text-zinc-500'}>Welcome back. You're being redirected...</p>
                                 </motion.div>
                             ) : (
-                                <motion.div key="form-container">
+                                <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                                     {/* Header */}
-                                    <div className="flex items-center justify-between mb-5">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-[0_10px_20px_-5px_rgba(16,185,129,0.4)] relative group">
-                                                <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                <Rocket size={22} className="text-white transform group-hover:rotate-12 transition-transform" />
-                                            </div>
-                                            <div>
-                                                <h2 className="text-2xl font-display font-black text-text-primary tracking-tight leading-none mb-1">
-                                                    {mode === 'login' ? 'Sign In' : 'Sign Up'}
-                                                </h2>
-                                            </div>
+                                    <div className="flex justify-between items-start mb-8">
+                                        <div>
+                                            <h2 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'} tracking-tight`}>
+                                                {mode === 'login' ? 'Welcome back' : 'Create account'}
+                                            </h2>
+                                            <p className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} mt-1`}>
+                                                {mode === 'login' ? 'Please enter your details' : 'Join Kwacha Digital today'}
+                                            </p>
                                         </div>
                                         <button
                                             onClick={onClose}
-                                            className="w-11 h-11 rounded-2xl glass border-glass-border flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-white/5 transition-all group active:scale-90"
+                                            className={`p-2 ${isDark ? 'text-zinc-500 hover:text-white' : 'text-zinc-400 hover:text-zinc-900'} transition-colors`}
                                         >
-                                            <X size={22} className="group-hover:rotate-90 transition-transform duration-300" />
+                                            <X size={20} />
                                         </button>
                                     </div>
 
-                                    <StaggeredChildren>
-                                        <FadeInItem>
-                                            <div className="mb-6">
-                                                <button 
-                                                    onClick={() => handleSocialLogin('google')}
-                                                    disabled={isSubmitting}
-                                                    className="w-full relative group overflow-hidden flex items-center justify-center gap-4 py-4.5 glass border-glass-border rounded-2xl transition-all active:scale-[0.98] disabled:opacity-50"
+                                    {/* Email Form */}
+                                    <form onSubmit={handleSubmit} className="space-y-4">
+                                        {mode === 'signup' && (
+                                            <div className="space-y-1.5">
+                                                <label className={`text-sm font-medium ${isDark ? 'text-zinc-300' : 'text-zinc-700'} ml-1`}>Full Name</label>
+                                                <div className="relative">
+                                                    <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        placeholder="John Doe"
+                                                        value={name}
+                                                        onChange={(e) => setName(e.target.value)}
+                                                        className={`w-full pl-11 pr-4 py-3 ${isDark ? 'bg-zinc-800/50 border-white/5 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'} border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all`}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="space-y-1.5">
+                                            <label className={`text-sm font-medium ${isDark ? 'text-zinc-300' : 'text-zinc-700'} ml-1`}>Email Address</label>
+                                            <div className="relative">
+                                                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                                                <input
+                                                    type="email"
+                                                    required
+                                                    placeholder="name@company.com"
+                                                    value={email}
+                                                    onChange={(e) => setEmail(e.target.value)}
+                                                    className={`w-full pl-11 pr-4 py-3 ${isDark ? 'bg-zinc-800/50 border-white/5 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'} border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all`}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <div className="flex justify-between items-center ml-1">
+                                                <label className={`text-sm font-medium ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>Password</label>
+                                                {mode === 'login' && (
+                                                    <button type="button" className="text-xs font-semibold text-primary hover:text-primary-dark transition-colors">
+                                                        Forgot password?
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className="relative">
+                                                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                                                <input
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    required
+                                                    placeholder="••••••••"
+                                                    value={password}
+                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    className={`w-full pl-11 pr-12 py-3 ${isDark ? 'bg-zinc-800/50 border-white/5 text-white' : 'bg-zinc-50 border-zinc-200 text-zinc-900'} border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all`}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className={`absolute right-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-zinc-500 hover:text-white' : 'text-zinc-400 hover:text-zinc-900'} transition-colors`}
                                                 >
-                                                    <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shrink-0">
-                                                        <Chrome size={20} className="text-[#4285F4]" />
-                                                    </div>
-                                                    <span className="text-sm font-black uppercase tracking-[0.15em] text-text-primary">
-                                                        {isSubmitting ? 'Connecting...' : 'Continue with Google'}
-                                                    </span>
+                                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                                 </button>
                                             </div>
-                                        </FadeInItem>
+                                        </div>
 
-                                        <FadeInItem>
-                                            <div className="relative mb-4">
-                                                <div className="absolute inset-0 flex items-center">
-                                                    <div className="w-full border-t border-glass-border"></div>
-                                                </div>
-                                                <div className="relative flex justify-center text-[9px] uppercase tracking-[0.3em] font-black">
-                                                    <span className="px-4 text-text-muted">or Continue with Email</span>
-                                                </div>
-                                            </div>
-                                        </FadeInItem>
+                                        <button
+                                            type="submit"
+                                            disabled={isSubmitting}
+                                            className="w-full py-3.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-2xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 active:scale-[0.98] mt-2"
+                                        >
+                                            {isSubmitting ? (
+                                                <Loader2 size={20} className="animate-spin" />
+                                            ) : (
+                                                <>
+                                                    {mode === 'login' ? 'Sign in' : 'Create account'}
+                                                    <ArrowRight size={18} />
+                                                </>
+                                            )}
+                                        </button>
+                                    </form>
 
-                                        <FadeInItem>
-                                            <form onSubmit={handleSubmit} className="space-y-2">
-                                                {mode === 'signup' && (
-                                                    <div className="relative group">
-                                                        <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-colors pointer-events-none">
-                                                            <User size={18} />
-                                                        </div>
-                                                        <input
-                                                            type="text"
-                                                            required
-                                                            placeholder="Full Name"
-                                                            value={name}
-                                                            onChange={(e) => setName(e.target.value)}
-                                                            className="w-full pl-14 pr-5 py-4.5 glass border-glass-border rounded-[20px] text-sm font-bold text-text-primary focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all bg-white/5 placeholder:text-text-muted/50"
-                                                        />
-                                                    </div>
-                                                )}
+                                    {/* Divider */}
+                                    <div className="relative my-8">
+                                        <div className="absolute inset-0 flex items-center">
+                                            <div className={`w-full border-t ${isDark ? 'border-white/5' : 'border-zinc-200'}`}></div>
+                                        </div>
+                                        <div className="relative flex justify-center text-xs">
+                                            <span className={`px-4 ${isDark ? 'text-zinc-500' : 'text-zinc-400'} bg-transparent`}>or continue with</span>
+                                        </div>
+                                    </div>
 
-                                                <div className="relative group">
-                                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-colors pointer-events-none">
-                                                        <Mail size={18} />
-                                                    </div>
-                                                    <input
-                                                        type="email"
-                                                        required
-                                                        placeholder="Email"
-                                                        value={email}
-                                                        onChange={(e) => setEmail(e.target.value)}
-                                                        className="w-full pl-14 pr-5 py-4.5 glass border-glass-border rounded-[20px] text-sm font-bold text-text-primary focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all bg-white/5 placeholder:text-text-muted/50"
-                                                    />
-                                                </div>
+                                    {/* Google Login Section */}
+                                    <button
+                                        onClick={handleSocialLogin}
+                                        disabled={isSubmitting}
+                                        className={`w-full flex items-center justify-center gap-3 py-3 ${isDark ? 'bg-white hover:bg-zinc-100 text-zinc-900' : 'bg-white border-zinc-200 hover:bg-zinc-50 text-zinc-900 border'} font-semibold rounded-2xl transition-all active:scale-[0.98] shadow-sm`}
+                                    >
+                                        <GoogleIcon />
+                                        <span>Sign in with Google</span>
+                                    </button>
 
-                                                <div className="relative group">
-                                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 transition-colors pointer-events-none">
-                                                        <Lock size={18} />
-                                                    </div>
-                                                    <input
-                                                        type="password"
-                                                        required
-                                                        placeholder="Password"
-                                                        value={password}
-                                                        onChange={(e) => setPassword(e.target.value)}
-                                                        className="w-full pl-14 pr-5 py-4.5 glass border-glass-border rounded-[20px] text-sm font-bold text-text-primary focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all bg-white/5 placeholder:text-text-muted/50"
-                                                    />
-
-                                                    {/* Password Strength Widget */}
-                                                    {mode === 'signup' && password.length > 0 && (
-                                                        <div className="absolute right-5 top-1/2 -translate-y-1/2 flex gap-1">
-                                                            {[1, 2, 3, 4].map((step) => (
-                                                                <motion.div
-                                                                    key={step}
-                                                                    initial={{ scale: 0 }}
-                                                                    animate={{ scale: 1 }}
-                                                                    className={`w-1.5 h-1.5 rounded-full ${step <= getPasswordStrength() ? 'bg-primary' : 'bg-white/10'}`}
-                                                                />
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {mode === 'login' && (
-                                                    <div className="flex justify-end px-2">
-                                                        <button type="button" className="text-[10px] tracking-widest font-black text-red-500 hover:text-red-600 transition-colors">
-                                                            Forgot Password?
-                                                        </button>
-                                                    </div>
-                                                )}
-
-                                                <motion.button
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
-                                                    type="submit"
-                                                    disabled={isSubmitting}
-                                                    className="w-full relative group h-[50px] mt-2 rounded-[22px] overflow-hidden"
-                                                >
-                                                    <div className="absolute inset-0 bg-primary opacity-100 group-hover:bg-primary-dark transition-colors duration-300" />
-                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-
-                                                    <span className="relative z-10 flex items-center justify-center gap-3 text-white text-xs font-black uppercase tracking-[0.2em]">
-                                                        {isSubmitting ? (
-                                                            <>
-                                                                <Loader2 size={18} className="animate-spin" />
-                                                                <span>{mode === 'login' ? 'Logging In...' : 'Creating Account...'}</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <span>{mode === 'login' ? 'SignIn' : 'SignUp'}</span>
-                                                                <ArrowRight size={18} className="group-hover:translate-x-1.5 transition-transform" />
-                                                            </>
-                                                        )}
-                                                    </span>
-                                                </motion.button>
-                                            </form>
-                                        </FadeInItem>
-
-                                        <FadeInItem>
-                                            <div className="mt-5 pt-8 border-t border-glass-border flex flex-col gap-6">
-                                                <p className="text-center text-xs font-bold text-text-secondary">
-                                                    {mode === 'login' ? "First time around here?" : "Already have an account?"}
-                                                    <button
-                                                        onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-                                                        className="ml-2 text-primary hover:text-primary-dark font-black uppercase tracking-widest transition-colors"
-                                                    >
-                                                        {mode === 'login' ? 'Create Account' : 'Sign In'}
-                                                    </button>
-                                                </p>
-                                            </div>
-                                        </FadeInItem>
-                                    </StaggeredChildren>
+                                    {/* Toggle Mode */}
+                                    <p className={`mt-8 text-center ${isDark ? 'text-zinc-400' : 'text-zinc-600'} text-sm`}>
+                                        {mode === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
+                                        <button
+                                            onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+                                            className="text-primary font-bold hover:underline transition-all"
+                                        >
+                                            {mode === 'login' ? 'Sign up' : 'Log in'}
+                                        </button>
+                                    </p>
                                 </motion.div>
                             )}
                         </AnimatePresence>
