@@ -44,7 +44,6 @@ import Yazam from './Yazam';
 const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'products', label: 'Products', icon: Package },
-    { id: 'yazam', label: 'Yazam', icon: Presentation },
     { id: 'orders', label: 'Orders', icon: ShoppingBag },
     { id: 'users', label: 'Users', icon: UsersIcon, adminOnly: true },
     { id: 'redemptions', label: 'Redemptions', icon: Wallet, adminOnly: true },

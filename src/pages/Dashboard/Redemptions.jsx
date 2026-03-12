@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, Loader2, Clock, CheckCircle, XCircle, Coins, Phone, ChevronDown } from 'lucide-react';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, serverTimestamp, increment } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { toast } from 'react-hot-toast';
+
+import { processPayout } from '../../services/paychangu';
 
 const STATUS_STYLES = {
     pending: { color: 'text-amber-400', bg: 'bg-amber-400/10', border: 'border-amber-400/20', icon: Clock },
@@ -26,15 +28,52 @@ const Redemptions = () => {
         return () => unsub();
     }, []);
 
-    const handleStatus = async (id, newStatus) => {
+    const handleStatus = async (redemption, newStatus) => {
+        const id = redemption.id;
         setUpdatingId(id);
         try {
-            await updateDoc(doc(db, 'redemptions', id), { status: newStatus });
+            if (newStatus === 'approved') {
+                toast.loading('Initializing PayChangu Payout...', { id: 'payout' });
+                
+                // Split name for API
+                const nameParts = (redemption.userName || 'User').split(' ');
+                const firstName = nameParts[0];
+                const lastName = nameParts.slice(1).join(' ') || 'Digital';
+
+                const response = await processPayout({
+                    phone: redemption.phone,
+                    email: redemption.userEmail || 'payout@kwachadigital.com',
+                    firstName,
+                    lastName,
+                    operator: redemption.network || 'airtel',
+                    amount: redemption.amount,
+                    chargeId: id // Using doc ID as charge ID for correlation
+                });
+
+                console.log('[Payout] Success:', response);
+                toast.success('Payout processed successfully!', { id: 'payout' });
+            }
+
+            if (newStatus === 'rejected') {
+                // Refund points to user
+                const userRef = doc(db, 'users', redemption.userId);
+                await updateDoc(userRef, {
+                    points: increment(redemption.amount)
+                });
+                toast.success('Points refunded to user.', { icon: '🔄' });
+            }
+
+            await updateDoc(doc(db, 'redemptions', id), { 
+                status: newStatus,
+                updatedAt: serverTimestamp()
+            });
+            
             toast.success(`Redemption ${newStatus}.`, {
                 style: { background: '#111', color: '#fff', border: '1px solid rgba(16,185,129,0.2)' }
             });
         } catch (err) {
-            toast.error('Failed to update status.');
+            console.error('[Payout Error]', err);
+            toast.error(err.message || 'Failed to process request.', { id: 'payout' });
         } finally {
             setUpdatingId(null);
         }
@@ -152,14 +191,14 @@ const Redemptions = () => {
                                     <div className="flex gap-2 ml-auto">
                                         <button
                                             disabled={updatingId === r.id}
-                                            onClick={() => handleStatus(r.id, 'approved')}
+                                            onClick={() => handleStatus(r, 'approved')}
                                             className="px-3 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/20 transition-all disabled:opacity-50"
                                         >
                                             {updatingId === r.id ? <Loader2 size={12} className="animate-spin" /> : 'Approve'}
                                         </button>
                                         <button
                                             disabled={updatingId === r.id}
-                                            onClick={() => handleStatus(r.id, 'rejected')}
+                                            onClick={() => handleStatus(r, 'rejected')}
                                             className="px-3 py-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 transition-all disabled:opacity-50"
                                         >
                                             Reject

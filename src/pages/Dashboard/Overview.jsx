@@ -13,7 +13,8 @@ import {
     Users as UsersIcon,
     Coins,
     Loader2,
-    AlertCircle
+    AlertCircle,
+    Wallet
 } from 'lucide-react';
 import {
     collection,

@@ -306,3 +306,45 @@ export async function processPayment({ phone, email, firstName, lastName, operat
     // 3. Poll
     return pollPaymentStatus(chargeId, transactionDocId, onStatusUpdate);
 }
+/**
+ * Payout flow:
+ * 1. Initialize payout with PayChangu
+ * 2. This is used for redeeming points
+ */
+export async function processPayout({ phone, email, firstName, lastName, operator, amount, chargeId }) {
+    const secretKey = import.meta.env.VITE_PAYCHANGU_SECRET_KEY;
+    if (!secretKey) throw new Error('PayChangu secret key is not configured.');
+
+    // Fetch live operator list to get correct ref_ids
+    const operators = await fetchOperators();
+    const operatorInfo = operators[operator];
+    if (!operatorInfo) throw new Error('Invalid operator specified.');
+    if (!operatorInfo.ref_id) throw new Error(`Operator "${operator}" ref_id not found.`);
+
+    const normalizedPhone = normalizePhone(phone);
+
+    const response = await fetch(`${PAYCHANGU_BASE_URL}/mobile-money/payouts/initialize`, {
+        method: 'POST',
+        headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            Authorization: `Bearer ${secretKey}`
+        },
+        body: JSON.stringify({
+            mobile_money_operator_ref_id: operatorInfo.ref_id,
+            mobile: normalizedPhone,
+            amount: (amount || 0).toString(),
+            charge_id: chargeId || generateChargeId(),
+            email: email,
+            first_name: firstName,
+            last_name: lastName
+        })
+    });
+
+    if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || `Payout initialization failed: ${response.status}`);
+    }
+
+    return response.json();
+}
