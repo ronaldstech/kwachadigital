@@ -73,6 +73,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
         const items = cart.map(item => ({
             category: item.category || 'Digital Product',
             imageUrl: item.imageUrl || null,
+            fileUrl: item.fileUrl || null,
             price: typeof item.price === 'string' ? parseFloat(item.price.replace(/,/g, '')) : Number(item.price) || 0,
             productId: item.productId,
             sellerId: item.sellerId || null,

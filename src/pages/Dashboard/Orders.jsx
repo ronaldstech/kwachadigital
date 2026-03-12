@@ -157,16 +157,6 @@ const OrderCard = ({ order, isAdmin, currentUserId }) => {
                                     Verify Payment
                                 </button>
                             )}
-
-                            {(order.status === 'success' || order.status === 'pending') && (
-                                <button
-                                    onClick={() => handleStatusUpdate('failed')}
-                                    disabled={isUpdating}
-                                    className="w-full py-3 rounded-xl bg-surface-2 text-text-muted hover:text-red-500 hover:bg-red-500/5 border border-glass-border transition-all text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
-                                >
-                                    Cancel Stream
-                                </button>
-                            )}
                         </div>
                     </div>
 
@@ -204,6 +194,19 @@ const OrderCard = ({ order, isAdmin, currentUserId }) => {
                                             <span className="w-1 h-1 rounded-full bg-glass-border shrink-0" />
                                             <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider truncate">By <span className="text-text-secondary">{item.sellerName || 'Unknown Vendor'}</span></p>
                                         </div>
+                                        {(order.status === 'success' || order.status === 'completed') && item.fileUrl && (
+                                            <div className="mt-3">
+                                                <a
+                                                    href={item.fileUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 glass rounded-lg text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 hover:border-primary/30 transition-all shadow-sm border border-glass-border"
+                                                >
+                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                                    Link Provided
+                                                </a>
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             ))}
@@ -252,8 +255,8 @@ const Orders = () => {
     }, [user, isAdmin]);
 
     const filteredOrders = orders.filter(order => {
-        const orderItems = isAdmin 
-            ? (order.items || []) 
+        const orderItems = isAdmin
+            ? (order.items || [])
             : (order.items?.filter(item => item.sellerId === user.uid) || []);
 
         const matchesSearch =
