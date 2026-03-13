@@ -15,6 +15,59 @@ import {
 import ProductCard from '../components/ProductCard';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
+import { GraduationCap, Presentation, PenTool, ArrowUpRight } from 'lucide-react';
+
+const AI_TOOLS = [
+    {
+        name: "Dissertation Assistant",
+        description: "Advanced neural architecture optimized for complex academic research synthesis.",
+        icon: GraduationCap,
+        externalUrl: "https://anonemasi.vercel.app/dissertation",
+        color: "text-emerald-400",
+        features: ["Research Synthesis", "Structure Analysis"]
+    },
+    {
+        name: "PowerPoint Presentation",
+        description: "High-impact visual strategy engine. Transform raw data into cinematic narratives.",
+        icon: Presentation,
+        externalUrl: "https://anonemasi.vercel.app/powerpoint",
+        color: "text-blue-400",
+        features: ["Visual Hierarchy", "Narrative Flow"]
+    },
+    {
+        name: "Essay Catalyst",
+        description: "Unlocking linguistic depth. Intelligent drafting protocols for creative resonance.",
+        icon: PenTool,
+        externalUrl: "https://anonemasi.vercel.app/essay",
+        color: "text-purple-400",
+        features: ["Vocal Refinement", "Linguistic Flow"]
+    }
+];
+
+const SimpleToolCard = ({ tool }) => (
+    <div className="h-full bg-surface-1/40 rounded-[32px] border border-white/5 p-8 flex flex-col transition-all duration-300 hover:border-primary/30">
+        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 mb-6">
+            <tool.icon size={32} className={tool.color} />
+        </div>
+        <h3 className="text-2xl font-bold text-text-primary mb-3">{tool.name}</h3>
+        <p className="text-sm text-text-secondary opacity-60 mb-6 flex-1 italic">{tool.description}</p>
+        <div className="flex flex-wrap gap-2 mb-8">
+            {tool.features.map((f, i) => (
+                <span key={i} className="px-3 py-1 bg-white/5 rounded-lg text-[10px] uppercase tracking-widest text-text-muted font-bold">
+                    {f}
+                </span>
+            ))}
+        </div>
+        <a
+            href={tool.externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 py-4 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all duration-300"
+        >
+            Launch <ArrowUpRight size={14} />
+        </a>
+    </div>
+);
 
 const Marketplace = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -223,7 +276,22 @@ const Marketplace = () => {
                             icon={Sparkles}
                             items={newArrivals}
                         />
-
+                        {/* AI Tools Section */}
+                        <section className="mt-32 mb-20">
+                            <div className="flex items-center gap-3 mb-10">
+                                <Sparkles size={24} className="text-primary" />
+                                <h2 className="text-2xl font-bold text-text-primary">
+                                    AI Research Deployments
+                                </h2>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {AI_TOOLS.map(tool => (
+                                    <div key={tool.name} className="h-[420px]">
+                                        <SimpleToolCard tool={tool} />
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
                         <HorizontalSection
                             title="Best Selling"
                             icon={ShoppingBag}
@@ -241,6 +309,8 @@ const Marketplace = () => {
                             icon={Eye}
                             items={mostViewed}
                         />
+
+
                     </>
                 )}
 

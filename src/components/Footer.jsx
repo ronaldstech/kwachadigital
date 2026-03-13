@@ -38,9 +38,7 @@ const Footer = () => {
 
     return (
         <footer className="relative pt-24 pb-12 overflow-hidden border-t border-glass-border bg-bg-main/30 backdrop-blur-3xl">
-            {/* Background Depth Effects */}
-            <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
+
 
             <div className="container relative z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-20">
@@ -48,8 +46,7 @@ const Footer = () => {
                     <div className="lg:col-span-4 space-y-8">
                         <Link to="/" className="flex items-center gap-3 no-underline group w-fit">
                             <div className="relative">
-                                <div className="absolute inset-0 bg-primary blur-md opacity-40 group-hover:opacity-80 transition-opacity" />
-                                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg border border-white/20">
+                                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center border border-white/20">
                                     <Rocket size={24} className="text-white transform group-hover:rotate-12 transition-transform" />
                                 </div>
                             </div>
@@ -72,13 +69,11 @@ const Footer = () => {
                                 <motion.a
                                     key={i}
                                     href="#"
-                                    whileHover={{ y: -5, scale: 1.1 }}
-                                    className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-text-secondary hover:text-white transition-all border-glass-border relative group shadow-xl"
+                                    className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-text-secondary hover:text-white transition-all border-glass-border relative group"
                                     aria-label={social.label}
                                 >
                                     <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity" />
                                     <social.icon size={20} className="relative z-10 transition-colors" />
-                                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-all blur-sm" style={{ backgroundColor: social.color }} />
                                 </motion.a>
                             ))}
                         </div>
@@ -116,7 +111,7 @@ const Footer = () => {
                             © {currentYear} Kwacha Digital. All systems operational.
                         </p>
                         <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
-                            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                            <div className="w-2 h-2 rounded-full bg-primary" />
                             <span className="text-[10px] font-black uppercase tracking-widest text-primary">Live Exchange Active</span>
                         </div>
                     </div>

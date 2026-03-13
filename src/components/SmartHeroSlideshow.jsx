@@ -112,15 +112,15 @@ const SmartHeroSlideshow = () => {
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSlide.id + currentSlide.label}
-                        initial={{ opacity: 0, scale: 0.8, rotateY: 45, x: 100, filter: 'blur(10px)' }}
-                        animate={{ opacity: 1, scale: 1, rotateY: 0, x: 0, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, scale: 1.2, rotateY: -45, x: -100, filter: 'blur(10px)' }}
+                        initial={{ opacity: 0, scale: 0.8, rotateY: 45, x: 100 }}
+                        animate={{ opacity: 1, scale: 1, rotateY: 0, x: 0 }}
+                        exit={{ opacity: 0, scale: 1.2, rotateY: -45, x: -100 }}
                         transition={{
                             duration: 0.8,
                             ease: [0.16, 1, 0.3, 1],
                             opacity: { duration: 0.4 }
                         }}
-                        className="relative z-20 glass-premium p-4 md:p-6 rounded-[32px] md:rounded-[40px] border border-white/20 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] backdrop-blur-3xl w-[90%] max-w-[320px] md:max-w-[400px]"
+                        className="relative z-20 glass-premium p-4 md:p-6 rounded-[32px] md:rounded-[40px] border border-white/20 backdrop-blur-3xl w-[90%] max-w-[320px] md:max-w-[400px]"
                     >
                         {/* Image Container */}
                         <motion.div
@@ -142,10 +142,10 @@ const SmartHeroSlideshow = () => {
                                     initial={{ x: -20, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
                                     transition={{ delay: 0.4 }}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md border border-white/20 shadow-lg"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md border border-white/20"
                                     style={{ backgroundColor: `${currentSlide.color}30` }}
                                 >
-                                    <Icon size={16} style={{ color: currentSlide.color }} className="animate-pulse" />
+                                    <Icon size={16} style={{ color: currentSlide.color }} />
                                     <span className="text-[10px] font-black uppercase tracking-widest text-white">
                                         {currentSlide.label}
                                     </span>
@@ -157,7 +157,7 @@ const SmartHeroSlideshow = () => {
                                 initial={{ scale: 0, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
-                                className="absolute bottom-4 right-4 bg-primary/90 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-xl backdrop-blur-sm"
+                                className="absolute bottom-4 right-4 bg-primary/90 text-white px-4 py-2 rounded-xl font-bold text-sm backdrop-blur-sm"
                             >
                                 MK {currentSlide.price.toLocaleString()}
                             </motion.div>
@@ -213,17 +213,7 @@ const SmartHeroSlideshow = () => {
                     className="absolute w-[350px] h-[350px] border-2 border-accent/10 rounded-full border-dashed opacity-10 pointer-events-none"
                 />
 
-                {/* Floating Micro-elements */}
-                <motion.div
-                    animate={{ y: [0, -40, 0], x: [0, 20, 0] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-20 right-20 w-8 h-8 bg-primary/20 rounded-full blur-xl"
-                />
-                <motion.div
-                    animate={{ y: [0, 40, 0], x: [0, -20, 0] }}
-                    transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute bottom-20 left-20 w-12 h-12 bg-accent/20 rounded-full blur-xl"
-                />
+
             </div>
         </div >
     );

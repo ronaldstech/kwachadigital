@@ -13,9 +13,7 @@ const ProductCard = ({ item, type }) => {
 
     return (
         <motion.div
-            whileHover={{ y: -6 }}
-            transition={{ type: "spring", stiffness: 250, damping: 18 }}
-            className="group relative bg-bg-main/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
+            className="group relative bg-bg-main/60 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:border-primary/40"
         >
             {/* Image */}
             <div className="relative aspect-[4/3] overflow-hidden bg-surface-2">

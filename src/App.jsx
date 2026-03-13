@@ -21,7 +21,7 @@ import Favorites from './pages/Favorites';
 import Orders from './pages/Orders';
 import Yazam from './pages/Yazam';
 import PresentationDetail from './pages/PresentationDetail';
-import AITools from './pages/AITools';
+import FreeProducts from './pages/FreeProducts';
 
 // Helper to scroll to top on navigation
 const ScrollToTop = () => {
@@ -99,7 +99,7 @@ const AuthConsumer = () => {
               <Orders />
             </ProtectedRoute>
           } />
-          <Route path="/ai-tools" element={<AITools />} />
+          <Route path="/ai-tools" element={<FreeProducts />} />
         </Route>
 
         {/* Independent Protected Routes (No Global Navbar/Footer) */}

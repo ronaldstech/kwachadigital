@@ -74,7 +74,7 @@ const Navbar = () => {
         { name: 'Home', path: '/', icon: Home },
         { name: 'Marketplace', path: '/marketplace', icon: Store },
         { name: 'Yazam', path: '/yazam', icon: Briefcase },
-        { name: 'AI Tools', path: '/ai-tools', icon: Sparkle },
+        { name: 'Free Products', path: '/ai-tools', icon: Sparkle },
     ];
 
     const isActive = (path) => {
@@ -110,16 +110,16 @@ const Navbar = () => {
                     transition-all duration-700 cubic-bezier(0.23, 1, 0.32, 1)
                     w-full max-w-[1280px]
                     ${isScrolled
-                        ? 'rounded-full glass glass-premium px-8 md:px-10 py-3 shadow-2xl translate-y-2'
-                        : 'rounded-2xl glass px-8 md:px-10 py-5 translate-y-2'
+                        ? 'rounded-full glass glass-premium px-8 md:px-10 py-3'
+                        : 'rounded-2xl glass px-8 md:px-10 py-5'
                     }
                 `}
             >
                 {/* Logo Section */}
                 <Link to="/" className="flex items-center gap-2 md:gap-3 no-underline group shrink-0">
                     <div className="relative">
-                        <div className="absolute inset-0 bg-primary blur-md opacity-40 group-hover:opacity-80 transition-opacity" />
-                        <div className="relative w-8 md:w-10 h-8 md:h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg border border-white/20">
+                        <div className="absolute inset-0 bg-primary opacity-40 group-hover:opacity-80 transition-opacity" />
+                        <div className="relative w-8 md:w-10 h-8 md:h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center border border-white/20">
                             <Rocket size={18} className="md:w-[22px] text-white transform group-hover:rotate-12 transition-transform" />
                         </div>
                     </div>
@@ -192,7 +192,7 @@ const Navbar = () => {
                                 className="hidden sm:flex items-center gap-2 pl-2 md:pl-3 p-1 glass rounded-full hover:bg-white/10 border border-glass-border transition-all group"
                             >
                                 <span className="text-[11px] md:text-xs font-bold text-text-primary hidden lg:block">{user.name.split(' ')[0]}</span>
-                                <div className="w-7 md:w-8 h-7 md:h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary border border-primary/20 shadow-inner group-hover:scale-105 transition-transform">
+                                <div className="w-7 md:w-8 h-7 md:h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary border border-primary/20 group-hover:scale-105 transition-transform">
                                     {user.avatar}
                                 </div>
                                 <ChevronDown size={14} className={`text-text-muted transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
@@ -204,7 +204,7 @@ const Navbar = () => {
                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        className="absolute top-full right-0 mt-3 w-64 z-50 bg-bg-main/100 backdrop-blur-2xl rounded-[28px] border border-glass-border shadow-2xl overflow-hidden py-3 p-2 pointer-events-auto"
+                                        className="absolute top-full right-0 mt-3 w-64 z-50 bg-bg-main/100 backdrop-blur-2xl rounded-[28px] border border-glass-border overflow-hidden py-3 p-2 pointer-events-auto"
                                     >
                                         <div className="px-4 py-3 mb-2 border-b border-glass-border/50">
                                             <p className="text-[10px] uppercase tracking-widest font-black text-text-muted mb-1">Signed in as</p>
@@ -217,7 +217,7 @@ const Navbar = () => {
                                                 className="flex items-center gap-3 px-4 py-1 rounded-2xl hover:bg-primary/10 text-text-secondary hover:text-primary transition-all group no-underline"
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
-                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
                                                     <LayoutDashboard size={16} />
                                                 </div>
                                                 <span className="text-sm font-bold">Control Center</span>
@@ -228,7 +228,7 @@ const Navbar = () => {
                                                 className="flex items-center gap-3 px-4 py-1 rounded-2xl hover:bg-emerald-500/10 text-text-secondary hover:text-emerald-500 transition-all group no-underline"
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
-                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
+                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all">
                                                     <ShoppingBag size={16} />
                                                 </div>
                                                 <span className="text-sm font-bold">My Orders</span>
@@ -239,7 +239,7 @@ const Navbar = () => {
                                                 className="flex items-center gap-3 px-4 py-1 rounded-2xl hover:bg-secondary/10 text-text-secondary hover:text-secondary transition-all group no-underline"
                                                 onClick={() => setIsProfileOpen(false)}
                                             >
-                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-secondary group-hover:text-white transition-all shadow-sm">
+                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-secondary group-hover:text-white transition-all">
                                                     <Heart size={16} />
                                                 </div>
                                                 <span className="text-sm font-bold">Favorites</span>
@@ -251,7 +251,7 @@ const Navbar = () => {
                                                 onClick={handleLogout}
                                                 className="w-full flex items-center gap-3 px-4 py-1 rounded-2xl bg-red-500/20 text-text-secondary hover:text-red-500 transition-all group"
                                             >
-                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all shadow-sm">
+                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all">
                                                     <LogOut size={16} />
                                                 </div>
                                                 <span className="text-sm font-bold">Logout</span>
@@ -303,7 +303,7 @@ const Navbar = () => {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-                            className="fixed top-0 right-0 bottom-0 w-[310px] z-50 bg-bg-main/80 backdrop-blur-2xl border-l border-glass-border shadow-[-20px_0_50px_rgba(0,0,0,0.2)] md:hidden flex flex-col pointer-events-auto overflow-hidden"
+                            className="fixed top-0 right-0 bottom-0 w-[310px] z-50 bg-bg-main/80 backdrop-blur-2xl border-l border-glass-border md:hidden flex flex-col pointer-events-auto overflow-hidden"
                         >
                             {/* Animated Background Mesh */}
                             <div className="absolute inset-0 -z-10 opacity-30 pointer-events-none">
@@ -314,7 +314,7 @@ const Navbar = () => {
                             {/* Drawer Header */}
                             <div className="p-4 pt-5 flex items-center justify-between border-b border-glass-border">
                                 <Link to="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg">
+                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center">
                                         <Rocket size={16} className="text-white" />
                                     </div>
                                     <span className="font-display font-bold text-lg text-text-primary tracking-tight">Kwacha</span>
@@ -342,7 +342,7 @@ const Navbar = () => {
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                             >
                                                 <div className="flex items-center gap-4">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isActive(link.path) ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-surface-2 text-text-muted group-hover:bg-primary/10 group-hover:text-primary'}`}>
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isActive(link.path) ? 'bg-primary text-white' : 'bg-surface-2 text-text-muted group-hover:bg-primary/10 group-hover:text-primary'}`}>
                                                         <link.icon size={20} />
                                                     </div>
                                                     {link.name}
@@ -385,7 +385,7 @@ const Navbar = () => {
                                                         className="flex items-center gap-2 p-2 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all no-underline group"
                                                         onClick={() => setIsMobileMenuOpen(false)}
                                                     >
-                                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary border border-primary/20 shadow-inner group-hover:scale-105 transition-transform">
+                                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary border border-primary/20 group-hover:scale-105 transition-transform">
                                                             <LayoutDashboard size={20} />
                                                         </div>
                                                         <div className="flex flex-col flex-1">
@@ -400,7 +400,7 @@ const Navbar = () => {
                                                         className="flex items-center gap-2 p-2 glass rounded-2xl border border-glass-border hover:bg-primary/5 transition-all no-underline group"
                                                         onClick={() => setIsMobileMenuOpen(false)}
                                                     >
-                                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary border border-primary/20 shadow-inner group-hover:scale-105 transition-transform">
+                                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-lg font-bold text-primary border border-primary/20 group-hover:scale-105 transition-transform">
                                                             <User size={20} />
                                                         </div>
                                                         <div className="flex flex-col flex-1">
@@ -415,7 +415,7 @@ const Navbar = () => {
                                                         className="flex items-center gap-2 p-2 glass rounded-2xl border border-glass-border hover:bg-emerald-500/5 transition-all no-underline group"
                                                         onClick={() => setIsMobileMenuOpen(false)}
                                                     >
-                                                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-lg font-bold text-emerald-500 border border-emerald-500/20 shadow-inner group-hover:scale-105 transition-transform">
+                                                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-lg font-bold text-emerald-500 border border-emerald-500/20 group-hover:scale-105 transition-transform">
                                                             <ShoppingBag size={20} />
                                                         </div>
                                                         <div className="flex flex-col flex-1">
@@ -430,7 +430,7 @@ const Navbar = () => {
                                                         className="flex items-center gap-2 p-2 glass rounded-2xl border border-glass-border hover:bg-secondary/5 transition-all no-underline group"
                                                         onClick={() => setIsMobileMenuOpen(false)}
                                                     >
-                                                        <div className="relative w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner group-hover:scale-105 transition-transform">
+                                                        <div className="relative w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 group-hover:scale-105 transition-transform">
                                                             <Heart size={20} />
                                                             {favorites.length > 0 && (
                                                                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-secondary text-[9px] font-bold text-white flex items-center justify-center rounded-full border border-white/20">
@@ -462,7 +462,7 @@ const Navbar = () => {
                                                         className="flex items-center gap-4 p-4 glass rounded-2xl border border-glass-border hover:bg-secondary/5 transition-all no-underline group"
                                                         onClick={() => setIsMobileMenuOpen(false)}
                                                     >
-                                                        <div className="relative w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner group-hover:scale-105 transition-transform">
+                                                        <div className="relative w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20 group-hover:scale-105 transition-transform">
                                                             <Heart size={20} />
                                                             {favorites.length > 0 && (
                                                                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-secondary text-[9px] font-bold text-white flex items-center justify-center rounded-full border border-white/20">
@@ -494,7 +494,7 @@ const Navbar = () => {
 
                                         <Link
                                             to={user ? "/sell" : "/login"}
-                                            className="btn btn-primary w-full text-base py-4 rounded-2xl shadow-[0_15px_30px_-10px_rgba(16,185,129,0.3)] flex items-center gap-2 group mb-6"
+                                            className="btn btn-primary w-full text-base py-4 rounded-2xl flex items-center gap-2 group mb-6"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
                                             {user ? 'Sell Digital Asset' : 'Start Creating'}
