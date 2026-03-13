@@ -45,19 +45,12 @@ const AI_TOOLS = [
 ];
 
 const SimpleToolCard = ({ tool }) => (
-    <div className="h-full bg-surface-1/40 rounded-[32px] border border-white/5 p-8 flex flex-col transition-all duration-300 hover:border-primary/30">
-        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 mb-6">
+    <div className="h-full bg-surface-1/40 rounded-[32px] border border-white/5 p-6 flex flex-col transition-all duration-300 hover:border-primary/30">
+        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 mb-3">
             <tool.icon size={32} className={tool.color} />
         </div>
-        <h3 className="text-2xl font-bold text-text-primary mb-3">{tool.name}</h3>
+        <h3 className="text-2xl font-bold text-text-primary mb-2">{tool.name}</h3>
         <p className="text-sm text-text-secondary opacity-60 mb-6 flex-1 italic">{tool.description}</p>
-        <div className="flex flex-wrap gap-2 mb-8">
-            {tool.features.map((f, i) => (
-                <span key={i} className="px-3 py-1 bg-white/5 rounded-lg text-[10px] uppercase tracking-widest text-text-muted font-bold">
-                    {f}
-                </span>
-            ))}
-        </div>
         <a
             href={tool.externalUrl}
             target="_blank"
@@ -278,7 +271,7 @@ const Marketplace = () => {
                         />
                         {/* AI Tools Section */}
                         <section className="mt-32 mb-20">
-                            <div className="flex items-center gap-3 mb-10">
+                            <div className="flex items-center gap-3 mb-5">
                                 <Sparkles size={24} className="text-primary" />
                                 <h2 className="text-2xl font-bold text-text-primary">
                                     AI Research Deployments
@@ -286,7 +279,7 @@ const Marketplace = () => {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {AI_TOOLS.map(tool => (
-                                    <div key={tool.name} className="h-[420px]">
+                                    <div key={tool.name} className="h-[350px]">
                                         <SimpleToolCard tool={tool} />
                                     </div>
                                 ))}
