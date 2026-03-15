@@ -1,5 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 import {
     Sparkles,
     GraduationCap,
@@ -11,11 +14,36 @@ import {
     BrainCircuit,
     Layers,
     History,
-    ArrowUpRight
+    ArrowUpRight,
+    ArrowLeft,
+    ChevronLeft
 } from 'lucide-react';
 
 const ToolCard = ({ tool, index }) => {
+    const { user, openAuthModal } = useAuth();
+    const navigate = useNavigate();
 
+    const handleLaunch = (e) => {
+        e.preventDefault();
+        if (!user) {
+            toast.info('Neural verification required. Please login to access AI deployments.', {
+                icon: '🔒',
+                style: {
+                    background: '#111',
+                    color: '#fff',
+                    border: '1px solid rgba(16,185,129,0.2)',
+                    borderRadius: '16px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em'
+                }
+            });
+            openAuthModal('login');
+            return;
+        }
+        navigate(tool.link);
+    };
 
     return (
         <motion.div
@@ -67,15 +95,13 @@ const ToolCard = ({ tool, index }) => {
 
                 {/* Main Actions Layer */}
                 <div className="mt-auto relative z-10">
-                    <a
-                        href={tool.externalUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group/btn flex items-center justify-center gap-3 py-6 bg-primary text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300"
+                    <button
+                        onClick={handleLaunch}
+                        className="w-full group/btn flex items-center justify-center gap-3 py-6 bg-primary text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300"
                     >
                         <span>Launch Project</span>
                         <ArrowUpRight size={18} className="group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
-                    </a>
+                    </button>
                 </div>
 
                 {/* Visual Polish: Scanning line */}
@@ -91,7 +117,7 @@ const AITools = () => {
             name: "Dissertation Assistant",
             description: "Advanced neural architecture optimized for complex academic research synthesis, structural logic, and bibliographic precision.",
             icon: GraduationCap,
-            externalUrl: "https://anonemasi.vercel.app/dissertation",
+            link: "/ai-tools/dissertation",
             status: "CALIBRATING",
             color: "bg-emerald-500",
             iconColor: "text-emerald-400",
@@ -101,7 +127,7 @@ const AITools = () => {
             name: "PowerPoint Presentation",
             description: "High-impact visual strategy engine. Transform raw data into cinematic presentation narratives with intelligent flow.",
             icon: Presentation,
-            externalUrl: "https://anonemasi.vercel.app/powerpoint",
+            link: "/ai-tools/powerpoint",
             status: "DEPLOYING",
             color: "bg-blue-600",
             iconColor: "text-blue-400",
@@ -111,7 +137,7 @@ const AITools = () => {
             name: "Essay Catalyst",
             description: "Unlocking linguistic depth. Intelligent drafting protocols designed for creative resonance and rigorous analytical precision.",
             icon: PenTool,
-            externalUrl: "https://anonemasi.vercel.app/essay",
+            link: "/ai-tools/essay",
             status: "EVOLVING",
             color: "bg-purple-600",
             iconColor: "text-purple-400",
@@ -191,8 +217,14 @@ const AITools = () => {
                 {/* Matrix Interface Stats bar */}
                 <div className="flex flex-col xl:flex-row gap-8 items-stretch xl:items-center mb-24">
                     <div className="flex-1 glass-premium rounded-[32px] border border-white/10 p-2.5 flex items-center pr-8 shadow-2xl">
-                        <div className="w-16 h-16 bg-surface-2 rounded-2xl flex items-center justify-center text-primary border border-white/10 mr-6 group">
-                            <BrainCircuit size={28} className="group-hover:rotate-12 transition-transform" />
+                        <div className="p-4">
+                            <Link
+                                to="/ai-tools"
+                                className="flex items-center gap-2 text-zinc-400 dark:text-white/40 hover:text-zinc-800 dark:hover:text-white transition-colors text-xs font-medium group no-underline"
+                            >
+                                <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+                                Back to Matrix
+                            </Link>
                         </div>
                         <div className="flex-1">
                             <span className="text-[9px] font-black text-primary uppercase tracking-[0.3em] block mb-1">Global Registry</span>
@@ -222,9 +254,10 @@ const AITools = () => {
                                 <span className="text-[9px] font-black text-text-muted uppercase tracking-widest leading-none">Generations</span>
                             </div>
                         </div>
-                        <button className="glass p-6 rounded-[32px] border border-white/10 hover:border-primary/40 transition-all text-text-muted hover:text-primary group">
-                            <History size={24} className="group-hover:-rotate-45 transition-transform" />
-                        </button>
+                        <Link to="/ai-tools/free-products" className="glass p-6 rounded-[32px] border border-white/10 hover:border-primary/40 transition-all text-text-muted hover:text-primary group flex items-center gap-3">
+                            <Sparkles size={24} className="group-hover:rotate-12 transition-transform" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-text-primary">Free Assets</span>
+                        </Link>
                     </div>
                 </div>
 
@@ -281,7 +314,7 @@ const AITools = () => {
                 </motion.div>
             </div>
 
-            <style jsx>{`
+            <style>{`
 
                 @keyframes scan {
                     0% { transform: translateY(-100%); }

@@ -1,0 +1,2904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>anonemasi — PowerPoint AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700;800&family=Figtree:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════
+   Variables & Reset
+═══════════════════════════════════════════════════════ */
+:root {
+  --bg:         #f7f7f8;
+  --surface:    #ffffff;
+  --surface-2:  #f4f4f6;
+  --surface-3:  #ebebef;
+  --surface-4:  #dddde6;
+  --border:     rgba(0,0,0,0.08);
+  --border-hi:  rgba(124,92,252,0.35);
+  --accent:     #7c5cfc;
+  --accent-dim: rgba(124,92,252,0.10);
+  --accent-2:   #0099cc;
+  --accent-glow:rgba(124,92,252,0.2);
+  --text:       #1a1a2e;
+  --text-2:     #5a5a72;
+  --text-3:     #9494aa;
+  --success:    #0b8f6a;
+  --error:      #d63351;
+  --warn:       #e07a12;
+  --font-brand: 'Oxanium', monospace;
+  --font-body:  'Figtree', sans-serif;
+  --font-mono:  'JetBrains Mono', monospace;
+  --sidebar-w:  58px;
+  --panel-w:    310px;
+  --preview-w:  290px;
+  --r:          10px;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  position: relative;
+}
+
+/* Ambient background */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background:
+    radial-gradient(ellipse 700px 500px at 15% 85%, rgba(124,92,252,0.04), transparent),
+    radial-gradient(ellipse 500px 400px at 85% 10%, rgba(0,153,204,0.03), transparent);
+  pointer-events:none; z-index:0;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--surface-4); border-radius:99px; }
+::-webkit-scrollbar-thumb:hover { background:#aaaacc; }
+
+/* ═══════════════════════════════════════════════════════
+   Left Icon Sidebar
+═══════════════════════════════════════════════════════ */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 0 12px;
+  gap: 3px;
+  position: relative;
+  z-index: 30;
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-brand);
+  font-weight: 800; font-size: 0.68rem;
+  color: #fff;
+  margin-bottom: 14px;
+  position: relative;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.sidebar-logo::after {
+  content:'';
+  position:absolute; inset:-4px;
+  border-radius:13px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  opacity:0.2; filter:blur(8px); z-index:-1;
+}
+
+.tool-btn {
+  width:40px; height:40px;
+  border:none; background:transparent;
+  border-radius:9px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text-3);
+  transition: all 0.18s;
+  position:relative;
+  font-size:1.05rem;
+}
+.tool-btn:hover { background:var(--surface-3); color:var(--text-2); }
+.tool-btn.active { background:var(--accent-dim); color:var(--accent); }
+
+.tool-btn .tip {
+  position:absolute;
+  left:calc(100% + 10px);
+  top:50%; transform:translateY(-50%);
+  background:var(--text);
+  border:1px solid rgba(0,0,0,0.1);
+  color:#fff;
+  font-size:0.72rem; font-family:var(--font-body);
+  padding:4px 10px; border-radius:6px;
+  white-space:nowrap;
+  pointer-events:none;
+  opacity:0; transition:opacity 0.15s;
+  z-index:200;
+}
+.tool-btn:hover .tip { opacity:1; }
+.sidebar-spacer { flex:1; }
+
+/* ═══════════════════════════════════════════════════════
+   Slide-out Tool Panel
+═══════════════════════════════════════════════════════ */
+.tool-panel {
+  width:0; overflow:hidden;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  transition:width 0.3s cubic-bezier(0.4,0,0.2,1);
+  flex-shrink:0; z-index:28;
+  position:relative;
+}
+.tool-panel.open { width:var(--panel-w); }
+
+.panel-body {
+  width:var(--panel-w);
+  height:100%; overflow-y:auto;
+  padding:18px 16px;
+}
+
+.panel-head {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:18px;
+}
+.panel-head-title {
+  font-family:var(--font-brand);
+  font-weight:700; font-size:0.88rem;
+  color:var(--text); letter-spacing:0.3px;
+}
+.panel-x {
+  background:none; border:none;
+  color:var(--text-2); cursor:pointer;
+  font-size:1rem; line-height:1;
+  transition:color 0.15s;
+}
+.panel-x:hover { color:var(--text); }
+
+.panel-sec { display:none; }
+.panel-sec.active { display:block; }
+
+.plabel {
+  font-size:0.67rem; font-weight:600;
+  text-transform:uppercase; letter-spacing:1.1px;
+  color:var(--text-3); margin-bottom:7px; margin-top:16px;
+}
+.plabel:first-child { margin-top:0; }
+
+/* Upload zone in panel */
+.p-upload {
+  border:1.5px dashed var(--border-hi);
+  border-radius:var(--r);
+  padding:22px 14px; text-align:center;
+  cursor:pointer; background:var(--accent-dim);
+  transition:all 0.2s;
+}
+.p-upload:hover { border-color:var(--accent); background:rgba(124,92,252,0.1); }
+.p-upload-icon { font-size:1.7rem; margin-bottom:5px; }
+.p-upload strong { font-size:0.8rem; color:var(--text); }
+.p-upload p { font-size:0.73rem; color:var(--text-2); margin-top:3px; }
+
+/* Pill */
+.p-pill {
+  display:none; align-items:center; gap:7px;
+  background:rgba(0,212,160,0.1);
+  border:1px solid rgba(0,212,160,0.25);
+  border-radius:99px; padding:5px 12px;
+  font-size:0.76rem; font-weight:500;
+  color:var(--success); margin-top:9px;
+}
+.p-pill.on { display:flex; }
+.p-pill button { background:none; border:none; cursor:pointer; color:var(--success); font-size:0.8rem; margin-left:auto; opacity:0.6; }
+.p-pill button:hover { opacity:1; }
+
+/* Textarea in panel */
+.p-ta {
+  width:100%; background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:var(--r);
+  padding:10px 12px; color:var(--text);
+  font-family:var(--font-body); font-size:0.8rem;
+  line-height:1.65; resize:vertical; min-height:80px;
+  outline:none; transition:border-color 0.2s;
+}
+.p-ta:focus { border-color:var(--accent); }
+.p-ta::placeholder { color:var(--text-3); }
+
+/* Panel button */
+.p-btn {
+  width:100%; padding:9px;
+  border:1.5px solid var(--border-hi);
+  background:transparent; color:var(--accent);
+  border-radius:var(--r);
+  font-family:var(--font-body); font-size:0.8rem; font-weight:600;
+  cursor:pointer; transition:all 0.2s; margin-top:8px;
+}
+.p-btn:hover { background:var(--accent-dim); }
+
+/* Setting rows */
+.s-row { margin-bottom:11px; }
+.s-label {
+  font-size:0.72rem; color:var(--text-2);
+  font-weight:500; margin-bottom:4px; display:block;
+}
+.s-inp {
+  width:100%; background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:8px; padding:8px 11px;
+  color:var(--text); font-family:var(--font-body);
+  font-size:0.8rem; outline:none;
+  transition:border-color 0.2s; appearance:none;
+}
+.s-inp:focus { border-color:var(--accent); }
+.s-inp option { background:var(--surface); color:var(--text); }
+
+/* Toggles */
+.tgl-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 0; border-bottom:1px solid var(--border);
+}
+.tgl-row:last-child { border-bottom:none; }
+.tgl-name { font-size:0.79rem; color:var(--text); font-weight:500; }
+.tgl-sub  { font-size:0.68rem; color:var(--text-3); margin-top:1px; }
+.tgl {
+  position:relative; width:34px; height:19px; flex-shrink:0;
+}
+.tgl input { opacity:0; width:0; height:0; }
+.tgl-track {
+  position:absolute; inset:0;
+  background:var(--surface-4);
+  border-radius:99px; cursor:pointer;
+  transition:background 0.2s;
+}
+.tgl-track::after {
+  content:''; position:absolute;
+  width:13px; height:13px;
+  background:rgba(255,255,255,0.9);
+  border-radius:50%; top:3px; left:3px;
+  transition:transform 0.2s, background 0.2s;
+}
+.tgl input:checked + .tgl-track { background:var(--accent); }
+.tgl input:checked + .tgl-track::after {
+  transform:translateX(15px);
+  background:#fff;
+}
+
+/* Info box */
+.p-info {
+  padding:11px 13px;
+  background:var(--accent-dim);
+  border:1px solid var(--border-hi);
+  border-radius:var(--r);
+  font-size:0.76rem; color:var(--text-2);
+  line-height:1.65; margin-top:12px;
+}
+.p-info strong { color:var(--accent); }
+
+/* ═══════════════════════════════════════════════════════
+   Main Chat Area
+═══════════════════════════════════════════════════════ */
+.chat-main {
+  flex:1; display:flex; flex-direction:column;
+  overflow:hidden; position:relative; z-index:10;
+  min-width:0;
+}
+
+/* Top bar */
+.topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:11px 20px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  flex-shrink:0; z-index:20;
+}
+.brand { display:flex; align-items:center; gap:10px; }
+.brand-name {
+  font-family:var(--font-brand);
+  font-weight:800; font-size:1.05rem;
+  letter-spacing:-0.3px;
+  background:linear-gradient(120deg, #6040e0, var(--accent-2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.brand-tag {
+  font-size:0.7rem; color:var(--text-3);
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  padding:2px 8px; border-radius:99px;
+}
+.topbar-right {
+  display:flex; align-items:center; gap:8px;
+}
+.status-dot {
+  width:6px; height:6px;
+  background:var(--success); border-radius:50%;
+  animation:dotpulse 2.2s ease-in-out infinite;
+}
+@keyframes dotpulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%     { opacity:0.45; transform:scale(0.65); }
+}
+.topbar-status { font-size:0.72rem; color:var(--text-3); }
+
+/* Messages */
+.msgs {
+  flex:1; overflow-y:auto;
+  padding:22px 24px;
+  display:flex; flex-direction:column;
+}
+
+/* Center content in messages like Claude */
+.msgs-inner {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+  min-height: 100%;
+}
+
+/* Welcome */
+.welcome {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  flex:1; text-align:center; padding:40px 20px;
+  gap:18px; min-height:320px;
+}
+.welcome-icon {
+  width:68px; height:68px;
+  background:linear-gradient(135deg, rgba(124,92,252,0.15), rgba(0,153,204,0.1));
+  border-radius:20px; border:1px solid var(--border-hi);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.8rem; position:relative;
+}
+.welcome-icon::before {
+  content:''; position:absolute; inset:-28px;
+  border-radius:48px;
+  background:radial-gradient(circle, rgba(124,92,252,0.06), transparent 70%);
+}
+.welcome-h {
+  font-family:var(--font-brand);
+  font-weight:800; font-size:1.7rem;
+  letter-spacing:-0.8px;
+  color: var(--text);
+}
+.welcome-p {
+  font-size:0.875rem; color:var(--text-2);
+  max-width:380px; line-height:1.75;
+}
+.chips {
+  display:flex; flex-wrap:wrap;
+  gap:7px; justify-content:center;
+  max-width:520px;
+}
+.chip {
+  padding:6px 14px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:99px;
+  font-size:0.78rem; color:var(--text-2);
+  cursor:pointer; transition:all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.chip:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+
+/* Message bubbles */
+.msg {
+  display:flex; gap:11px;
+  animation:msgslide 0.3s ease forwards; opacity:0;
+}
+@keyframes msgslide {
+  from { opacity:0; transform:translateY(7px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.msg.user { flex-direction:row-reverse; }
+
+.av {
+  width:30px; height:30px;
+  border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.72rem; font-weight:700; flex-shrink:0; margin-top:2px;
+}
+.msg.user  .av { background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff; }
+.msg.ai    .av { background:linear-gradient(135deg, rgba(124,92,252,0.15), rgba(0,153,204,0.1)); color:var(--accent); font-family:var(--font-brand); font-size:0.62rem; border:1px solid var(--border-hi); }
+
+.msg-body { max-width:82%; display:flex; flex-direction:column; gap:4px; }
+.msg.user .msg-body { align-items:flex-end; }
+
+.bubble {
+  padding:11px 15px; border-radius:13px;
+  font-size:0.855rem; line-height:1.65;
+}
+.msg.user .bubble {
+  background:var(--accent);
+  border:none;
+  border-bottom-right-radius:4px; color:#fff;
+}
+.msg.ai .bubble {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-bottom-left-radius:4px; color:var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.msg-time { font-size:0.65rem; color:var(--text-3); padding:0 3px; }
+
+/* Progress bubble */
+.pbar-wrap { height:3px; background:var(--surface-4); border-radius:99px; overflow:hidden; margin:10px 0 6px; }
+.pbar-fill {
+  height:100%;
+  background:linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius:99px; width:0%;
+  transition:width 0.5s ease;
+}
+.prog-steps { display:flex; flex-direction:column; gap:5px; margin-top:8px; }
+.pstep { display:flex; align-items:center; gap:7px; font-size:0.79rem; color:var(--text-3); }
+.pstep.on   { color:var(--accent); }
+.pstep.done { color:var(--success); }
+.pstep-ic { width:13px; text-align:center; font-size:0.72rem; }
+
+/* ═══════════════════════════════════════════════════════
+   Input Area
+═══════════════════════════════════════════════════════ */
+.input-area {
+  border-top:1px solid var(--border);
+  background: linear-gradient(to top, var(--bg) 0%, rgba(247,247,248,0.95) 100%);
+  padding:12px 24px 16px;
+  flex-shrink:0;
+}
+
+/* Inner wrapper - constrain width like Claude */
+.input-area-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* Upload tray — now hidden (chips appear inside input box) */
+.upload-tray { display:none; }
+
+/* File chips inside the input box */
+.inner-chips {
+  display:flex; align-items:center;
+  gap:6px; flex-wrap:wrap;
+  padding:0 0 8px 0;
+}
+.inner-chips:empty { display:none; }
+
+.tray-chip {
+  display:flex; align-items:center; gap:5px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:7px; padding:4px 9px;
+  font-size:0.75rem; color:var(--text);
+  max-width:200px;
+}
+.tray-chip span.cn { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tray-chip .ck {
+  background:none; border:none; cursor:pointer;
+  color:var(--text-3); font-size:0.75rem; line-height:1; flex-shrink:0;
+}
+.tray-chip .ck:hover { color:var(--error); }
+.tray-chip.chip-pdf   { border-color:rgba(214,51,81,0.25); background:rgba(214,51,81,0.04); }
+.tray-chip.chip-docx  { border-color:rgba(0,120,215,0.25); background:rgba(0,120,215,0.04); }
+
+/* Input row - now a column container */
+.input-row {
+  display:flex; flex-direction:column;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:16px;
+  padding:12px 12px 10px 16px;
+  transition:border-color 0.2s;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+}
+.input-row:focus-within { border-color:var(--accent); box-shadow: 0 0 0 3px rgba(124,92,252,0.08), 0 1px 6px rgba(0,0,0,0.06); }
+
+/* Bottom bar inside input box: textarea + action buttons */
+.input-bottom {
+  display:flex; align-items:flex-end; gap:8px;
+}
+
+/* Attach button inside the box */
+.attach-btn {
+  width:32px; height:32px; flex-shrink:0;
+  background:transparent; border:none;
+  border-radius:8px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text-3); transition:all 0.18s;
+  margin-bottom:1px;
+}
+.attach-btn:hover { background:var(--surface-2); color:var(--accent); }
+
+.main-ta {
+  flex:1; background:transparent;
+  border:none; outline:none;
+  color:var(--text); font-family:var(--font-body);
+  font-size:0.9rem; line-height:1.6;
+  resize:none; max-height:140px; overflow-y:auto;
+  padding: 2px 0;
+}
+.main-ta::placeholder { color:var(--text-3); }
+
+.send-btn {
+  width:34px; height:34px;
+  background:var(--accent); border:none;
+  border-radius:8px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s; flex-shrink:0;
+  color:#fff;
+}
+.send-btn:hover { background:#9070ff; transform:scale(1.05); }
+.send-btn:disabled { opacity:0.35; cursor:not-allowed; transform:none; }
+
+.input-hint { font-size:0.67rem; color:var(--text-3); margin-top:5px; text-align:center; }
+
+/* ═══════════════════════════════════════════════════════
+   Right Preview Panel
+═══════════════════════════════════════════════════════ */
+.preview-panel {
+  width:0; overflow:hidden;
+  background:var(--surface);
+  border-left:1px solid var(--border);
+  transition:width 0.3s cubic-bezier(0.4,0,0.2,1);
+  flex-shrink:0; z-index:15;
+  display:flex; flex-direction:column;
+}
+.preview-panel.open { width:var(--preview-w); }
+
+.pv-inner {
+  width:var(--preview-w);
+  height:100%; display:flex;
+  flex-direction:column; overflow:hidden;
+}
+
+.pv-head {
+  padding:13px 15px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center;
+  justify-content:space-between; flex-shrink:0;
+}
+.pv-title {
+  font-family:var(--font-brand); font-weight:700;
+  font-size:0.82rem; color:var(--text);
+  display:flex; align-items:center; gap:8px;
+}
+.pv-badge {
+  font-size:0.67rem;
+  background:rgba(124,92,252,0.18);
+  color:var(--accent); padding:2px 7px;
+  border-radius:99px; font-family:var(--font-body);
+  font-weight:500;
+}
+
+.pv-list {
+  flex:1; overflow-y:auto;
+  padding:10px; display:flex;
+  flex-direction:column; gap:5px;
+}
+
+.pv-slide {
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:8px; padding:9px 11px;
+  cursor:default; transition:border-color 0.18s;
+  animation:msgslide 0.25s ease forwards; opacity:0;
+}
+.pv-slide:hover { border-color:var(--border-hi); }
+.pv-slide.title-sl   { border-left:3px solid var(--accent); }
+.pv-slide.section-sl { border-left:3px solid var(--accent-2); }
+.pv-slide.closing-sl { border-left:3px solid var(--success); }
+
+.pv-num  { font-size:0.62rem; color:var(--text-3); font-family:var(--font-mono); margin-bottom:2px; }
+.pv-ttl  { font-weight:600; font-size:0.78rem; color:var(--text); margin-bottom:3px; line-height:1.3; }
+.pv-type { font-size:0.65rem; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px; }
+
+.pv-foot { padding:11px 14px; border-top:1px solid var(--border); flex-shrink:0; }
+
+.dl-btn {
+  width:100%; padding:11px;
+  background:linear-gradient(135deg, var(--accent), #5a3cd1);
+  border:none; border-radius:9px;
+  color:#fff; font-family:var(--font-brand);
+  font-weight:700; font-size:0.84rem;
+  cursor:pointer; transition:all 0.22s;
+  display:none; align-items:center;
+  justify-content:center; gap:7px;
+  letter-spacing:0.3px;
+}
+.dl-btn.on { display:flex; animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes popIn {
+  from { opacity:0; transform:scale(0.88); }
+  to   { opacity:1; transform:scale(1); }
+}
+.dl-btn:hover { transform:translateY(-1px); box-shadow:0 6px 22px rgba(124,92,252,0.38); }
+
+/* ═══════════════════════════════════════════════════════
+   Toast
+═══════════════════════════════════════════════════════ */
+.toast {
+  position:fixed; bottom:22px; left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--surface);
+  border:1px solid var(--error);
+  color:var(--text); padding:10px 18px;
+  border-radius:9px; font-size:0.82rem;
+  z-index:1000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  max-width:420px; text-align:center;
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast.ok   { border-color:var(--success); }
+
+/* Hidden inputs */
+#fileInput, #templateInput, #copycatInput, #sourcesFileInput { display:none; }
+
+/* ═══════════════════════════════════════════════════════
+   History Panel (persistent, left of chat)
+═══════════════════════════════════════════════════════ */
+.history-panel {
+  width: 0; overflow: hidden;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+  flex-shrink: 0; z-index: 27;
+  display: flex; flex-direction: column;
+}
+.history-panel.open { width: 260px; }
+
+.history-inner {
+  width: 260px; height: 100%;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.history-head {
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  justify-content: space-between; flex-shrink: 0;
+}
+.history-head-title {
+  font-family: var(--font-brand); font-weight: 700;
+  font-size: 0.82rem; color: var(--text);
+  letter-spacing: 0.3px;
+}
+.history-x {
+  background: none; border: none;
+  color: var(--text-2); cursor: pointer;
+  font-size: 1rem; line-height: 1;
+  transition: color 0.15s; padding: 2px;
+}
+.history-x:hover { color: var(--text); }
+
+/* New presentation button inside history */
+.history-new-btn {
+  margin: 10px 12px 6px;
+  padding: 9px 14px;
+  background: var(--accent);
+  color: #fff; border: none;
+  border-radius: 10px; cursor: pointer;
+  font-family: var(--font-body); font-size: 0.82rem;
+  font-weight: 600; display: flex; align-items: center;
+  gap: 7px; transition: all 0.18s;
+  flex-shrink: 0;
+}
+.history-new-btn:hover { background: #6a4ce0; transform: translateY(-1px); }
+
+.history-list {
+  flex: 1; overflow-y: auto;
+  padding: 6px 8px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+
+.history-empty {
+  text-align: center; padding: 32px 16px;
+  color: var(--text-3); font-size: 0.8rem; line-height: 1.7;
+}
+.history-empty-icon { font-size: 1.6rem; margin-bottom: 8px; }
+
+/* Individual history card */
+.hcard {
+  border-radius: 9px;
+  padding: 10px 11px;
+  cursor: pointer;
+  background: transparent;
+  border: 1.5px solid transparent;
+  transition: all 0.16s;
+  position: relative;
+}
+.hcard:hover { background: var(--surface-2); border-color: var(--border); }
+.hcard.active { background: var(--accent-dim); border-color: var(--border-hi); }
+
+.hcard-title {
+  font-weight: 600; font-size: 0.8rem;
+  color: var(--text); line-height: 1.35;
+  margin-bottom: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 195px;
+}
+.hcard-meta {
+  font-size: 0.68rem; color: var(--text-3);
+  display: flex; align-items: center; gap: 7px;
+}
+.hcard-badge {
+  background: var(--surface-3);
+  padding: 1px 6px; border-radius: 99px;
+  font-size: 0.64rem; color: var(--text-2);
+}
+.hcard-actions {
+  position: absolute; right: 8px; top: 50%;
+  transform: translateY(-50%);
+  display: none; gap: 3px;
+}
+.hcard:hover .hcard-actions { display: flex; }
+.hcard-del {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-3); font-size: 0.8rem;
+  padding: 3px 5px; border-radius: 5px;
+  transition: all 0.14s; line-height: 1;
+}
+.hcard-del:hover { color: var(--error); background: rgba(214,51,81,0.08); }
+
+/* New chat button in topbar */
+.new-chat-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 6px 12px;
+  font-family: var(--font-body); font-size: 0.78rem;
+  font-weight: 600; color: var(--text-2);
+  cursor: pointer; transition: all 0.18s;
+}
+.new-chat-btn:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* Responsive */
+@media (max-width:800px) {
+  .preview-panel { display:none; }
+  .history-panel.open { width: 220px; }
+  :root { --panel-w:270px; }
+}
+@media (max-width:580px) {
+  .msgs { padding:16px 14px; }
+  .input-area { padding:10px 14px 12px; }
+  .topbar { padding:10px 14px; }
+  .history-panel.open { width:100%; position:absolute; z-index:100; height:100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- Hidden inputs -->
+<input type="file" id="fileInput" accept=".pdf,.doc,.docx">
+<input type="file" id="templateInput" accept=".pptx">
+<input type="file" id="copycatInput" accept=".pptx">
+<input type="file" id="sourcesFileInput" accept=".pdf,.doc,.docx">
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ LEFT SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">AN</div>
+
+  <button class="tool-btn" id="btn-history" onclick="toggleHistory()">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span class="tip">History</span>
+  </button>
+
+  <div style="width:28px;height:1px;background:var(--border);margin:4px 0;"></div>
+
+  <button class="tool-btn" id="btn-sources" onclick="openTool('sources')">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span class="tip">Sources</span>
+  </button>
+
+  <button class="tool-btn" id="btn-template" onclick="openTool('template')">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="2"/></svg>
+    <span class="tip">Template</span>
+  </button>
+
+  <button class="tool-btn" id="btn-customize" onclick="openTool('customize')">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="2"/></svg>
+    <span class="tip">Customize</span>
+  </button>
+
+  <button class="tool-btn" id="btn-copycat" onclick="openTool('copycat')">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M20 9V7a2 2 0 00-2-2h-6l-2-3H4a2 2 0 00-2 2v16a2 2 0 002 2h16a2 2 0 002-2v-7M12 13l9-9M21 4l-5 1 4 4 1-5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="tip">Copycat</span>
+  </button>
+
+  <div class="sidebar-spacer"></div>
+
+  <button class="tool-btn" onclick="newPresentation()" style="margin-bottom:4px" title="New presentation">
+    <svg width="15" height="15" fill="none" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+    <span class="tip">New presentation</span>
+  </button>
+</aside>
+
+<!-- ═══ HISTORY PANEL ═══ -->
+<div class="history-panel" id="historyPanel">
+  <div class="history-inner">
+    <div class="history-head">
+      <span class="history-head-title">📂 History</span>
+      <button class="history-x" onclick="toggleHistory()">✕</button>
+    </div>
+    <button class="history-new-btn" onclick="newPresentation()">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+      New Presentation
+    </button>
+    <div class="history-list" id="historyList">
+      <div class="history-empty" id="historyEmpty">
+        <div class="history-empty-icon">🗂️</div>
+        Your presentations will appear here once you generate one.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOOL PANEL ═══ -->
+<div class="tool-panel" id="toolPanel">
+  <div class="panel-body">
+    <div class="panel-head">
+      <span class="panel-head-title" id="panelTitle">Tools</span>
+      <button class="panel-x" onclick="closePanel()">✕</button>
+    </div>
+
+    <!-- SOURCES -->
+    <div class="panel-sec" id="panel-sources">
+      <div class="plabel">Upload Reference File</div>
+      <div class="p-upload" onclick="document.getElementById('sourcesFileInput').click()">
+        <div class="p-upload-icon">📄</div>
+        <strong>Attach a reference document</strong>
+        <p>PDF or DOCX — AI pulls facts from this</p>
+      </div>
+      <div class="p-pill" id="srcPill">
+        <span>📎</span>
+        <span id="srcFileName">file.pdf</span>
+        <button onclick="removeSrcFile()">✕</button>
+      </div>
+
+      <div class="plabel">URLs / Extra Context</div>
+      <textarea class="p-ta" id="srcText" placeholder="Paste URLs (one per line) or extra context here…" rows="5"></textarea>
+      <button class="p-btn" onclick="applySrc()">✓ Apply Sources</button>
+
+      <div class="p-info" style="margin-top:10px">
+        <strong>Tip:</strong> Sources are mixed into your next generation. You can add URLs, paste raw text, or both — the AI will extract what's relevant.
+      </div>
+    </div>
+
+    <!-- TEMPLATE -->
+    <div class="panel-sec" id="panel-template">
+      <div class="plabel">PPTX Template</div>
+      <div class="p-upload" id="tplZone" onclick="document.getElementById('templateInput').click()">
+        <div class="p-upload-icon">🎨</div>
+        <strong>Upload a .pptx template</strong>
+        <p>AI fills in text only — your design is preserved</p>
+      </div>
+      <div class="p-pill" id="tplPill">
+        <span>🎨</span>
+        <span id="tplName">template.pptx</span>
+        <button onclick="removeTpl()">✕</button>
+      </div>
+
+      <div class="tgl-row" id="styleRefRow" style="margin-top:14px; display:none">
+        <div>
+          <div class="tgl-name">Mirror Writing Style</div>
+          <div class="tgl-sub">Copy tone, vocabulary & bullet structure</div>
+        </div>
+        <label class="tgl">
+          <input type="checkbox" id="styleRefCheck">
+          <span class="tgl-track"></span>
+        </label>
+      </div>
+
+      <div class="p-info" id="tplInfo" style="display:none">
+        <strong>Template loaded.</strong> AI will match your slide themes, colors, and layout.
+      </div>
+    </div>
+
+    <!-- CUSTOMIZE -->
+    <div class="panel-sec" id="panel-customize">
+      <div class="plabel">Slide Count & Layout</div>
+
+      <div class="s-row">
+        <span class="s-label">Number of slides</span>
+        <input type="number" class="s-inp" id="slideCount" value="12" min="4" max="60">
+      </div>
+      <div class="s-row">
+        <span class="s-label">Max bullet points per slide</span>
+        <input type="number" class="s-inp" id="pointsPerSlide" value="3" min="1" max="8">
+      </div>
+      <div class="s-row">
+        <span class="s-label">Bullet detail level</span>
+        <select class="s-inp" id="linesPerPoint">
+          <option value="short">Short — 1 tight sentence</option>
+          <option value="medium" selected>Medium — 1–2 sentences</option>
+          <option value="long">Long — 2–3 detailed sentences</option>
+        </select>
+      </div>
+      <div class="s-row">
+        <span class="s-label">Visual style</span>
+        <select class="s-inp" id="styleSelect">
+          <option value="professional">Professional / Corporate</option>
+          <option value="academic">Academic / Research</option>
+          <option value="minimal">Clean & Minimal</option>
+          <option value="bold">Bold & Impactful</option>
+        </select>
+      </div>
+      <div class="s-row">
+        <span class="s-label">Target audience</span>
+        <select class="s-inp" id="audienceSelect">
+          <option value="general">General Audience</option>
+          <option value="executives">Executives / Decision Makers</option>
+          <option value="technical">Technical Team</option>
+          <option value="students">Students / Learners</option>
+        </select>
+      </div>
+      <div class="s-row">
+        <span class="s-label">Focus area (optional)</span>
+        <input type="text" class="s-inp" id="focusInput" placeholder="e.g. key findings, financials…">
+      </div>
+
+      <div class="plabel" style="margin-top:16px">Slide Feature Toggles</div>
+
+      <div class="tgl-row">
+        <div><div class="tgl-name">Tables</div><div class="tgl-sub">Data comparison slides</div></div>
+        <label class="tgl"><input type="checkbox" id="allowTables" checked><span class="tgl-track"></span></label>
+      </div>
+      <div class="tgl-row">
+        <div><div class="tgl-name">Flow Diagrams</div><div class="tgl-sub">Step-by-step process slides</div></div>
+        <label class="tgl"><input type="checkbox" id="allowDiagrams" checked><span class="tgl-track"></span></label>
+      </div>
+      <div class="tgl-row">
+        <div><div class="tgl-name">AI Illustrations</div><div class="tgl-sub">SVG visuals per slide</div></div>
+        <label class="tgl"><input type="checkbox" id="allowImages"><span class="tgl-track"></span></label>
+      </div>
+      <div class="tgl-row">
+        <div><div class="tgl-name">Quote Slides</div><div class="tgl-sub">Highlight key quotations</div></div>
+        <label class="tgl"><input type="checkbox" id="allowQuotes" checked><span class="tgl-track"></span></label>
+      </div>
+      <div class="tgl-row">
+        <div><div class="tgl-name">Two-Column Slides</div><div class="tgl-sub">Side-by-side comparisons</div></div>
+        <label class="tgl"><input type="checkbox" id="allowTwoCol" checked><span class="tgl-track"></span></label>
+      </div>
+    </div>
+
+    <!-- COPYCAT -->
+    <div class="panel-sec" id="panel-copycat">
+      <div class="plabel">Upload Deck to Mirror</div>
+      <div class="p-upload" onclick="document.getElementById('copycatInput').click()">
+        <div class="p-upload-icon">🪄</div>
+        <strong>Choose a .pptx file</strong>
+        <p>AI copies its structure, colors & layout — not its words</p>
+      </div>
+      <div class="p-pill" id="ccPill">
+        <span>🪄</span>
+        <span id="ccName">original.pptx</span>
+        <button onclick="removeCopycat()">✕</button>
+      </div>
+      <div class="p-info">
+        <strong>How Copycat works:</strong><br>
+        The AI reads the uploaded deck's slide count, section order, color palette, and formatting style — then builds a brand-new presentation with that exact "skeleton" using your content or topic.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN CHAT ═══ -->
+<main class="chat-main">
+  <div class="topbar">
+    <div class="brand">
+      <span class="brand-name">anonemasi</span>
+      <span class="brand-tag">PowerPoint AI</span>
+      <span class="topbar-sep" style="color:var(--border);margin:0 2px;">|</span>
+      <span id="topbarTitle" style="font-size:0.78rem;color:var(--text-2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+    </div>
+    <div class="topbar-right">
+      <button class="new-chat-btn" onclick="newPresentation()">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        New
+      </button>
+      <div class="status-dot"></div>
+      <span class="topbar-status" id="topbarStatus">Gemini 2.5 Flash · Ready</span>
+    </div>
+  </div>
+
+  <div class="msgs" id="msgs">
+    <div class="msgs-inner" id="msgsInner">
+    <div class="welcome" id="welcomeScreen">
+      <div class="welcome-icon">✦</div>
+      <div class="welcome-h">Create any presentation</div>
+      <div class="welcome-p">Describe your topic, upload a file, or combine both. I'll build a complete, styled PowerPoint deck — from scratch or from your documents.</div>
+      <div class="chips">
+        <div class="chip" onclick="useChip(this)">Climate change impacts</div>
+        <div class="chip" onclick="useChip(this)">Business proposal for investors</div>
+        <div class="chip" onclick="useChip(this)">Introduction to machine learning</div>
+        <div class="chip" onclick="useChip(this)">Company quarterly review</div>
+        <div class="chip" onclick="useChip(this)">History of the Roman Empire</div>
+        <div class="chip" onclick="useChip(this)">Product launch strategy</div>
+        <div class="chip" onclick="useChip(this)">The future of renewable energy</div>
+        <div class="chip" onclick="useChip(this)">Digital marketing fundamentals</div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-area-inner">
+    <!-- Hidden tray kept for JS chip insertion (chips render inside .input-row now) -->
+    <div class="upload-tray" id="uploadTray"></div>
+
+    <div class="input-row">
+      <!-- Attached file chips appear here -->
+      <div class="inner-chips" id="innerChips"></div>
+      <!-- Textarea + buttons row -->
+      <div class="input-bottom">
+        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="Attach file">
+          <svg width="17" height="17" fill="none" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <textarea
+          class="main-ta" id="mainInput" rows="1"
+          placeholder="Describe your presentation topic, or ask me to transform an uploaded file…"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="handleSend()">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24">
+            <path d="M5 12h14M12 5l7 7-7 7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="input-hint">Enter to send · Shift+Enter for new line · Use the sidebar tools for templates, sources & customization</div>
+    </div>
+  </div>
+</main>
+
+<!-- ═══ RIGHT PREVIEW ═══ -->
+<aside class="preview-panel" id="previewPanel">
+  <div class="pv-inner">
+    <div class="pv-head">
+      <div class="pv-title">
+        Slide Preview
+        <span class="pv-badge" id="countBadge">0 slides</span>
+      </div>
+    </div>
+    <div class="pv-list" id="pvList"></div>
+    <div class="pv-foot">
+      <button class="dl-btn" id="dlBtn" onclick="downloadPptx()">
+        ⬇ &nbsp;Download .pptx
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+/* ── mammoth safety shim ────────────────────────────────── */
+function getMammoth() {
+  if (typeof mammoth !== 'undefined') return mammoth;
+  if (window.mammoth) return window.mammoth;
+  throw new Error('mammoth library failed to load — please refresh the page');
+}
+
+/* ── API Config ─────────────────────────────────────────── */
+const API_KEYS = [
+  "AIzaSyCyxiKVm9Oheegyl5GSL9P4IBBBy5UE2lQ",
+  "AIzaSyC4zjWw7wZOlu9XxTjTDkHcKpHDZHsKweE",
+  "AIzaSyChEjBSxEwmFEzImgvA6WUuqJ2Xeu8jvIc",
+  "AIzaSyBtWRx7ErE6zDuCL6ElAJVSf-WBN3FRXhw",
+  "AIzaSyCAy92k4yS3P8tWsFhHSWwnas7Csga3umI",
+  "AIzaSyAPti_i4IxcZwkqvzeS0PEqDws77UPyny8",
+  "AIzaSyBG0vkLsxxtrGoM49J-BcKB7K8faZ9-HBU",
+  "AIzaSyAQHUYPRxEyFa1Z8R9FsM7EnvbyJA61qEc",
+  "AIzaSyBsW-zBcW7GPR0fD4QSp7Z5eB7avKSpBVY",
+  "AIzaSyD2P3eXluVp3xsvLty1MVqgjYHYd42CdjQ",
+  "AIzaSyA_L6NaENi3jjyZkDoh1SBCN4qp5StW_Ik"
+];
+const MODEL = "gemini-2.5-flash";
+let keyIdx = Math.floor(Math.random() * API_KEYS.length);
+
+/* ── State ──────────────────────────────────────────────── */
+let mainFile       = null;
+let slidesData     = null;
+let busy           = false;
+let currentTool    = null;
+let historyOpen    = false;
+let activeHistoryId = null;
+
+let tplTheme       = null;
+let tplText        = '';
+let tplAB          = null;
+
+let ccTheme        = null;
+let ccText         = '';
+let ccAB           = null;
+
+let srcFile        = null;
+let srcExtraText   = '';
+
+/* ── History (localStorage) ─────────────────────────────── */
+const HISTORY_KEY = 'anonemasi_history_v1';
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveHistory(arr) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(arr.slice(0, 50))); }
+  catch(e) { console.warn('History save failed:', e); }
+}
+
+function addToHistory(title, slides) {
+  const arr = loadHistory();
+  const id  = 'p_' + Date.now();
+  arr.unshift({
+    id, title,
+    slides: JSON.parse(JSON.stringify(slides)),
+    count: slides.length,
+    date: new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }),
+    ts: Date.now()
+  });
+  saveHistory(arr);
+  activeHistoryId = id;
+  renderHistoryList();
+  return id;
+}
+
+function deleteFromHistory(id, e) {
+  e && e.stopPropagation();
+  const arr = loadHistory().filter(p => p.id !== id);
+  saveHistory(arr);
+  if (activeHistoryId === id) activeHistoryId = null;
+  renderHistoryList();
+  showToast('Presentation deleted from history');
+}
+
+function loadFromHistory(id) {
+  const arr = loadHistory();
+  const item = arr.find(p => p.id === id);
+  if (!item) { showToast('⚠️ Could not load this presentation'); return; }
+
+  // Restore state
+  slidesData = item.slides;
+  activeHistoryId = id;
+
+  // Restore UI
+  const ws = document.getElementById('welcomeScreen');
+  if (ws) ws.style.display = 'none';
+  document.getElementById('msgs').innerHTML = `<div class="msgs-inner" id="msgsInner"></div>`;
+  const inner = document.getElementById('msgsInner');
+
+  // Show a restore message
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.innerHTML = `
+    <div class="av">AN</div>
+    <div class="msg-body">
+      <div class="bubble">
+        <div style="font-weight:600;margin-bottom:6px">📂 Loaded from history</div>
+        <div style="color:var(--text-2);font-size:0.83rem;line-height:1.75">
+          <strong style="color:var(--text)">"${esc(item.title)}"</strong><br>
+          ${item.count} slides · Created ${item.date}. Use the Download button to get your file.
+        </div>
+      </div>
+    </div>`;
+  inner.appendChild(div);
+
+  // Show preview
+  renderPreview(item.slides);
+  document.getElementById('previewPanel').classList.add('open');
+  document.getElementById('dlBtn').classList.add('on');
+  document.getElementById('topbarTitle').textContent = item.title;
+
+  renderHistoryList();
+  showToast('✓ Presentation restored', 'ok');
+}
+
+function renderHistoryList() {
+  const arr = loadHistory();
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  if (!arr.length) {
+    empty.style.display = 'block';
+    // Remove all cards
+    list.querySelectorAll('.hcard').forEach(c => c.remove());
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Rebuild list
+  list.querySelectorAll('.hcard').forEach(c => c.remove());
+  arr.forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'hcard' + (item.id === activeHistoryId ? ' active' : '');
+    d.dataset.id = item.id;
+    d.onclick = () => loadFromHistory(item.id);
+    d.innerHTML = `
+      <div class="hcard-title" title="${esc(item.title)}">${esc(item.title)}</div>
+      <div class="hcard-meta">
+        <span>${esc(item.date)}</span>
+        <span class="hcard-badge">${item.count} slides</span>
+      </div>
+      <div class="hcard-actions">
+        <button class="hcard-del" title="Delete" onclick="deleteFromHistory('${item.id}', event)">🗑</button>
+      </div>`;
+    list.appendChild(d);
+  });
+}
+
+function toggleHistory() {
+  historyOpen = !historyOpen;
+  document.getElementById('historyPanel').classList.toggle('open', historyOpen);
+  document.getElementById('btn-history').classList.toggle('active', historyOpen);
+  if (historyOpen) renderHistoryList();
+}
+
+function newPresentation() {
+  if (busy) return;
+  // Save current if exists
+  activeHistoryId = null;
+  slidesData = null;
+  mainFile = null;
+
+  // Reset inner chips
+  const ic = document.getElementById('innerChips');
+  if (ic) ic.innerHTML = '';
+
+  // Reset UI
+  document.getElementById('msgs').innerHTML = `
+    <div class="msgs-inner" id="msgsInner">
+    <div class="welcome" id="welcomeScreen">
+      <div class="welcome-icon">✦</div>
+      <div class="welcome-h">Create any presentation</div>
+      <div class="welcome-p">Describe your topic or upload a document. I'll build a complete, styled PowerPoint deck from scratch or from your files.</div>
+      <div class="chips">
+        <div class="chip" onclick="useChip(this)">Climate change impacts</div>
+        <div class="chip" onclick="useChip(this)">Business proposal for investors</div>
+        <div class="chip" onclick="useChip(this)">Introduction to machine learning</div>
+        <div class="chip" onclick="useChip(this)">Company quarterly review</div>
+        <div class="chip" onclick="useChip(this)">History of the Roman Empire</div>
+        <div class="chip" onclick="useChip(this)">Product launch strategy</div>
+        <div class="chip" onclick="useChip(this)">The future of renewable energy</div>
+        <div class="chip" onclick="useChip(this)">Digital marketing fundamentals</div>
+      </div>
+    </div>
+    </div>`;
+
+  document.getElementById('previewPanel').classList.remove('open');
+  document.getElementById('dlBtn').classList.remove('on');
+  document.getElementById('pvList').innerHTML = '';
+  document.getElementById('topbarTitle').textContent = '';
+
+  const ta = document.getElementById('mainInput');
+  ta.value = ''; ta.style.height = 'auto';
+  ta.focus();
+
+  renderHistoryList();
+}
+
+/* ── Init ───────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  document.getElementById('fileInput').addEventListener('change', e => {
+    if (e.target.files[0]) handleMainFile(e.target.files[0]);
+  });
+  document.getElementById('templateInput').addEventListener('change', e => {
+    if (e.target.files[0]) handleTemplate(e.target.files[0]);
+  });
+  document.getElementById('copycatInput').addEventListener('change', e => {
+    if (e.target.files[0]) handleCopycat(e.target.files[0]);
+  });
+  document.getElementById('sourcesFileInput').addEventListener('change', e => {
+    if (e.target.files[0]) handleSrcFile(e.target.files[0]);
+  });
+
+  // Drag-drop on main area
+  const main = document.getElementById('msgs');
+  main.addEventListener('dragover', e => { e.preventDefault(); });
+  main.addEventListener('drop', e => {
+    e.preventDefault();
+    const f = e.dataTransfer.files[0];
+    if (f) handleMainFile(f);
+  });
+
+  // Load history on startup
+  renderHistoryList();
+});
+
+/* ── Tool Panel ─────────────────────────────────────────── */
+const panelTitles = {
+  sources:   '🔗  Sources',
+  template:  '🎨  Template',
+  customize: '⚙️  Customize',
+  copycat:   '🪄  Copycat'
+};
+
+function openTool(name) {
+  if (currentTool === name) { closePanel(); return; }
+  document.querySelectorAll('.panel-sec').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('btn-' + name).classList.add('active');
+  document.getElementById('panelTitle').textContent = panelTitles[name];
+  document.getElementById('toolPanel').classList.add('open');
+  currentTool = name;
+}
+
+function closePanel() {
+  document.getElementById('toolPanel').classList.remove('open');
+  document.querySelectorAll('.tool-btn').forEach(b => {
+    if (b.id !== 'btn-history') b.classList.remove('active');
+  });
+  currentTool = null;
+}
+
+/* ── Main File ──────────────────────────────────────────── */
+function handleMainFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['pdf','doc','docx'].includes(ext)) {
+    showToast('⚠️ Unsupported type — use PDF or .docx');
+    return;
+  }
+  mainFile = file;
+  addTrayChip(file, 'main');
+}
+
+function addTrayChip(file, id) {
+  const tray = document.getElementById('innerChips');
+  const ext = file.name.split('.').pop().toLowerCase();
+  const icons = { pdf:'📄', docx:'📝', doc:'📝', pptx:'📊' };
+  const cls   = { pdf:'chip-pdf', docx:'chip-docx', doc:'chip-docx' };
+  const old = document.getElementById('chip-' + id);
+  if (old) old.remove();
+  const chip = document.createElement('div');
+  chip.id = 'chip-' + id;
+  chip.className = 'tray-chip ' + (cls[ext] || '');
+  const label = file.name.length > 24 ? file.name.slice(0,22) + '…' : file.name;
+  chip.innerHTML = `<span>${icons[ext]||'📎'}</span><span class="cn" title="${esc(file.name)}">${esc(label)}</span><button class="ck" onclick="removeChip('${id}')">✕</button>`;
+  tray.appendChild(chip);
+}
+
+function removeChip(id) {
+  const el = document.getElementById('chip-' + id);
+  if (el) el.remove();
+  if (id === 'main') mainFile = null;
+}
+
+/* ── Template ───────────────────────────────────────────── */
+async function handleTemplate(file) {
+  if (!file.name.match(/\.pptx$/i)) { showToast('⚠️ Template must be .pptx'); return; }
+  document.getElementById('tplName').textContent = file.name;
+  document.getElementById('tplPill').classList.add('on');
+  try {
+    const ab = await file.arrayBuffer();
+    tplAB    = ab;
+    tplTheme = await extractPptxTheme(ab);
+    tplText  = await extractPptxText(ab);
+    document.getElementById('styleRefRow').style.display = 'flex';
+    const tplInfoEl = document.getElementById('tplInfo');
+    tplInfoEl.style.display = 'block';
+    if (tplTheme) {
+      const swatches = [tplTheme.bg, tplTheme.bodyAccent, tplTheme.bodyBg]
+        .map(c => `<span style="display:inline-block;width:13px;height:13px;border-radius:3px;background:#${c};border:1px solid rgba(255,255,255,0.15);vertical-align:middle;margin-left:3px;"></span>`).join('');
+      tplInfoEl.innerHTML = `<strong>Template loaded.</strong> AI will use your design. Detected colors: ${swatches}`;
+    }
+    ensureStyleOption('template', '✦ Use Uploaded Template');
+    document.getElementById('styleSelect').value = 'template';
+    showToast('✓ Template loaded — design preserved', 'ok');
+  } catch(e) { showToast('⚠️ Could not read template: ' + e.message); }
+}
+
+function removeTpl() {
+  tplTheme = null; tplText = ''; tplAB = null;
+  document.getElementById('tplPill').classList.remove('on');
+  document.getElementById('styleRefRow').style.display = 'none';
+  document.getElementById('tplInfo').style.display = 'none';
+  removeStyleOption('template');
+}
+
+/* ── Copycat ────────────────────────────────────────────── */
+async function handleCopycat(file) {
+  if (!file.name.match(/\.pptx$/i)) { showToast('⚠️ Copycat file must be .pptx'); return; }
+  document.getElementById('ccName').textContent = file.name;
+  document.getElementById('ccPill').classList.add('on');
+  try {
+    const ab = await file.arrayBuffer();
+    ccAB    = ab;
+    ccTheme = await extractPptxTheme(ab);
+    ccText  = await extractPptxText(ab);
+    ensureStyleOption('copycat', '🪄 Copycat — Mirror Structure');
+    document.getElementById('styleSelect').value = 'copycat';
+    showToast('✓ Copycat deck loaded', 'ok');
+  } catch(e) { showToast('⚠️ Could not read file: ' + e.message); }
+}
+
+function removeCopycat() {
+  ccTheme = null; ccText = ''; ccAB = null;
+  document.getElementById('ccPill').classList.remove('on');
+  removeStyleOption('copycat');
+}
+
+function ensureStyleOption(val, label) {
+  const sel = document.getElementById('styleSelect');
+  if (!sel.querySelector(`option[value="${val}"]`)) {
+    const o = document.createElement('option');
+    o.value = val; o.textContent = label;
+    sel.insertBefore(o, sel.firstChild);
+  }
+}
+
+function removeStyleOption(val) {
+  const o = document.getElementById('styleSelect').querySelector(`option[value="${val}"]`);
+  if (o) o.remove();
+}
+
+/* ── Sources ────────────────────────────────────────────── */
+function handleSrcFile(file) {
+  srcFile = file;
+  document.getElementById('srcFileName').textContent = file.name;
+  document.getElementById('srcPill').classList.add('on');
+}
+
+function removeSrcFile() {
+  srcFile = null;
+  document.getElementById('srcPill').classList.remove('on');
+}
+
+function applySrc() {
+  srcExtraText = document.getElementById('srcText').value.trim();
+  if (!srcFile && !srcExtraText) { showToast('⚠️ Add a file or paste text first'); return; }
+  showToast('✓ Sources applied for next generation', 'ok');
+  closePanel();
+}
+
+/* ── Chat logic ─────────────────────────────────────────── */
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function useChip(el) {
+  const ta = document.getElementById('mainInput');
+  ta.value = el.textContent;
+  ta.focus();
+  autoResize(ta);
+}
+
+async function handleSend() {
+  if (busy) return;
+  const ta = document.getElementById('mainInput');
+  const text = ta.value.trim();
+  if (!text && !mainFile) { showToast('⚠️ Type a topic or attach a file first'); return; }
+
+  // Hide welcome
+  const ws = document.getElementById('welcomeScreen');
+  if (ws) ws.style.display = 'none';
+
+  addMsg('user', text || `Process file: ${mainFile.name}`);
+  ta.value = ''; ta.style.height = 'auto';
+
+  await runGeneration(text);
+}
+
+function addMsg(role, text) {
+  const inner = document.getElementById('msgsInner') || document.getElementById('msgs');
+  const area  = document.getElementById('msgs');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const t = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+  div.innerHTML = `
+    <div class="av">${role === 'user' ? 'U' : 'AN'}</div>
+    <div class="msg-body">
+      <div class="bubble">${esc(text)}</div>
+      <div class="msg-time">${t}</div>
+    </div>`;
+  inner.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addProgressMsg() {
+  const inner = document.getElementById('msgsInner') || document.getElementById('msgs');
+  const area  = document.getElementById('msgs');
+  const div = document.createElement('div');
+  div.className = 'msg ai'; div.id = 'progressBubble';
+  div.innerHTML = `
+    <div class="av">AN</div>
+    <div class="msg-body">
+      <div class="bubble">
+        <div style="font-weight:600;margin-bottom:8px">Building your presentation…</div>
+        <div class="pbar-wrap"><div class="pbar-fill" id="pbarFill"></div></div>
+        <div class="prog-steps">
+          <div class="pstep on"  id="ps1"><span class="pstep-ic">⏳</span>Reading content…</div>
+          <div class="pstep"     id="ps2"><span class="pstep-ic">○</span>Structuring slides with AI…</div>
+          <div class="pstep"     id="ps3"><span class="pstep-ic">○</span>Finalizing slide data…</div>
+        </div>
+      </div>
+    </div>`;
+  inner.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function setPbar(pct, step) {
+  const f = document.getElementById('pbarFill');
+  if (f) f.style.width = pct + '%';
+  const labels = ['Reading content…','Structuring slides with AI…','Finalizing slide data…'];
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('ps' + i);
+    if (!el) continue;
+    const cls = i < step ? 'done' : i === step ? 'on' : '';
+    const icon = i < step ? '✓' : i === step ? '⏳' : '○';
+    el.className = 'pstep ' + cls;
+    el.innerHTML = `<span class="pstep-ic">${icon}</span>${labels[i-1]}`;
+  }
+}
+
+function removeProgressMsg() {
+  const el = document.getElementById('progressBubble');
+  if (el) el.remove();
+}
+
+function addResultMsg(count, title) {
+  const inner = document.getElementById('msgsInner') || document.getElementById('msgs');
+  const area  = document.getElementById('msgs');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.innerHTML = `
+    <div class="av">AN</div>
+    <div class="msg-body">
+      <div class="bubble">
+        <div style="font-weight:600;margin-bottom:6px">✦ Presentation ready!</div>
+        <div style="color:var(--text-2);font-size:0.83rem;line-height:1.75">
+          <strong style="color:var(--text)">"${esc(title)}"</strong><br>
+          ${count} slides generated. See the preview panel on the right — then click <strong>Download .pptx</strong> to get your file.
+        </div>
+      </div>
+    </div>`;
+  inner.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+
+  // Save to history
+  if (slidesData) {
+    addToHistory(title, slidesData);
+  }
+  // Update topbar title
+  document.getElementById('topbarTitle').textContent = title;
+}
+
+function clearChat() {
+  newPresentation();
+}
+
+/* ── Generation Pipeline ────────────────────────────────── */
+async function runGeneration(userPrompt) {
+  busy = true;
+  document.getElementById('sendBtn').disabled = true;
+  addProgressMsg();
+
+  try {
+    // Step 1 — read content
+    setPbar(15, 1);
+    let content = '';
+    if (mainFile) content = await extractDocText(mainFile);
+    if (srcFile)  content += '\n\n--- REFERENCE SOURCE ---\n' + await extractDocText(srcFile);
+    if (srcExtraText) content += '\n\n--- EXTRA CONTEXT ---\n' + srcExtraText;
+    const topicMode = !content.trim();
+    if (topicMode) content = userPrompt;
+
+    // Step 2 — call AI
+    setPbar(38, 2);
+    const cfg = getSettings();
+    const rawJson = await buildSlideJson(content, userPrompt, topicMode, cfg);
+
+    setPbar(80, 3);
+
+    // Step 3 — parse
+    let slides;
+    try {
+      const clean = rawJson.replace(/^```json\s*/,'').replace(/\s*```$/,'').trim();
+      slides = JSON.parse(clean);
+    } catch {
+      const m = rawJson.match(/\[[\s\S]*\]/);
+      if (m) slides = JSON.parse(m[0]);
+      else throw new Error('Could not parse AI response.');
+    }
+
+    slidesData = slides;
+    setPbar(100, 3);
+    removeProgressMsg();
+
+    const title = slides[0]?.title || 'Presentation';
+    addResultMsg(slides.length, title);
+    renderPreview(slides);
+
+    document.getElementById('previewPanel').classList.add('open');
+    document.getElementById('dlBtn').classList.add('on');
+
+  } catch(err) {
+    removeProgressMsg();
+    addMsg('ai', '⚠️ Error: ' + err.message + ' — please try again.');
+    showToast('⚠️ ' + err.message);
+  } finally {
+    busy = false;
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+function getSettings() {
+  return {
+    slideCount:    parseInt(document.getElementById('slideCount').value) || 12,
+    pointsPerSlide:parseInt(document.getElementById('pointsPerSlide').value) || 3,
+    linesPerPoint: document.getElementById('linesPerPoint').value,
+    style:         document.getElementById('styleSelect').value,
+    audience:      document.getElementById('audienceSelect').value,
+    focus:         document.getElementById('focusInput').value.trim(),
+    allowTables:   document.getElementById('allowTables').checked,
+    allowDiagrams: document.getElementById('allowDiagrams').checked,
+    allowImages:   document.getElementById('allowImages').checked,
+    allowQuotes:   document.getElementById('allowQuotes').checked,
+    allowTwoCol:   document.getElementById('allowTwoCol').checked,
+    styleRef:      document.getElementById('styleRefCheck')?.checked,
+  };
+}
+
+/* ── Gemini API ─────────────────────────────────────────── */
+async function callGemini(prompt, retries = 3) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const key = API_KEYS[keyIdx % API_KEYS.length];
+    keyIdx++;
+    try {
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`,
+        {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            contents:[{ parts:[{ text: prompt }] }],
+            generationConfig:{ temperature:0.35, maxOutputTokens:32768 }
+          })
+        }
+      );
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        if ((err.error?.code === 429 || err.error?.code === 403) && attempt < retries - 1) continue;
+        throw new Error(err.error?.message || `API error ${resp.status}`);
+      }
+      const data = await resp.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error('Empty response from API');
+      return text;
+    } catch(e) {
+      if (attempt === retries - 1) throw e;
+    }
+  }
+}
+
+async function buildSlideJson(content, userPrompt, topicMode, cfg) {
+  const today = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  const trimmed = content.slice(0, 40000);
+
+  /* ── Step 1: Parse user's explicit slide instructions ── */
+  const parsed = parseUserSlideInstructions(userPrompt, cfg);
+
+  const isCopycat  = cfg.style === 'copycat'  && ccTheme;
+  const isTemplate = cfg.style === 'template' && tplTheme;
+
+  const styleRefNote = (isTemplate || isCopycat) && cfg.styleRef && tplText
+    ? '\n\nSTYLE REFERENCE — match this writing style:\n- Same sentence structure, vocabulary, tone\nSAMPLE SLIDES:\n' + tplText.slice(0,2000)
+    : '';
+  const copycatNote = isCopycat && ccText
+    ? '\n\nCOPYCAT: Mirror structure of this deck (same slide count, types, section order). Use given content, NOT this deck\'s words:\n' + ccText.slice(0,2500)
+    : '';
+
+  /* ── Step 2: Build exact slide skeleton from parsed instructions ── */
+  const skeletonLines = parsed.slides.map((sl, i) => {
+    const parts = [`Slide ${i+1} (type: "${sl.type}")`];
+    if (sl.title_hint) parts.push(`  → Title must be: "${sl.title_hint}"`);
+    if (sl.paragraph) {
+      parts.push(`  → Content: ONE long flowing paragraph (NOT bullet points). Min 4–6 sentences. No list formatting.`);
+    } else if (sl.table) {
+      parts.push(`  → Content: A table (use table_headers + table_rows). ${sl.table_hint || ''}`);
+    } else if (sl.diagram) {
+      parts.push(`  → Content: A flow diagram (use diagram_steps array).`);
+    } else if (sl.type === 'image') {
+      parts.push(`  → Content: An SVG image slide (use image_description + svg_code). Create a complete, colorful, informative SVG at 800x450 viewBox that visually represents the topic.`);
+    } else if (sl.bullets_count) {
+      parts.push(`  → Exactly ${sl.bullets_count} bullet point${sl.bullets_count>1?'s':''}`);
+      if (sl.lines_per_point) parts.push(`  → Each bullet: max ${sl.lines_per_point} line${sl.lines_per_point>1?'s':''} (${sl.lines_per_point===1?'tight, concise':'2–3 full sentences'})`);
+      if (sl.bullet_hint) parts.push(`  → Bullet style note: ${sl.bullet_hint}`);
+    }
+    return parts.join('\n');
+  }).join('\n\n');
+
+  /* ── Step 3: Build the full prompt ── */
+  const topicNote = topicMode
+    ? `TOPIC MODE: Generate a comprehensive, well-researched presentation on: "${userPrompt}"\n\n`
+    : '';
+
+  const schemaEx = JSON.stringify([
+    {"type":"title","title":"Research Topic Name","subtitle":"Author | Institution | " + today},
+    {"type":"content","title":"Background","bullets":["Statement one with full context and supporting detail across 1–2 sentences","Statement two: specific fact or finding here with measurement or citation"]},
+    {"type":"content","title":"Problem Statement","paragraph":"This is a long flowing paragraph that explains the problem in full sentences, with no bullet formatting, providing detailed context and justification for why this problem matters and what gap exists in current knowledge or practice."},
+    {"type":"table","title":"Objectives","table_headers":["Objective","Research Question"],"table_rows":[["Main objective text here","Corresponding research question?"],["Supporting objective text","Sub-question here?"]]},
+    {"type":"diagram","title":"Process Flow","diagram_steps":["Step 1: Identify","Step 2: Analyze","Step 3: Implement","Step 4: Evaluate"]},
+    {"type":"image","title":"Visual Overview","image_description":"A clear description of what the image/diagram shows","svg_code":"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 450'><rect width='800' height='450' fill='#f0f4ff'/><text x='400' y='225' text-anchor='middle' font-family='Arial' font-size='24' fill='#333'>Diagram Title</text></svg>"},
+    {"type":"content","title":"References","bullets":["Author, A. (2020). Title of work. Journal, 10(2), 1–15."],"_refSlide":true}
+  ], null, 2);
+
+  const userInstructionBlock = parsed.hasExplicit
+    ? `\n\n${'='.repeat(60)}\nUSER'S EXACT SLIDE-BY-SLIDE INSTRUCTIONS — OVERRIDE EVERYTHING ELSE\n${'='.repeat(60)}\nThe user gave you a PRECISE layout blueprint. You MUST follow it EXACTLY:\n\n${skeletonLines}\n\nTOTAL SLIDES: ${parsed.slides.length} — OUTPUT EXACTLY ${parsed.slides.length} SLIDES, NO MORE, NO FEWER.\nDO NOT add, remove, or reorder any slides. DO NOT change a paragraph slide to bullets. DO NOT change a table slide to bullets. DO NOT ignore any specification above.\nFINAL CHECK: Before outputting, count your slide objects. If not ${parsed.slides.length}, correct it.\n${'='.repeat(60)}`
+    : '';
+
+  const languageNote = parsed.wantsSimpleEnglish
+    ? '\n\nLANGUAGE: Write in SIMPLE, PLAIN English. Use short, everyday words. Avoid jargon, technical terms, and complex sentences. Maximum 1-2 short sentences per bullet. A 10-year-old should understand every word.'
+    : '';
+
+  const prompt = `You are an expert PowerPoint architect. Your ONE job is to output a valid JSON array of slides that EXACTLY matches the specifications below. Deviation from slide count, type, bullet count, or format is not acceptable.
+${userInstructionBlock}${languageNote}
+
+==========================
+SOURCE CONTENT
+==========================
+${trimmed || '(Generate content based on the topic described in user instructions)'}
+${styleRefNote}${copycatNote}
+
+==========================
+${parsed.hasExplicit ? 'CONFIRMED SPECIFICATIONS (from user instructions above)' : 'DEFAULT SPECIFICATIONS'}
+==========================
+Total slides: ${parsed.slides.length}
+Today's date: ${today}
+${!parsed.hasExplicit ? `Max bullets per slide: ${cfg.pointsPerSlide}\nBullet detail: ${{'short':'SHORT: 1 tight sentence','medium':'MEDIUM: 1–2 sentences with facts','long':'LONG: 2–3 detailed sentences'}[cfg.linesPerPoint]}\nAudience: ${cfg.audience}${cfg.focus ? '\nFocus: ' + cfg.focus : ''}` : ''}
+
+==========================
+CONTENT QUALITY RULES (apply to all bullet text)
+==========================
+1. Declarative, factual statements ONLY — never imperative or instructional language
+2. Extract exact numbers, names, dates, statistics from the source
+3. Never use these words: explore, understand, examine, discuss, overview, look at
+4. Academic / professional tone throughout — formal and objective
+
+==========================
+JSON SCHEMA REFERENCE
+==========================
+Use these slide types: title, content, closing, two_column, quote, diagram, table, image
+- "content" slide with bullets array: standard bullet slide
+- "content" slide with paragraph string: full paragraph, NO bullets array
+- "table" slide: uses table_headers (string[]) and table_rows (string[][])
+- "diagram" slide: uses diagram_steps (string[]) — up to 6 steps
+- "image" slide: uses image_description (string) + svg_code (complete self-contained SVG markup, 800x450 viewBox, colorful and informative, using shapes and text labels). Use for: data visualizations, org charts, process maps, infographics, comparisons.
+- "title" slide: uses title + subtitle
+- "two_column": uses left_bullets and right_bullets
+- "quote": uses quote_text + quote_source
+
+WHEN TO USE IMAGE SLIDES:
+- When the user explicitly mentions "image", "illustration", "visual", "infographic", "chart", "diagram" in their instructions for a slide
+- When the topic benefits from a visual representation (org charts, cycle diagrams, comparison graphics, geography maps, timelines)
+- The SVG must be complete, well-structured, and render cleanly at 800x450. Use descriptive labels, good contrast colors, and clear layout.
+
+EXAMPLE OUTPUT (match this format exactly):
+${schemaEx}
+
+HARD CONSTRAINTS:
+- Output ONLY the raw JSON array starting with [ and ending with ]
+- NO markdown, NO backticks, NO commentary before or after
+- Every string value must be valid JSON (escape any quotes inside strings)
+- If a slide is type "content" with a "paragraph" field, do NOT include a "bullets" array
+- Never output more or fewer slides than specified
+- Slide 1 must always be type "title"`;
+
+  return await callGemini(prompt);
+}
+
+/* ══════════════════════════════════════════════════════════
+   INSTRUCTION PARSER
+   Converts natural-language user instructions into a strict
+   slide-by-slide specification that Gemini must follow.
+══════════════════════════════════════════════════════════ */
+function parseUserSlideInstructions(userMsg, cfg) {
+  const msg   = userMsg || '';
+  const lower = msg.toLowerCase();
+
+  /* Helper: extract a number near a phrase */
+  function numNear(pattern, text, fallback) {
+    const m = text.match(new RegExp(pattern + '[^\\d]*(\\d+)|(?<![\\w])(\\d+)[^\\w]*' + pattern, 'i'));
+    if (m) return parseInt(m[1] || m[2], 10);
+    return fallback;
+  }
+
+  /* ── Detect explicit slide count — broader patterns ── */
+  let totalSlides = cfg.slideCount;
+  const slideCountPatterns = [
+    /(\d+)\s*slides?/i,
+    /(?:number\s+of\s+slides?|slides?\s+(?:count|number|total))\s*(?:to\s+be|should\s+be|=|:)?\s*(\d+)/i,
+    /(?:make|create|generate|produce|give\s+me)\s+(\d+)\s*(?:slides?|page)/i,
+    /(?:total|exactly|only)\s+(\d+)\s*slides?/i,
+  ];
+  for (const pat of slideCountPatterns) {
+    const m = msg.match(pat);
+    if (m) { totalSlides = parseInt(m[1] || m[2], 10); break; }
+  }
+
+  /* ── Detect lines/bullets per slide ── */
+  let globalBulletsPerSlide = cfg.pointsPerSlide;
+  const bulletsPatterns = [
+    /(?:max(?:imum)?\s*)?(\d+)\s*(?:lines?|points?|bullets?)\s*(?:per\s*(?:slide|page)|each\s*slide|per\s*page)/i,
+    /(?:lines?|points?|bullets?)\s*per\s*(?:slide|page)\s*(?:should\s*be|to\s*be|=|:)?\s*(\d+)/i,
+    /(?:not\s*more\s*than|maximum\s*of|max\s*of)\s*(\d+)\s*(?:lines?|points?|bullets?)/i,
+    /(?:only|just)\s*(\d+)\s*(?:line|point|bullet)/i,
+  ];
+  for (const pat of bulletsPatterns) {
+    const m = msg.match(pat);
+    if (m) { globalBulletsPerSlide = parseInt(m[1] || m[2], 10); break; }
+  }
+
+  /* ── Detect lines per point/bullet ── */
+
+  /* ── Check if user gave explicit per-slide instructions ── */
+  const hasExplicit = /\b(background|problem\s*statement|objectives?|justification|references?|introduction|conclusion|methodology|literature|findings?|results?|discussion|front\s*page|title\s*(slide|page)|table\s*of)\b/i.test(msg)
+    || /\b(\d+)\s*(points?|bullets?|slides?)\b/i.test(msg)
+    || /\b(paragraph|long\s*paragraph|no\s*bullets?|instead\s*of\s*points?)\b/i.test(msg)
+    || /\b(create\s+a\s+table|flow\s*(diagram|chart)|process\s*(flow|diagram)|image\s*of|illustration|infographic|svg|visual\s+of|org\s*chart)\b/i.test(msg)
+    || /(?:max(?:imum)?|not\s*more\s*than|only)\s*\d+\s*(?:lines?|points?|bullets?)/i.test(msg)
+    || /(?:lines?|points?|bullets?)\s*per\s*(?:slide|page)/i.test(msg)
+    || /(?:simple\s*english|easy\s*(?:english|words|language)|plain\s*(?:english|language)|basic\s*(?:english|language))/i.test(msg)
+    || /(?:number\s+of\s+slides?|slides?\s+count|total\s+slides?)\s*(?:to\s+be|should\s+be|=|:)?\s*\d+/i.test(msg);
+
+  if (!hasExplicit) {
+    /* Return generic slide list based on settings — but honour any counts detected from NL */
+    const effectiveCfg = { ...cfg, pointsPerSlide: globalBulletsPerSlide };
+    const wantsSimpleEnglish = /(?:simple\s*english|easy\s*(?:english|words|language)|plain\s*(?:english|language)|basic\s*(?:english|language)|simple\s*(?:words|language)|keep\s*it\s*simple)/i.test(msg);
+    return { hasExplicit: false, slides: buildGenericSlides(totalSlides, effectiveCfg), wantsSimpleEnglish };
+  }
+
+  /* ── Parse explicit instructions ── */
+  /* We split the message on common delimiters to find per-slide specs */
+  const segments = msg.split(/(?:,\s*(?:and\s+)?(?:then\s+)?|\.\s+|;\s*|then\s+|\band\s+)/i).filter(s => s.trim().length > 3);
+
+  const slides = [];
+  let maxPointsPerSlide = globalBulletsPerSlide; // start from NL-detected value, not just cfg
+  let globalLinesPerPoint = cfg.linesPerPoint === 'long' ? 3 : cfg.linesPerPoint === 'short' ? 1 : 2;
+
+  /* Extract global constraints mentioned anywhere in the message */
+  const globalMaxPoints = msg.match(/(?:max(?:imum)?\s*)?(\d+)\s*points?\s*(?:each|per\s*slide)/i);
+  if (globalMaxPoints) maxPointsPerSlide = parseInt(globalMaxPoints[1], 10);
+
+  const globalMaxLines = msg.match(/(?:max(?:imum)?\s*)?(?:lines?\s*of\s*sentence|sentences?\s*per\s*point|lines?\s*per\s*point)\s*(?:should\s*be\s*)?(\d+)/i)
+    || msg.match(/(\d+)\s*(?:max(?:imum)?\s*)?(?:lines?\s*(?:of\s*sentence\s*)?per\s*point|sentences?\s*per\s*point)/i);
+  if (globalMaxLines) globalLinesPerPoint = parseInt(globalMaxLines[1], 10);
+
+  /* Segment classifiers */
+  function classifySegment(seg) {
+    const s = seg.toLowerCase().trim();
+    const result = {
+      type:'content', title_hint: null, bullets_count: maxPointsPerSlide,
+      lines_per_point: globalLinesPerPoint, paragraph: false, table: false,
+      diagram: false, bullet_hint: null, table_hint: null
+    };
+
+    /* Title / front page */
+    if (/front\s*page|title\s*(?:page|slide)|cover\s*(?:page|slide)/.test(s)) {
+      result.type = 'title'; result.title_hint = 'Title Page'; return result;
+    }
+
+    /* References */
+    if (/references?/.test(s)) {
+      result.type = 'content'; result.title_hint = 'References';
+      result._isRef = true; return result;
+    }
+
+    /* Problem statement */
+    if (/problem\s*statement/.test(s)) {
+      result.title_hint = 'Problem Statement';
+      // Check for paragraph in THIS segment OR anywhere in the full message (global intent)
+      if (/paragraph|long\s*para|instead\s*of\s*points?|no\s*bullets?/.test(s)
+          || /problem\s*statement[^.]*paragraph/i.test(msg)
+          || /paragraph[^.]*problem\s*statement/i.test(msg)) {
+        result.paragraph = true; result.type = 'content';
+      } else {
+        const pc = s.match(/(\d+)\s*(?:long\s*)?(?:points?|bullets?)/i);
+        if (pc) result.bullets_count = parseInt(pc[1]);
+      }
+      return result;
+    }
+
+    /* Objectives / questions */
+    if (/objectives?/.test(s)) {
+      result.title_hint = s.includes('main') && s.includes('support') ? 'Main and Supporting Objectives'
+        : s.includes('main') ? 'Main Objectives'
+        : s.includes('support') ? 'Supporting Objectives'
+        : 'Objectives';
+      if (/table/.test(s) || (/question/.test(s) && /table/.test(lower))) {
+        result.table = true; result.type = 'table';
+        result.table_hint = 'Include objectives and their corresponding research questions as table rows. Headers: ["Objective", "Research Question"]';
+      } else {
+        const pc = s.match(/(\d+)\s*(?:points?|bullets?)/i);
+        if (pc) result.bullets_count = parseInt(pc[1]);
+      }
+      if (/question/.test(s)) result.bullet_hint = 'Include the research question(s) alongside each objective';
+      return result;
+    }
+
+    /* Justification */
+    if (/justif(?:y|ication)/.test(s)) {
+      result.title_hint = 'Justification';
+      const pc = s.match(/(\d+)\s*(?:points?|bullets?)/i) || msg.match(/justif\w+\s+(\d+)\s*points?/i);
+      if (pc) result.bullets_count = parseInt(pc[1]);
+      const lc = s.match(/(\d+)\s*(?:lines?|sentences?)/i);
+      if (lc) result.lines_per_point = parseInt(lc[1]);
+      return result;
+    }
+
+    /* Background */
+    if (/background/.test(s)) {
+      result.title_hint = 'Background';
+      const pc = s.match(/(\d+)\s*(?:points?|bullets?)/i);
+      if (pc) result.bullets_count = parseInt(pc[1]);
+      const lc = s.match(/(\d+)\s*(?:lines?|max\s*lines?|sentences?)\s*(?:per\s*(?:point|sentence)|each)/i);
+      if (lc) result.lines_per_point = parseInt(lc[1]);
+      return result;
+    }
+
+    /* Introduction */
+    if (/introduction|intro\b/.test(s)) {
+      result.title_hint = 'Introduction';
+      const pc = s.match(/(\d+)\s*(?:points?|bullets?)/i);
+      if (pc) result.bullets_count = parseInt(pc[1]);
+      return result;
+    }
+
+    /* Conclusion / closing */
+    if (/conclusion|summary/.test(s)) {
+      result.type = 'closing'; result.title_hint = 'Conclusions';
+      const pc = s.match(/(\d+)\s*(?:points?|bullets?)/i);
+      if (pc) result.bullets_count = parseInt(pc[1]);
+      return result;
+    }
+
+    /* Methodology */
+    if (/method(?:ology)?/.test(s)) {
+      result.title_hint = 'Methodology';
+      const pc = s.match(/(\d+)\s*(?:points?|bullets?)/i);
+      if (pc) result.bullets_count = parseInt(pc[1]);
+      return result;
+    }
+
+    /* Literature review */
+    if (/literature/.test(s)) {
+      result.title_hint = 'Literature Review';
+      const pc = s.match(/(\d+)\s*(?:points?|bullets?)/i);
+      if (pc) result.bullets_count = parseInt(pc[1]);
+      return result;
+    }
+
+    /* Findings / Results */
+    if (/finding|result/.test(s)) {
+      result.title_hint = 'Findings & Results';
+      const pc = s.match(/(\d+)\s*(?:points?|bullets?)/i);
+      if (pc) result.bullets_count = parseInt(pc[1]);
+      return result;
+    }
+
+    /* Flow/diagram */
+    if (/flow\s*(diagram|chart)|process\s*(flow|diagram|map)/.test(s)) {
+      result.type = 'diagram';
+      result.title_hint = 'Process Flow';
+      return result;
+    }
+
+    /* Table explicit */
+    if (/\bcreate\s+a\s+table\b|\btable\s*(?:slide|of|showing|with)\b/.test(s)) {
+      result.type = 'table';
+      const titleMatch = s.match(/table\s+(?:of|for|about|showing)\s+([^,;]+)/i);
+      result.title_hint = titleMatch ? titleMatch[1].trim() : 'Data Table';
+      return result;
+    }
+
+    /* Image / SVG / illustration / infographic / visual */
+    if (/\b(?:image|illustration|visual|infographic|svg|picture|graphic|diagram\s+of|chart\s+of|org\s*chart|timeline|map|icon)\b/.test(s)) {
+      result.type = 'image';
+      const titleMatch = s.match(/(?:image|illustration|visual|infographic|diagram|chart|graphic)\s+(?:of|for|about|showing)\s+([^,;]+)/i)
+        || s.match(/(?:create|add|include|show)\s+(?:an?\s+)?(?:image|illustration|visual|svg|infographic|diagram|chart)\s+(?:of\s+)?([^,;]+)/i);
+      result.title_hint = titleMatch ? titleMatch[1].trim() : 'Visual';
+      return result;
+    }
+
+    /* Generic slide with explicit number mention */
+    if (/\d+\s*(?:points?|bullets?)/.test(s)) {
+      const pc = s.match(/(\d+)\s*(?:points?|bullets?)/i);
+      if (pc) result.bullets_count = parseInt(pc[1]);
+    }
+
+    /* Local lines-per-point override */
+    const lc = s.match(/(\d+)\s*(?:lines?|sentences?)\s*(?:per\s*(?:point|sentence)|each|max)/i);
+    if (lc) result.lines_per_point = parseInt(lc[1]);
+
+    return result;
+  }
+
+  /* Scan all segments */
+  let foundTitle = false;
+  for (const seg of segments) {
+    // Check for "N <type> slides" prefix like "2 background slides with 4 points each"
+    const multiMatch = seg.match(/^(\d+)\s+(background|introduction|intro|findings?|results?|method(?:ology)?|literature|discussion|analysis)\s*slides?/i);
+    const repeatCount = multiMatch ? parseInt(multiMatch[1]) : 1;
+    const classified = classifySegment(seg);
+
+    /* Skip fragments that don't describe a slide */
+    if (!classified.title_hint && classified.type === 'content') {
+      if (/(?:maximum|max|per\s*slide|lines?\s*of\s*sentence|points?\s*each|sentences?\s*per)/.test(seg.toLowerCase())) continue;
+    }
+
+    if (classified.type === 'title') {
+      if (!foundTitle) { slides.push(classified); foundTitle = true; }
+      continue;
+    }
+
+    // Push the slide once or multiple times (for "2 background slides")
+    for (let r = 0; r < repeatCount; r++) {
+      const clone = { ...classified };
+      if (repeatCount > 1 && r > 0) {
+        // Add cont... to title for 2nd+ repetitions
+        clone.title_hint = (classified.title_hint || 'Slide') + ' cont...';
+      }
+      slides.push(clone);
+    }
+  }
+
+  /* Ensure title slide is always first */
+  if (!foundTitle) slides.unshift({ type:'title', title_hint: null, bullets_count:0 });
+
+  /* Apply global lines-per-point as default to all slides that haven't set their own */
+  for (const sl of slides) {
+    if (sl.lines_per_point == null) sl.lines_per_point = globalLinesPerPoint;
+  }
+
+  /* ── Detect simple/plain language request ── */
+  const wantsSimpleEnglish = /(?:simple\s*english|easy\s*(?:english|words|language)|plain\s*(?:english|language)|basic\s*(?:english|language)|simple\s*(?:words|language)|keep\s*it\s*simple)/i.test(msg);
+
+  return { hasExplicit: true, slides, wantsSimpleEnglish };
+}
+
+function buildGenericSlides(count, cfg) {
+  const types = [
+    { type:'title' },
+    { type:'content', title_hint:'Introduction', bullets_count: cfg.pointsPerSlide, lines_per_point:2 },
+    { type:'content', title_hint:'Background', bullets_count: cfg.pointsPerSlide, lines_per_point:2 },
+    { type:'content', title_hint:'Main Points', bullets_count: cfg.pointsPerSlide, lines_per_point:2 },
+    { type:'content', title_hint:'Analysis', bullets_count: cfg.pointsPerSlide, lines_per_point:2 },
+    { type:'content', title_hint:'Discussion', bullets_count: cfg.pointsPerSlide, lines_per_point:2 },
+    { type:'closing',  title_hint:'Conclusions', bullets_count: cfg.pointsPerSlide, lines_per_point:2 },
+  ];
+  const result = [];
+  result.push(types[0]); // always title
+  for (let i = 1; i < count - 1; i++) {
+    result.push(types[Math.min(i, types.length - 2)]);
+  }
+  if (count > 1) result.push(types[types.length - 1]);
+  return result;
+}
+
+/* ── Preview Rendering ──────────────────────────────────── */
+function renderPreview(slides) {
+  const list = document.getElementById('pvList');
+  list.innerHTML = '';
+  document.getElementById('countBadge').textContent = slides.length + ' slides';
+
+  const typeClass = { title:'title-sl', section:'section-sl', closing:'closing-sl' };
+  slides.forEach((sl, i) => {
+    const d = document.createElement('div');
+    d.className = 'pv-slide ' + (typeClass[sl.type] || '');
+    d.style.animationDelay = (i * 0.035) + 's';
+
+    // Figure out preview text
+    let previewText = '';
+    let typeLabel = sl.type;
+    if (sl.paragraph) {
+      previewText = sl.paragraph.slice(0, 55) + '…';
+      typeLabel = 'paragraph';
+    } else if (sl.type === 'table') {
+      previewText = (sl.table_headers || []).join(' | ').slice(0, 55);
+      typeLabel = 'table';
+    } else if (sl.type === 'diagram') {
+      previewText = (sl.diagram_steps || []).join(' → ').slice(0, 55);
+      typeLabel = 'diagram';
+    } else if (sl.type === 'image') {
+      previewText = (sl.image_description || '').slice(0, 55);
+      typeLabel = '🖼 image';
+    } else {
+      const bullets = sl.bullets || sl.left_bullets || [];
+      previewText = bullets[0] ? bullets[0].slice(0, 55) + (bullets[0].length > 55 ? '…':'') : '';
+    }
+
+    d.innerHTML = `
+      <div class="pv-num">SLIDE ${String(i+1).padStart(2,'0')}</div>
+      <div class="pv-ttl">${esc(sl.title || '—')}</div>
+      <div class="pv-type">${esc(typeLabel)}${previewText ? ' · ' + esc(previewText) : ''}</div>`;
+    list.appendChild(d);
+  });
+}
+
+/* ── Text Extraction ────────────────────────────────────── */
+async function extractDocText(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'pdf')          return extractPdf(file);
+  if (['doc','docx'].includes(ext)) return extractDocx(file);
+  throw new Error('Unsupported file type');
+}
+
+async function extractPdf(file) {
+  const ab = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+  let txt = '';
+  for (let i = 1; i <= Math.min(pdf.numPages, 60); i++) {
+    const page = await pdf.getPage(i);
+    const c = await page.getTextContent();
+    txt += c.items.map(s => s.str).join(' ') + '\n';
+  }
+  return txt;
+}
+
+async function extractDocx(file) {
+  const ab = await file.arrayBuffer();
+  const m = getMammoth();
+  const r = await m.extractRawText({ arrayBuffer: ab });
+  return r.value;
+}
+
+/* ── PPTX Theme/Text Extraction ─────────────────────────── */
+async function extractPptxTheme(ab) {
+  const fallback = {
+    bg:'1E3A5F', accent:'2563EB', text:'FFFFFF',
+    sub:'A8C0D6', bodyBg:'FFFFFF', bodyText:'111111',
+    bodyAccent:'1E3A5F', bodySub:'555555', fontFace:'Calibri'
+  };
+  try {
+    const zip = await JSZip.loadAsync(ab);
+
+    let dk1=null, lt1=null, acc1=null, fontFace='Calibri', masterBg=null, layoutBg=null;
+
+    // Read theme XML
+    const themeFiles = zip.file(/ppt\/theme\/theme\d*\.xml$/i);
+    if (themeFiles.length) {
+      const xml = await themeFiles[0].async('text');
+
+      // Extract dk1 (dark 1) color
+      const dk1m = xml.match(/<a:dk1[\s\S]{0,300}?<\/a:dk1>/);
+      if (dk1m) { const c = dk1m[0].match(/srgbClr val="([0-9A-Fa-f]{6})"/i); if (c) dk1 = c[1].toUpperCase(); }
+
+      // Extract lt1 (light 1) color
+      const lt1m = xml.match(/<a:lt1[\s\S]{0,300}?<\/a:lt1>/);
+      if (lt1m) { const c = lt1m[0].match(/srgbClr val="([0-9A-Fa-f]{6})"/i); if (c) lt1 = c[1].toUpperCase(); }
+
+      // Extract accent1 color
+      const accm = xml.match(/<a:accent1[\s\S]{0,300}?<\/a:accent1>/);
+      if (accm) { const c = accm[0].match(/srgbClr val="([0-9A-Fa-f]{6})"/i); if (c) acc1 = c[1].toUpperCase(); }
+
+      // Extract font
+      const fontm = xml.match(/typeface="([A-Za-z][^"]{1,50})"/);
+      if (fontm && !fontm[1].startsWith('+')) fontFace = fontm[1];
+    }
+
+    // Read slide master background
+    const masterFiles = zip.file(/ppt\/slideMasters\/slideMaster1\.xml$/i);
+    if (masterFiles.length) {
+      const mxml = await masterFiles[0].async('text');
+      const m = mxml.match(/<p:bg>[\s\S]{0,600}?srgbClr val="([0-9A-Fa-f]{6})"/i);
+      if (m) masterBg = m[1].toUpperCase();
+    }
+
+    // Read title layout background
+    const layoutFiles = zip.file(/ppt\/slideLayouts\/slideLayout1\.xml$/i);
+    if (layoutFiles.length) {
+      const lxml = await layoutFiles[0].async('text');
+      const m = lxml.match(/<p:bg>[\s\S]{0,600}?srgbClr val="([0-9A-Fa-f]{6})"/i);
+      if (m) layoutBg = m[1].toUpperCase();
+    }
+
+    function brightness(hex) {
+      const h = (hex||'').replace('#','');
+      if (h.length !== 6) return 128;
+      return parseInt(h.slice(0,2),16)*0.299 + parseInt(h.slice(2,4),16)*0.587 + parseInt(h.slice(4,6),16)*0.114;
+    }
+    function isLight(hex) { return brightness(hex) > 140; }
+
+    const titleBg      = layoutBg || masterBg || dk1 || '1E3A5F';
+    const titleText    = isLight(titleBg) ? '111111' : 'FFFFFF';
+    const titleAccent  = acc1 || (isLight(titleBg) ? '555555' : 'FFFFFF');
+    const titleSub     = isLight(titleBg) ? '555555' : 'BBCCDD';
+
+    const bodyBg       = (lt1 && isLight(lt1)) ? lt1 : 'FFFFFF';
+    const rawBodyText  = dk1 && !isLight(dk1) ? dk1 : '111111';
+    const bodyText     = (isLight(bodyBg) && isLight(rawBodyText)) ? '111111' : rawBodyText;
+    const bodyAccent   = acc1 || dk1 || '1E3A5F';
+
+    console.log('[Template Theme]', { titleBg, titleText, titleAccent, bodyBg, bodyText, bodyAccent, fontFace });
+
+    return { bg:titleBg, accent:titleAccent, text:titleText, sub:titleSub, bodyBg, bodyText, bodyAccent, bodySub:'555555', fontFace };
+  } catch(e) {
+    console.warn('extractPptxTheme failed:', e);
+    return fallback;
+  }
+}
+
+async function extractPptxText(ab) {
+  try {
+    const zip = await JSZip.loadAsync(ab);
+    const files = Object.keys(zip.files).filter(f => /ppt\/slides\/slide\d+\.xml$/.test(f));
+    let txt = '';
+    for (const f of files.slice(0, 6)) {
+      const xml = await zip.files[f].async('text');
+      txt += xml.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,500) + '\n';
+    }
+    return txt;
+  } catch { return ''; }
+}
+
+/* ── Download / Build PPTX ──────────────────────────────── */
+async function downloadPptx() {
+  if (!slidesData) return;
+  const btn = document.getElementById('dlBtn');
+  btn.innerHTML = '⏳ Building…';
+  btn.style.pointerEvents = 'none';
+  try {
+    if (tplAB) {
+      await downloadPptxFromTemplate();
+    } else {
+      await buildFreshPptx();
+    }
+  } catch(e) {
+    showToast('⚠️ Download error: ' + e.message);
+  } finally {
+    btn.innerHTML = '⬇ &nbsp;Download .pptx';
+    btn.style.pointerEvents = '';
+  }
+}
+
+/* ── TEMPLATE PATH: clone template slides, replace text only ── */
+async function downloadPptxFromTemplate() {
+  const zip = await JSZip.loadAsync(tplAB);
+
+  // 1. Gather & sort template slides
+  const tmplFiles = zip.file(/^ppt\/slides\/slide\d+\.xml$/).sort((a, b) =>
+    parseInt(a.name.match(/\d+/)[0]) - parseInt(b.name.match(/\d+/)[0])
+  );
+  if (!tmplFiles.length) throw new Error('Template has no slides.');
+
+  const tmplSlides = await Promise.all(tmplFiles.map(async f => {
+    const num = parseInt(f.name.match(/\d+/)[0]);
+    const xml = await f.async('string');
+    // Try multiple possible rels paths
+    const relsPaths = [
+      `ppt/slides/_rels/slide${num}.xml.rels`,
+      `ppt/slides/_rels/Slide${num}.xml.rels`,
+    ];
+    let relsXml = null;
+    for (const rp of relsPaths) {
+      const rf = zip.file(rp);
+      if (rf) { relsXml = await rf.async('string'); break; }
+    }
+    const relsPath = relsPaths[0];
+    return { num, path: f.name, xml, relsPath, relsXml, slideType: detectTmplSlideType(xml) };
+  }));
+
+  // 2. Match AI slide to best template slide
+  const findTmpl = type => {
+    if (type === 'title') return tmplSlides.find(s => s.slideType === 'title') || tmplSlides[0];
+    if (type === 'section') return tmplSlides.find(s => s.slideType === 'section') || tmplSlides.find(s => s.slideType === 'content') || tmplSlides[1] || tmplSlides[0];
+    return tmplSlides.find(s => s.slideType === 'content') || (tmplSlides.length > 1 ? tmplSlides[1] : tmplSlides[0]);
+  };
+
+  // 3. Build new slides
+  const expanded = expandSlides(sanitiseSlides(slidesData));
+  const newSlides = expanded.map((aiSlide, i) => {
+    const tmpl   = findTmpl(aiSlide.type);
+    const newXml = replaceSlideText(tmpl.xml, aiSlide);
+    return { slideNum: i + 1, path: `ppt/slides/slide${i+1}.xml`, xml: newXml, relsPath: `ppt/slides/_rels/slide${i+1}.xml.rels`, relsXml: tmpl.relsXml };
+  });
+
+  // 4. Remove old slides
+  for (const ts of tmplSlides) {
+    zip.remove(ts.path);
+    if (ts.relsPath) zip.remove(ts.relsPath);
+  }
+
+  // 5. Add new slides
+  for (const ns of newSlides) {
+    zip.file(ns.path, ns.xml);
+    // Strip notes/notesMaster rels that don't exist for new slides
+    const cleanedRels = ns.relsXml
+      ? ns.relsXml.replace(/<Relationship[^>]*Type="[^"]*\/notesSlide"[^>]*\/?>/g, '')
+                  .replace(/<Relationship[^>]*Type="[^"]*\/notesMaster"[^>]*\/?>/g, '')
+      : null;
+    if (cleanedRels) zip.file(ns.relsPath, cleanedRels);
+  }
+
+  // 5b. CRITICAL: Update [Content_Types].xml with new slide entries
+  // Without this, PowerPoint refuses to open the file on any PC
+  const ctPath = '[Content_Types].xml';
+  const ctFile = zip.file(ctPath);
+  if (ctFile) {
+    let ctXml = await ctFile.async('string');
+    // Remove old slide Override entries
+    ctXml = ctXml.replace(/<Override[^>]*PartName="\/ppt\/slides\/slide\d+\.xml"[^>]*\/?>/g, '');
+    // Add new Override entries for all new slides
+    const overrides = newSlides.map(ns =>
+      `<Override PartName="/ppt/slides/slide${ns.slideNum}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`
+    ).join('\n');
+    ctXml = ctXml.replace('</Types>', overrides + '\n</Types>');
+    zip.file(ctPath, ctXml);
+  }
+
+  // 6. Rebuild presentation.xml.rels
+  const presRelsPath = 'ppt/_rels/presentation.xml.rels';
+  const presRelsFile = zip.file(presRelsPath);
+  if (!presRelsFile) throw new Error('Template is missing ppt/_rels/presentation.xml.rels — please try a different template.');
+  let presRelsXml = await presRelsFile.async('string');
+  presRelsXml = presRelsXml.replace(/<Relationship[^>]*Type="[^"]*\/slide"[^>]*\/?>/g, '');
+  const existingRIds = [...presRelsXml.matchAll(/Id="rId(\d+)"/g)].map(m => parseInt(m[1]));
+  let nextRId = existingRIds.length ? Math.max(...existingRIds) + 1 : 50;
+  const slideRelEntries = newSlides.map(ns => {
+    ns.rId = `rId${nextRId++}`;
+    return `  <Relationship Id="${ns.rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide${ns.slideNum}.xml"/>`;
+  }).join('\n');
+  presRelsXml = presRelsXml.replace('</Relationships>', slideRelEntries + '\n</Relationships>');
+  zip.file(presRelsPath, presRelsXml);
+
+  // 7. Rebuild presentation.xml sldIdLst
+  const presXmlPath = 'ppt/presentation.xml';
+  const presXmlFile = zip.file(presXmlPath);
+  if (!presXmlFile) throw new Error('Template is missing ppt/presentation.xml — please try a different template.');
+  let presXml = await presXmlFile.async('string');
+  const existingSldIds = [...presXml.matchAll(/\bid="(\d+)"/gi)].map(m => parseInt(m[1]));
+  let nextSldId = existingSldIds.length ? Math.max(...existingSldIds) + 1 : 256;
+  const sldIdNodes = newSlides.map(ns => `      <p:sldId id="${nextSldId++}" r:id="${ns.rId}"/>`).join('\n');
+  // Handle both with and without existing sldIdLst
+  if (/<p:sldIdLst>[\s\S]*?<\/p:sldIdLst>/.test(presXml)) {
+    presXml = presXml.replace(/<p:sldIdLst>[\s\S]*?<\/p:sldIdLst>/, `<p:sldIdLst>\n${sldIdNodes}\n    </p:sldIdLst>`);
+  } else {
+    // Insert after <p:sldMasterIdLst>...</p:sldMasterIdLst> if present, else after first tag
+    presXml = presXml.replace(/(<\/p:sldMasterIdLst>)/, `$1\n    <p:sldIdLst>\n${sldIdNodes}\n    </p:sldIdLst>`);
+  }
+  zip.file(presXmlPath, presXml);
+
+  // 8. Download
+  const blob = await zip.generateAsync({ type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.presentationml.presentation', compression:'DEFLATE', compressionOptions:{ level:4 } });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (slidesData[0]?.title || 'Presentation').replace(/[^a-z0-9]/gi,'_').slice(0,40) + '.pptx';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+/* ── XML Namespace Cleanup ──────────────────────────────────
+   XMLSerializer can emit redundant xmlns on child elements.
+   Since OOXML declares all namespaces on the root <p:sld>,
+   we strip duplicates from descendants to keep Office happy.
+──────────────────────────────────────────────────────────── */
+function fixRedundantNamespaces(xml) {
+  try {
+    // Find the end of the root element's opening tag
+    const rootStart = xml.indexOf('<p:sld');
+    if (rootStart === -1) return xml;
+    const rootEnd = xml.indexOf('>', rootStart);
+    if (rootEnd === -1) return xml;
+    const rootTag = xml.slice(0, rootEnd + 1);
+    const rest    = xml.slice(rootEnd + 1);
+    // Collect all xmlns declarations on the root
+    const declared = new Set();
+    const nsRe = /xmlns(?::([a-z0-9]+))?="([^"]*)"/g;
+    let m;
+    while ((m = nsRe.exec(rootTag)) !== null) declared.add(m[0]);
+    // Strip duplicate xmlns from the rest of the document
+    const cleaned = rest.replace(/\s+xmlns(?::[a-z0-9]+)?="[^"]*"/g, match => {
+      return declared.has(match.trim()) ? '' : match;
+    });
+    return rootTag + cleaned;
+  } catch(e) { return xml; }
+}
+
+function detectTmplSlideType(xml) {
+  if (xml.includes('type="ctrTitle"') || xml.includes('type="subTitle"')) return 'title';
+  if (xml.includes('type="title"') && !xml.includes('type="body"')) return 'section';
+  if (xml.includes('type="body"')) return 'content';
+  return 'content';
+}
+
+function replaceSlideText(xml, aiSlide) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, 'application/xml');
+  if (doc.querySelector('parsererror')) return xml;
+
+  const NS = {
+    p: 'http://schemas.openxmlformats.org/presentationml/2006/main',
+    a: 'http://schemas.openxmlformats.org/drawingml/2006/main'
+  };
+  function getEls(root, nsKey, local) {
+    const byNs = Array.from(root.getElementsByTagNameNS(NS[nsKey], local));
+    return byNs.length ? byNs : Array.from(root.getElementsByTagName(`${nsKey}:${local}`));
+  }
+
+  const isSpecial = aiSlide.type === 'title' || aiSlide.type === 'section';
+  let titleFilled = false, bodyFilled = false;
+
+  for (const sp of getEls(doc, 'p', 'sp')) {
+    const phEls = getEls(sp, 'p', 'ph');
+    if (!phEls.length) {
+      for (const txBody of getEls(sp, 'p', 'txBody')) setTxText(txBody, [], doc, NS);
+      continue;
+    }
+    const ph = phEls[0];
+    const phType = ph.getAttribute('type') || '';
+    const phIdx  = parseInt(ph.getAttribute('idx') || '0');
+    const txBodies = getEls(sp, 'p', 'txBody');
+    if (!txBodies.length) continue;
+    const txBody = txBodies[0];
+
+    const isTitlePh = phType === 'title' || phType === 'ctrTitle';
+    const isSubPh   = phType === 'subTitle';
+    const isBodyPh  = phType === 'body' || phType === 'obj' || (phType === '' && phIdx === 1);
+    const isHouse   = ['dt','ftr','sldNum','hdr'].includes(phType);
+
+    if (isTitlePh && !titleFilled) {
+      titleFilled = true;
+      setTxText(txBody, [aiSlide.title || ''], doc, NS);
+    } else if (isTitlePh) {
+      setTxText(txBody, [], doc, NS);
+    } else if (isSubPh) {
+      setTxText(txBody, isSpecial && aiSlide.subtitle ? [aiSlide.subtitle] : [], doc, NS);
+    } else if (isBodyPh && !bodyFilled) {
+      bodyFilled = true;
+      if (isSpecial) {
+        setTxText(txBody, aiSlide.subtitle ? [aiSlide.subtitle] : [], doc, NS);
+      } else if (aiSlide.paragraph) {
+        setTxText(txBody, [aiSlide.paragraph], doc, NS);
+      } else if (aiSlide.type === 'table') {
+        const rows = [aiSlide.table_headers || [], ...(aiSlide.table_rows || [])];
+        setTxText(txBody, rows.map(r => r.join(' | ')), doc, NS);
+      } else if (aiSlide.type === 'two_column') {
+        setTxText(txBody, [...(aiSlide.left_bullets||[]), ...(aiSlide.right_bullets||[])], doc, NS);
+      } else if (aiSlide.type === 'quote') {
+        const lines = ['\u201c' + (aiSlide.quote_text||'') + '\u201d'];
+        if (aiSlide.quote_source) lines.push('\u2014 ' + aiSlide.quote_source);
+        setTxText(txBody, lines, doc, NS);
+      } else {
+        setTxText(txBody, aiSlide.bullets || [], doc, NS);
+      }
+    } else if (isBodyPh || isHouse) {
+      setTxText(txBody, [], doc, NS);
+    } else {
+      setTxText(txBody, [], doc, NS);
+    }
+  }
+
+  let out = new XMLSerializer().serializeToString(doc);
+  if (!out.startsWith('<?xml')) out = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + out;
+  // Fix: XMLSerializer sometimes adds redundant xmlns declarations on child elements.
+  // Strip those from non-root elements — OOXML namespaces are declared on the root <p:sld> element.
+  out = fixRedundantNamespaces(out);
+  return out;
+}
+
+function setTxText(txBody, lines, doc, NS) {
+  function getEls(root, nsKey, local) {
+    const byNs = Array.from(root.getElementsByTagNameNS(NS[nsKey], local));
+    return byNs.length ? byNs : Array.from(root.getElementsByTagName(`${nsKey}:${local}`));
+  }
+  const existingParas = getEls(txBody, 'a', 'p');
+  if (!existingParas.length) return;
+  const tmplPara = existingParas[0].cloneNode(true);
+  const lastPara = existingParas[existingParas.length-1].cloneNode(true);
+  function clearText(para) { getEls(para,'a','t').forEach(t => t.textContent=''); }
+  clearText(lastPara);
+  for (const p of existingParas) txBody.removeChild(p);
+
+  if (!lines || !lines.length) {
+    const blank = tmplPara.cloneNode(true);
+    clearText(blank);
+    txBody.appendChild(blank);
+    return;
+  }
+
+  const aNS = NS.a;
+  for (const line of lines) {
+    const newPara = tmplPara.cloneNode(true);
+    const runs = getEls(newPara, 'a', 'r');
+    if (!runs.length) {
+      const r = doc.createElementNS(aNS, 'a:r');
+      const t = doc.createElementNS(aNS, 'a:t');
+      t.textContent = line; r.appendChild(t); newPara.appendChild(r);
+    } else {
+      for (const r of runs.slice(1)) r.parentNode.removeChild(r);
+      const firstRun = runs[0];
+      const tEls = getEls(firstRun, 'a', 't');
+      if (tEls.length) {
+        tEls[0].textContent = line;
+        for (const t of tEls.slice(1)) t.parentNode.removeChild(t);
+      } else {
+        const t = doc.createElementNS(aNS, 'a:t');
+        t.textContent = line; firstRun.appendChild(t);
+      }
+    }
+    txBody.appendChild(newPara);
+  }
+  txBody.appendChild(lastPara);
+}
+
+async function buildFreshPptx() {
+  const styleVal = document.getElementById('styleSelect').value;
+  const PptxCtor = window.PptxGenJS || window.pptxgen;
+  if (!PptxCtor) throw new Error('PptxGenJS failed to load. Refresh and try again.');
+
+  const pptx = new PptxCtor();
+  pptx.layout = 'LAYOUT_WIDE';
+  pptx.title  = slidesData[0]?.title || 'Presentation';
+
+  const builtinThemes = {
+    professional:{ bg:'1E3A5F', accent:'2563EB', text:'FFFFFF', sub:'A8C0D6', bodyBg:'FFFFFF', bodyText:'111111', bodyAccent:'1E3A5F', bodySub:'555555', fontFace:'Calibri' },
+    academic:    { bg:'1B3A4B', accent:'2E86AB', text:'FFFFFF', sub:'90B4C1', bodyBg:'FFFFFF', bodyText:'111111', bodyAccent:'1B3A4B', bodySub:'444444', fontFace:'Calibri' },
+    minimal:     { bg:'222222', accent:'555555', text:'FFFFFF', sub:'AAAAAA', bodyBg:'FFFFFF', bodyText:'111111', bodyAccent:'333333', bodySub:'666666', fontFace:'Calibri' },
+    bold:        { bg:'C1121F', accent:'FFFFFF', text:'FFFFFF', sub:'FFCCD2', bodyBg:'FFFFFF', bodyText:'111111', bodyAccent:'C1121F', bodySub:'444444', fontFace:'Calibri' },
+  };
+
+  let t = builtinThemes[styleVal] || builtinThemes.professional;
+  if (styleVal === 'template' && tplTheme) t = { ...builtinThemes.professional, ...tplTheme };
+  if (styleVal === 'copycat'  && ccTheme)  t = { ...builtinThemes.professional, ...ccTheme };
+  const ff = t.fontFace || 'Calibri';
+
+  const allSlides = expandSlides(sanitiseSlides(slidesData));
+
+  for (let idx = 0; idx < allSlides.length; idx++) {
+    const sl = allSlides[idx];
+    const s = pptx.addSlide();
+
+    const isCover   = sl.type === 'title';
+    const isSection = sl.type === 'section';
+    const isQuote   = sl.type === 'quote';
+    const isClosing = sl.type === 'closing';
+    const isDiagram = sl.type === 'diagram';
+    const isTable   = sl.type === 'table';
+    const isImage   = sl.type === 'image';
+    const isDark    = isCover || isSection || isClosing;
+
+    // Background + accent stripe
+    s.addShape(pptx.ShapeType.rect, { x:0, y:0, w:'100%', h:'100%', fill:{ color: isDark ? t.bg : t.bodyBg } });
+    s.addShape(pptx.ShapeType.rect, { x:0, y:0, w:0.06, h:'100%', fill:{ color: isDark ? t.accent : t.bodyAccent } });
+
+    if (isCover || isSection || isClosing) {
+      // Dark/full-bleed slides
+      const titleY = isSection ? 1.8 : 1.35;
+      const titleSz = isSection ? 36 : 42;
+      s.addText(sl.title || '', { x:0.5, y:titleY, w:9, h:1.5, fontSize:titleSz, bold:true, color:t.text, align:'center', fontFace:ff, wrap:true });
+      if (sl.subtitle) s.addText(sl.subtitle, { x:0.5, y:isSection ? 3.1 : 2.9, w:9, h:0.8, fontSize:18, color:t.sub, align:'center', fontFace:ff, italic:!isSection });
+      s.addShape(pptx.ShapeType.rect, { x:4.3, y:isSection ? 2.95 : 2.78, w:1.4, h:0.04, fill:{ color:t.accent } });
+      if (isClosing && sl.bullets?.length) {
+        const clBullets = sl.bullets;
+        // Closing bullets sit below the title/subtitle block — available from y=3.65
+        const clAvailH = 5.25 - 3.65;
+        const clLayout = computeBulletLayout(clBullets, clAvailH);
+        let clY = 3.65;
+        clBullets.forEach((b, i) => {
+          const h = clLayout.heights[i];
+          s.addText('✓  ' + b, {
+            x:1.5, y:clY, w:7, h:h - BULLET_GAP,
+            fontSize:clLayout.fontSize, color:t.sub, fontFace:ff, wrap:true, valign:'top', shrinkText:true
+          });
+          clY += h;
+        });
+      }
+    } else if (isQuote) {
+      s.addText('\u201c', { x:0.4, y:0.4, w:1, h:1.2, fontSize:96, color:t.bodyAccent, fontFace:'Georgia', bold:true });
+      s.addText(sl.quote_text || '', { x:0.5, y:1.0, w:9, h:2.2, fontSize:22, italic:true, color:t.bodyText, align:'center', fontFace:ff, wrap:true });
+      if (sl.quote_source) s.addText('\u2014 ' + sl.quote_source, { x:0.5, y:3.4, w:9, h:0.5, fontSize:13, color:t.bodySub, align:'center', fontFace:ff, bold:true });
+    } else if (isDiagram) {
+      s.addText(sl.title || '', { x:0.3, y:0.15, w:9.4, h:0.55, fontSize:26, bold:true, color:t.bodyAccent, fontFace:ff, wrap:true, shrinkText:true });
+      s.addShape(pptx.ShapeType.rect, { x:0.3, y:0.75, w:9.4, h:0.03, fill:{ color:t.bodyAccent } });
+      const steps = sl.diagram_steps || [];
+      if (steps.length > 0) {
+        const totalW = 9.0;
+        const sw = totalW / steps.length;
+        steps.forEach((step, i) => {
+          const x = 0.5 + i * sw;
+          s.addShape(pptx.ShapeType.roundRect, { x, y:1.5, w:sw - 0.15, h:1.3, fill:{ color:t.bodyAccent } });
+          s.addText(String(i+1) + '. ' + step, { x, y:1.52, w:sw - 0.15, h:1.26, fontSize:11, color:t.text, align:'center', fontFace:ff, wrap:true, valign:'middle', bold:true });
+          if (i < steps.length - 1) {
+            s.addShape(pptx.ShapeType.rect, { x: x + sw - 0.16, y:2.08, w:0.16, h:0.08, fill:{ color:'AAAAAA' } });
+          }
+        });
+        // Sub-text bullets if present
+        if (sl.bullets?.length) {
+          const diagAvailH = CBOTTOM - 3.0;
+          const diagLayout = computeBulletLayout(sl.bullets, diagAvailH);
+          let dbY = 3.0;
+          sl.bullets.forEach((b, i) => {
+            const dh = diagLayout.heights[i];
+            const dotR = 0.05;
+            const firstLH = (diagLayout.fontSize / 72) * 1.45;
+            s.addShape(pptx.ShapeType.ellipse, { x:0.28, y:dbY + firstLH/2 - dotR, w:dotR*2, h:dotR*2, fill:{ color:t.bodyAccent } });
+            s.addText(b, { x:0.55, y:dbY, w:9.15, h:dh - BULLET_GAP, fontSize:diagLayout.fontSize, color:t.bodyText, fontFace:ff, wrap:true, valign:'top', shrinkText:true });
+            dbY += dh;
+          });
+        }
+      }
+    } else if (sl.paragraph) {
+      // Long paragraph slide (e.g. Problem Statement)
+      s.addText(sl.title || '', { x:0.3, y:0.15, w:9.4, h:0.55, fontSize:26, bold:true, color:t.bodyAccent, fontFace:ff, wrap:true, shrinkText:true });
+      s.addShape(pptx.ShapeType.rect, { x:0.3, y:0.75, w:9.4, h:0.03, fill:{ color:t.bodyAccent } });
+      s.addText(sl.paragraph, { x:0.35, y:0.88, w:9.3, h:4.3, fontSize:16, color:t.bodyText, fontFace:ff, wrap:true, valign:'top', lineSpacingMultiple:1.4, shrinkText:true });
+    } else if (isTable) {
+      s.addText(sl.title || '', { x:0.3, y:0.15, w:9.4, h:0.55, fontSize:26, bold:true, color:t.bodyAccent, fontFace:ff, wrap:true, shrinkText:true });
+      s.addShape(pptx.ShapeType.rect, { x:0.3, y:0.75, w:9.4, h:0.03, fill:{ color:t.bodyAccent } });
+      const headers = sl.table_headers || [];
+      const rows    = sl.table_rows    || [];
+      if (headers.length) {
+        const tData = [
+          headers.map(h => ({ text:h, options:{ bold:true, color:t.text, fill:t.bodyAccent, fontFace:ff } })),
+          ...rows.map(r => r.map(c => ({ text:String(c||''), options:{ fontFace:ff, color:t.bodyText } })))
+        ];
+        s.addTable(tData, { x:0.3, y:0.9, w:9.4, h:3.8, border:{ type:'solid', color:'DDDDDD', pt:1 }, autoPage:false });
+      }
+    } else if (isImage) {
+      // SVG Image slide
+      s.addText(sl.title || '', { x:0.3, y:0.15, w:9.4, h:0.55, fontSize:26, bold:true, color:t.bodyAccent, fontFace:ff, wrap:true, shrinkText:true });
+      s.addShape(pptx.ShapeType.rect, { x:0.3, y:0.75, w:9.4, h:0.03, fill:{ color:t.bodyAccent } });
+      if (sl.svg_code) {
+        try {
+          // Convert SVG to base64 data URI and embed as image
+          const svgB64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(sl.svg_code)));
+          s.addImage({ data: svgB64, x:0.3, y:0.85, w:9.4, h:3.9 });
+        } catch(svgErr) {
+          // Fallback: show description as text
+          const desc = sl.image_description || 'Visual content';
+          s.addText('[Visual: ' + desc + ']', { x:0.3, y:1.5, w:9.4, h:2.5, fontSize:16, color:t.bodyText, fontFace:ff, align:'center', valign:'middle', wrap:true });
+        }
+      } else if (sl.image_description) {
+        s.addText(sl.image_description, { x:0.3, y:1.5, w:9.4, h:2.5, fontSize:16, color:t.bodyText, fontFace:ff, align:'center', valign:'middle', wrap:true, italic:true });
+      }
+    } else if (sl.type === 'two_column') {
+      s.addText(sl.title || '', { x:0.3, y:0.15, w:9.4, h:0.55, fontSize:24, bold:true, color:t.bodyAccent, fontFace:ff, wrap:true });
+      s.addShape(pptx.ShapeType.rect, { x:0.3, y:0.75, w:9.4, h:0.03, fill:{ color:'DDDDDD' } });
+      const lb = sl.left_bullets  || sl.bullets?.slice(0, Math.ceil((sl.bullets?.length||0)/2)) || [];
+      const rb = sl.right_bullets || sl.bullets?.slice(Math.ceil((sl.bullets?.length||0)/2))   || [];
+      // Compute layout for each column independently (column width ~4.2")
+      const COL_W = 4.2;
+      function colLayout(bts) {
+        const SIZES = [16,15,14,13,12,11,10];
+        for (const fs of SIZES) {
+          const cpl = Math.max(20, Math.floor((COL_W * 72) / (fs * 0.50)));
+          const heights = bts.map(b => {
+            const lines = Math.max(1, Math.ceil((b||'').length / cpl));
+            return lines * (fs / 72 * 1.45) + 0.12;
+          });
+          const totalH = heights.reduce((a,h) => a+h, 0);
+          if (totalH <= AVAIL_H || fs === SIZES[SIZES.length-1]) return { fs, heights };
+        }
+      }
+      const lLayout = colLayout(lb);
+      const rLayout = colLayout(rb);
+      let lY = CTOP, rY = CTOP;
+      lb.forEach((b, i) => {
+        const h = lLayout.heights[i];
+        s.addText('\u25b8  ' + b, { x:0.35, y:lY, w:COL_W, h:h - 0.05, fontSize:lLayout.fs, color:t.bodyText, fontFace:ff, wrap:true, valign:'top', shrinkText:true });
+        lY += h;
+      });
+      rb.forEach((b, i) => {
+        const h = rLayout.heights[i];
+        s.addText('\u25b8  ' + b, { x:5.15, y:rY, w:COL_W, h:h - 0.05, fontSize:rLayout.fs, color:t.bodyText, fontFace:ff, wrap:true, valign:'top', shrinkText:true });
+        rY += h;
+      });
+      s.addShape(pptx.ShapeType.rect, { x:4.95, y:0.85, w:0.03, h:3.5, fill:{ color:'EEEEEE' } });
+    } else {
+      // Standard content — dynamic layout
+      const bullets = sl.bullets || [];
+      const isRef   = sl._refSlide;
+
+      s.addText(sl.title || '', { x:0.3, y:0.15, w:9.4, h:0.55, fontSize:26, bold:true, color:t.bodyAccent, fontFace:ff, wrap:true, shrinkText:true });
+      s.addShape(pptx.ShapeType.rect, { x:0.3, y:0.75, w:9.4, h:0.03, fill:{ color:t.bodyAccent } });
+
+      if (bullets.length) {
+        if (isRef) {
+          // References: compact, no dots, shrink to fit
+          const refFs = bullets.length <= 3 ? 13 : bullets.length <= 5 ? 12 : bullets.length <= 7 ? 11 : 10;
+          const refStepH = (CBOTTOM - CTOP) / Math.max(bullets.length, 1);
+          bullets.forEach((b, i) => {
+            s.addText(b, {
+              x: 0.3, y: CTOP + i * refStepH, w: 9.40, h: refStepH,
+              fontSize: refFs, color: t.bodyText, fontFace: ff,
+              wrap: true, valign: 'middle', shrinkText: true
+            });
+          });
+        } else {
+          // Normal bullets: dynamic layout
+          const layout = computeBulletLayout(bullets, AVAIL_H);
+          let curY = CTOP;
+          bullets.forEach((b, i) => {
+            const h = layout.heights[i];
+            const dotR = 0.055; // dot radius
+            // Dot vertically centred on first line of bullet
+            const firstLineH = (layout.fontSize / 72) * 1.45;
+            s.addShape(pptx.ShapeType.ellipse, {
+              x: 0.28, y: curY + firstLineH / 2 - dotR,
+              w: dotR * 2, h: dotR * 2,
+              fill: { color: t.bodyAccent }
+            });
+            s.addText(b, {
+              x: 0.55, y: curY, w: 9.15, h: h - BULLET_GAP,
+              fontSize: layout.fontSize,
+              color: t.bodyText, fontFace: ff,
+              wrap: true, valign: 'top', shrinkText: true,
+              lineSpacingMultiple: 1.15
+            });
+            curY += h;
+          });
+        }
+      }
+      if (sl.note && !isRef) s.addNotes(sl.note);
+    }
+
+    // Page number
+    if (!isCover) {
+      s.addText(String(idx+1), { x:9.5, y:5.3, w:0.4, h:0.3, fontSize:9, color:isDark?'666666':'BBBBBB', align:'right', fontFace:ff });
+    }
+  }
+
+  const fname = (slidesData[0]?.title || 'Presentation').replace(/[^a-z0-9]/gi,'_').slice(0,40) + '.pptx';
+  await pptx.writeFile({ fileName: fname });
+}
+
+/* ── Slide Utilities (from original) ────────────────────── */
+function sanitiseSlides(slides) {
+  if (!Array.isArray(slides)) return [];
+  const out = []; const refBullets = []; let refIdx = -1;
+  for (const sl of slides) {
+    const s = { ...sl };
+    if (!['title','section'].includes(s.type)) { delete s.subtitle; }
+    // Don't skip paragraph slides (they have no bullets array by design)
+    const hasParagraph = !!s.paragraph;
+    const hasTable = s.type === 'table' && (s.table_headers?.length || s.table_rows?.length);
+    const hasDiagram = s.type === 'diagram' && s.diagram_steps?.length;
+    const hasImage = s.type === 'image' && (s.svg_code || s.image_description);
+    if (!hasParagraph && !hasTable && !hasDiagram && !hasImage) {
+      if (['content','data','closing'].includes(s.type) && (!s.bullets || !s.bullets.length)) continue;
+      if (s.type === 'two_column' && (!s.left_bullets?.length) && (!s.right_bullets?.length)) continue;
+    }
+    const isRef = /reference/i.test(s.title||'') || s._refSlide;
+    if (isRef) {
+      refBullets.push(...(s.bullets||[]));
+      if (refIdx === -1) { refIdx = out.length; out.push(s); }
+    } else { out.push(s); }
+  }
+  if (refIdx !== -1) out[refIdx] = { ...out[refIdx], bullets:refBullets.slice(0,8), _refSlide:true };
+  return out;
+}
+
+/* ── Dynamic bullet layout engine ───────────────────────────
+   Estimates the real wrapped height of each bullet at a given
+   font size, then finds the largest font that fits all bullets
+   within the available vertical space.
+────────────────────────────────────────────────────────── */
+const CTOP    = 0.85;   // content starts below title+divider
+const CBOTTOM = 5.25;   // leave room for page number
+const AVAIL_H = CBOTTOM - CTOP;    // 4.40"
+const BULLET_W = 9.15;  // text column width in inches
+const BULLET_GAP = 0.14; // vertical gap between bullets (inches)
+
+/** Estimate height of one bullet at font size fs (inches) */
+function bulletHeight(text, fs) {
+  const charsPerLine = Math.max(25, Math.floor((BULLET_W * 72) / (fs * 0.50)));
+  const lines = Math.max(1, Math.ceil((text || '').length / charsPerLine));
+  return lines * (fs / 72 * 1.45) + BULLET_GAP;
+}
+
+/**
+ * Given an array of bullets and available height, find the best
+ * font size and return per-bullet heights.
+ * Returns { fontSize, heights[], totalH }
+ */
+function computeBulletLayout(bullets, availH) {
+  const SIZES = [20, 18, 16, 15, 14, 13, 12, 11, 10];
+  availH = availH || AVAIL_H;
+
+  for (const fs of SIZES) {
+    const heights = bullets.map(b => bulletHeight(b, fs));
+    const totalH  = heights.reduce((a, h) => a + h, 0);
+    if (totalH <= availH || fs === SIZES[SIZES.length - 1]) {
+      return { fontSize: fs, heights, totalH };
+    }
+  }
+}
+
+/** Legacy shim – kept so any leftover callers don't crash */
+function pickFont(n) {
+  return n <= 2 ? { fontSize: 18, stepH: 1.00 } : { fontSize: 16, stepH: 0.85 };
+}
+
+function expandSlides(slides) {
+  // Use font-14 as a conservative estimate for splitting decisions
+  const EST_FS = 14;
+
+  function estH(text) { return bulletHeight(text, EST_FS); }
+
+  function ctitle(t, n) {
+    if (n === 1) return t;
+    const b = t.replace(/ cont\.\.\.$/, '').trim();
+    return (b.length > 38 ? b.slice(0, 38) + '…' : b) + ' cont...';
+  }
+
+  const out = [];
+  for (const sl of slides) {
+    const bts = sl.bullets || [];
+    if (!bts.length ||
+        ['title','section','quote','two_column'].includes(sl.type) ||
+        sl._refSlide || sl.paragraph ||
+        sl.type === 'table' || sl.type === 'diagram' || sl.type === 'image') {
+      out.push(sl);
+      continue;
+    }
+
+    let page = [], pH = 0, pn = 1;
+
+    for (const b of bts) {
+      const h = estH(b);
+      // Start a new page if this bullet would overflow
+      if (page.length > 0 && pH + h > AVAIL_H) {
+        out.push({ ...sl, title: ctitle(sl.title, pn), bullets: [...page] });
+        page = []; pH = 0; pn++;
+      }
+      page.push(b);
+      pH += h;
+    }
+    if (page.length) out.push({ ...sl, title: ctitle(sl.title, pn), bullets: [...page] });
+  }
+  return out;
+}
+
+/* ── Toast ──────────────────────────────────────────────── */
+let toastTimer;
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (type === 'ok' ? ' ok' : '');
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3600);
+}
+
+/* ── Util ───────────────────────────────────────────────── */
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

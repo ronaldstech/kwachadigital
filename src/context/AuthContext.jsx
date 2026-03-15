@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
@@ -22,53 +22,67 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [initialAuthMode, setInitialAuthMode] = useState('login');
+    const isInitialAuthCheck = useRef(true);
 
     useEffect(() => {
         let unsubscribeDoc = null;
+        console.info('[AuthContext] Initializing onAuthStateChanged...');
 
         const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+            console.info(`[AuthContext] onAuthStateChanged fired. User: ${firebaseUser ? 'Found' : 'null'} (Initial: ${isInitialAuthCheck.current})`);
+            
             if (unsubscribeDoc) {
                 unsubscribeDoc();
                 unsubscribeDoc = null;
             }
 
             if (firebaseUser) {
-                // Fetch user data from Firestore
                 const userDocRef = doc(db, 'users', firebaseUser.uid);
-
-                // Set up a real-time listener for the user document
+                
                 unsubscribeDoc = onSnapshotDoc(userDocRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const userData = docSnap.data();
                         setUser({
                             uid: firebaseUser.uid,
                             email: firebaseUser.email,
-                            role: userData.role,
                             ...userData,
                             avatar: userData.avatar || (userData.name || firebaseUser.email).slice(0, 2).toUpperCase()
                         });
                     } else {
-                        // Fallback if doc doesn't exist yet (e.g., during signup)
                         setUser({
                             uid: firebaseUser.uid,
                             email: firebaseUser.email,
                             name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-                            role: 'user',
                             avatar: 'KD'
                         });
                     }
                     setLoading(false);
+                    isInitialAuthCheck.current = false;
                 }, (error) => {
-                    console.error("Error listening to user doc:", error);
+                    console.error("[AuthContext] Firestore error:", error);
                     setLoading(false);
+                    isInitialAuthCheck.current = false;
                 });
             } else {
-                setUser(null);
-                setLoading(false);
+                if (isInitialAuthCheck.current) {
+                    console.info('[AuthContext] Initial guest check. Applying 300ms safety delay for persistence layer...');
+                    setTimeout(() => {
+                        if (isInitialAuthCheck.current) {
+                            console.info('[AuthContext] No session restored. Setting guest state.');
+                            setUser(null);
+                            setLoading(false);
+                            isInitialAuthCheck.current = false;
+                        }
+                    }, 300);
+                } else {
+                    setUser(null);
+                    setLoading(false);
+                }
             }
         });
 
         return () => {
+            console.info('[AuthContext] Cleaning up AuthProvider');
             unsubscribeAuth();
             if (unsubscribeDoc) unsubscribeDoc();
         };

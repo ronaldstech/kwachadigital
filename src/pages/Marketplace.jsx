@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ChevronLeft,
@@ -22,7 +22,7 @@ const AI_TOOLS = [
         name: "Dissertation Assistant",
         description: "Advanced neural architecture optimized for complex academic research synthesis.",
         icon: GraduationCap,
-        externalUrl: "https://anonemasi.vercel.app/dissertation",
+        link: "/ai-tools/dissertation",
         color: "text-emerald-400",
         features: ["Research Synthesis", "Structure Analysis"]
     },
@@ -30,7 +30,7 @@ const AI_TOOLS = [
         name: "PowerPoint Presentation",
         description: "High-impact visual strategy engine. Transform raw data into cinematic narratives.",
         icon: Presentation,
-        externalUrl: "https://anonemasi.vercel.app/powerpoint",
+        link: "/ai-tools/powerpoint",
         color: "text-blue-400",
         features: ["Visual Hierarchy", "Narrative Flow"]
     },
@@ -38,29 +38,50 @@ const AI_TOOLS = [
         name: "Essay Catalyst",
         description: "Unlocking linguistic depth. Intelligent drafting protocols for creative resonance.",
         icon: PenTool,
-        externalUrl: "https://anonemasi.vercel.app/essay",
+        link: "/ai-tools/essay",
         color: "text-purple-400",
         features: ["Vocal Refinement", "Linguistic Flow"]
     }
 ];
 
-const SimpleToolCard = ({ tool }) => (
-    <div className="h-full bg-surface-1/40 rounded-[32px] border border-white/5 p-6 flex flex-col transition-all duration-300 hover:border-primary/30">
-        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 mb-3">
-            <tool.icon size={32} className={tool.color} />
+const SimpleToolCard = ({ tool }) => {
+    const { user, openAuthModal } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLaunch = (e) => {
+        e.preventDefault();
+        if (!user) {
+            toast.info('Please login to access AI research deployments.', {
+                icon: '🔒',
+                style: {
+                    background: '#111',
+                    color: '#fff',
+                    border: '1px solid rgba(16,185,129,0.2)',
+                    borderRadius: '16px',
+                }
+            });
+            openAuthModal('login');
+            return;
+        }
+        navigate(tool.link);
+    };
+
+    return (
+        <div className="h-full bg-surface-1/40 rounded-[32px] border border-white/5 p-6 flex flex-col transition-all duration-300 hover:border-primary/30">
+            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 mb-3">
+                <tool.icon size={32} className={tool.color} />
+            </div>
+            <h3 className="text-2xl font-bold text-text-primary mb-2">{tool.name}</h3>
+            <p className="text-sm text-text-secondary opacity-60 mb-6 flex-1 italic">{tool.description}</p>
+            <button
+                onClick={handleLaunch}
+                className="w-full flex items-center justify-center gap-2 py-4 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all duration-300"
+            >
+                Launch <ArrowUpRight size={14} />
+            </button>
         </div>
-        <h3 className="text-2xl font-bold text-text-primary mb-2">{tool.name}</h3>
-        <p className="text-sm text-text-secondary opacity-60 mb-6 flex-1 italic">{tool.description}</p>
-        <a
-            href={tool.externalUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 py-4 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all duration-300"
-        >
-            Launch <ArrowUpRight size={14} />
-        </a>
-    </div>
-);
+    );
+};
 
 const Marketplace = () => {
     const [searchParams, setSearchParams] = useSearchParams();

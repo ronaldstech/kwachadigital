@@ -74,7 +74,7 @@ const Navbar = () => {
         { name: 'Home', path: '/', icon: Home },
         { name: 'Marketplace', path: '/marketplace', icon: Store },
         { name: 'Yazam', path: '/yazam', icon: Briefcase },
-        { name: 'Free Products', path: '/ai-tools', icon: Sparkle },
+        { name: 'AI Tools', path: '/ai-tools', icon: Sparkle },
     ];
 
     const isActive = (path) => {

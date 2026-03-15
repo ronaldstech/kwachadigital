@@ -22,6 +22,10 @@ import Orders from './pages/Orders';
 import Yazam from './pages/Yazam';
 import PresentationDetail from './pages/PresentationDetail';
 import FreeProducts from './pages/FreeProducts';
+import AITools from './pages/AITools';
+import DissertationTool from './anonemasi/pages/DissertationTool';
+import EssayTool from './anonemasi/pages/EssayTool';
+import PowerPointTool from './anonemasi/pages/PowerPointTool';
 
 // Helper to scroll to top on navigation
 const ScrollToTop = () => {
@@ -33,16 +37,26 @@ const ScrollToTop = () => {
 };
 
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = () => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
-  if (loading) return null;
+  console.info(`[ProtectedRoute] Path: ${location.pathname}, Loading: ${loading}, User: ${user ? 'Authenticated' : 'Guest'}`);
 
-  if (!user) {
-    return <Navigate to="/" replace />;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg-main flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
-  return children;
+  if (!user) {
+    console.info(`[ProtectedRoute] No user found at ${location.pathname}. Redirecting to Home.`);
+    return <Navigate to="/" state={{ from: location }} replace />;
+  }
+
+  return <Outlet />;
 };
 
 // Layout for Public Pages (with Navbar and Footer)
@@ -58,31 +72,13 @@ const MainLayout = () => {
   );
 };
 
-const App = () => {
-  return (
-    <ThemeProvider>
-      <AuthProvider>
-        <StoreProvider>
-          <AuthConsumer />
-        </StoreProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  );
-};
-
-const AuthConsumer = () => {
+const AppContent = () => {
   const { isAuthModalOpen, closeAuthModal, initialAuthMode } = useAuth();
 
   return (
-    <Router>
+    <>
       <ScrollToTop />
-      <Toaster position="bottom-right" />
-
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={closeAuthModal}
-        initialMode={initialAuthMode}
-      />
+      <Toaster position="top-right" />
 
       <Routes>
         {/* Public Routes with Main Layout */}
@@ -94,29 +90,51 @@ const AuthConsumer = () => {
           <Route path="/presentation/:id" element={<PresentationDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />
-          <Route path="/orders" element={
-            <ProtectedRoute>
-              <Orders />
-            </ProtectedRoute>
-          } />
-          <Route path="/ai-tools" element={<FreeProducts />} />
+          <Route path="/ai-tools" element={<AITools />} />
+          <Route path="/ai-tools/free-products" element={<FreeProducts />} />
+          
+          {/* Protected Dashboard Routes (WITH Navbar/Footer) */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
         </Route>
 
-        {/* Independent Protected Routes (No Global Navbar/Footer) */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        } />
+        {/* Protected AI Tool Routes (IMMERSIVE - NO Navbar/Footer) */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/ai-tools/dissertation" element={<DissertationTool />} />
+          <Route path="/ai-tools/essay" element={<EssayTool />} />
+          <Route path="/ai-tools/powerpoint" element={<PowerPointTool />} />
+        </Route>
+
+        {/* Auth Routes */}
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/signup" element={<Navigate to="/" replace />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={closeAuthModal} 
+        initialMode={initialAuthMode} 
+      />
+    </>
+  );
+};
+
+const App = () => {
+  return (
+    <Router>
+      <ThemeProvider>
+        <AuthProvider>
+          <StoreProvider>
+            <AppContent />
+          </StoreProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </Router>
   );
 };
