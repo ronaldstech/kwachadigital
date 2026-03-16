@@ -31,16 +31,16 @@ const Sidebar = ({
     };
 
     const sidebarContent = (
-        <aside className={`w-64 h-full border-r border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0d0d0f] flex flex-col z-50 shrink-0 shadow-2xl lg:shadow-none`}>
+        <aside className={`w-64 h-full border-r border-glass-border bg-bg-main flex flex-col z-50 shrink-0 shadow-2xl lg:shadow-none`}>
             {/* Header / Brand */}
-            <div className="p-4 border-b border-zinc-200 dark:border-white/5 flex items-center justify-between">
+            <div className="p-4 border-b border-glass-border flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 shrink-0">
                         <PenTool size={16} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-sm font-bold font-outfit text-[var(--text-primary)]">Anonemasi</h1>
-                        <p className="text-[9px] text-[var(--text-secondary)] uppercase tracking-widest font-bold">Essay Weaver</p>
+                        <h1 className="text-sm font-bold font-outfit text-text-primary">Anonemasi</h1>
+                        <p className="text-[9px] text-text-secondary uppercase tracking-widest font-bold">Essay Weaver</p>
                     </div>
                 </div>
                 {/* Close button for mobile */}
@@ -79,10 +79,10 @@ const Sidebar = ({
                             <Clock size={10} />
                             Active Essay
                         </h3>
-                        <p className="text-[10px] text-[var(--text-secondary)] px-1 line-clamp-2 leading-relaxed mb-2">{essayState.topic}</p>
+                        <p className="text-[10px] text-text-secondary px-1 line-clamp-2 leading-relaxed mb-2">{essayState.topic}</p>
 
                         {/* We don't have chapters, but we can show paragraph count or plan status */}
-                        <div className="w-full px-2.5 py-2 rounded-lg flex items-center gap-2.5 transition-all bg-purple-50 dark:bg-white/5 border border-purple-200 dark:border-white/10 text-[var(--text-primary)]">
+                        <div className="w-full px-2.5 py-2 rounded-lg flex items-center gap-2.5 transition-all bg-surface-2 border border-glass-border text-text-primary">
                             <div className="w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-mono border shrink-0 bg-purple-100 dark:bg-purple-500/20 border-purple-300 dark:border-purple-500/40 text-purple-600 dark:text-purple-400">
                                 <PenTool size={10} />
                             </div>
@@ -121,14 +121,14 @@ const Sidebar = ({
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-1.5 mb-1">
-                                                    <p className={`text-[11px] font-bold line-clamp-1 transition-colors ${isActive ? 'text-purple-600 dark:text-purple-400' : isCompleted ? 'text-green-700 dark:text-green-400' : 'text-[var(--text-primary)] group-hover:text-purple-600 dark:group-hover:text-purple-400'
+                                                    <p className={`text-[11px] font-bold line-clamp-1 transition-colors ${isActive ? 'text-purple-600 dark:text-purple-400' : isCompleted ? 'text-green-700 dark:text-green-400' : 'text-text-primary group-hover:text-purple-600 dark:group-hover:text-purple-400'
                                                         }`}>
                                                         {item.topic || 'Untitled Essay'}
                                                     </p>
                                                     {isActive && <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse shrink-0" />}
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
-                                                    <p className="text-[9px] text-[var(--text-secondary)] flex items-center gap-1">
+                                                    <p className="text-[9px] text-text-secondary flex items-center gap-1">
                                                         <LayoutDashboard size={9} />
                                                         {item.essayType ? item.essayType.charAt(0).toUpperCase() + item.essayType.slice(1) : 'Standard'}
                                                     </p>
@@ -155,8 +155,8 @@ const Sidebar = ({
             </div>
 
             {/* User Profile Footer */}
-            <div className="p-3 border-t border-zinc-200 dark:border-white/5 bg-zinc-50/50 dark:bg-white/5">
-                <div className="flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-zinc-200 dark:hover:border-white/10 transition-all group relative">
+            <div className="p-3 border-t border-glass-border bg-surface-1">
+                <div className="flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-glass-border transition-all group relative">
                     <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-purple-500/20 shrink-0 overflow-hidden ring-2 ring-white dark:ring-zinc-900">
                         {user?.photoURL ? (
                             <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
@@ -165,7 +165,7 @@ const Sidebar = ({
                         )}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-bold text-[var(--text-primary)] truncate">{user?.name || 'Loading...'}</p>
+                        <p className="text-[11px] font-bold text-text-primary truncate">{user?.name || 'Loading...'}</p>
                         <div className="flex items-center gap-1.5">
                             <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${essayState?.plan === 'pro'
                                 ? 'bg-purple-500 text-white shadow-sm shadow-purple-500/20'

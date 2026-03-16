@@ -1,35 +1,20 @@
 :root {
-  --pp-bg: #0a0a0b;
-  --pp-surface: #141417;
-  --pp-glass: rgba(255, 255, 255, 0.03);
-  --pp-border: rgba(255, 255, 255, 0.08);
+  --pp-bg: var(--bg-main);
+  --pp-surface: var(--surface-1);
+  --pp-glass: var(--surface-2);
+  --pp-border: var(--glass-border);
   --pp-accent: #6366f1;
   --pp-accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-  --pp-text: #ffffff;
-  --pp-text-dim: #94a3b8;
-}
-
-.dark .pp-container {
-  --pp-bg: #0a0a0b;
-  --pp-surface: #141417;
-  --pp-text: #ffffff;
-}
-
-.light .pp-container {
-  --pp-bg: #f8fafc;
-  --pp-surface: #ffffff;
-  --pp-text: #0f172a;
-  --pp-text-dim: #64748b;
-  --pp-glass: rgba(0, 0, 0, 0.02);
-  --pp-border: rgba(0, 0, 0, 0.1);
+  --pp-text: var(--text-primary);
+  --pp-text-dim: var(--text-secondary);
 }
 
 .pp-tool-layout {
   display: grid;
   grid-template-columns: 280px 1fr 340px;
   height: 100vh;
-  background: var(--pp-bg);
-  color: var(--pp-text);
+  background: var(--bg-main);
+  color: var(--text-primary);
   overflow: hidden;
 }
 

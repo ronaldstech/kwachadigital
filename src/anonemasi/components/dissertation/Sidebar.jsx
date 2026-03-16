@@ -33,22 +33,22 @@ const Sidebar = ({
     };
 
     const sidebarContent = (
-        <aside className={`w-64 h-full border-r border-zinc-200 dark:border-white/10 bg-white dark:bg-[#0d0d0f] flex flex-col z-50 shrink-0 shadow-2xl lg:shadow-none`}>
+        <aside className={`w-64 h-full border-r border-glass-border bg-bg-main flex flex-col z-50 shrink-0 shadow-2xl lg:shadow-none`}>
             {/* Header / Brand */}
-            <div className="p-4 border-b border-zinc-200 dark:border-white/5 flex items-center justify-between">
+            <div className="p-4 border-b border-glass-border flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
                         <BookOpen size={16} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-sm font-bold font-outfit text-[var(--text-primary)]">Anonemasi</h1>
-                        <p className="text-[9px] text-[var(--text-secondary)] uppercase tracking-widest font-bold">Dissertation Pro</p>
+                        <h1 className="text-sm font-bold font-outfit text-text-primary">Anonemasi</h1>
+                        <p className="text-[9px] text-text-secondary uppercase tracking-widest font-bold">Dissertation Pro</p>
                     </div>
                 </div>
                 {/* Close button for mobile */}
                 <button
                     onClick={onClose}
-                    className="lg:hidden p-2 text-zinc-400 hover:text-zinc-800 dark:hover:text-white transition-colors"
+                    className="lg:hidden p-2 text-text-muted hover:text-text-primary transition-colors"
                 >
                     <X size={18} />
                 </button>
@@ -57,7 +57,7 @@ const Sidebar = ({
             <div className="p-4">
                 <button
                     onClick={onBack}
-                    className="flex items-center gap-2 text-zinc-400 dark:text-white/40 hover:text-zinc-800 dark:hover:text-white transition-colors text-xs font-medium group"
+                    className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors text-xs font-medium group"
                 >
                     <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
                     Back to Matrix
@@ -77,11 +77,11 @@ const Sidebar = ({
                 {/* Current Progress */}
                 {dissState.topic && (
                     <div className="space-y-2">
-                        <h3 className="text-[9px] font-bold text-zinc-400 dark:text-white/20 uppercase tracking-[0.2em] px-1 flex items-center gap-1.5">
+                        <h3 className="text-[9px] font-bold text-text-muted uppercase tracking-[0.2em] px-1 flex items-center gap-1.5">
                             <Clock size={10} />
                             Active Project
                         </h3>
-                        <p className="text-[10px] text-[var(--text-secondary)] px-1 line-clamp-2 leading-relaxed mb-2">{dissState.topic}</p>
+                        <p className="text-[10px] text-text-secondary px-1 line-clamp-2 leading-relaxed mb-2">{dissState.topic}</p>
                         <div className="space-y-0.5">
                             {chapters.map(([num, chapter]) => {
                                 const isActive = parseInt(num) === dissState.currentChapter;
@@ -92,15 +92,15 @@ const Sidebar = ({
                                         key={num}
                                         onClick={() => onClose?.()}
                                         className={`w-full px-2.5 py-2 rounded-lg flex items-center gap-2.5 transition-all text-left group ${isActive
-                                            ? 'bg-indigo-50 dark:bg-white/5 border border-indigo-200 dark:border-white/10 text-[var(--text-primary)]'
-                                            : 'text-zinc-500 dark:text-white/40 hover:text-[var(--text-primary)] hover:bg-zinc-100 dark:hover:bg-white/5'
+                                            ? 'bg-surface-2 border border-glass-border text-text-primary'
+                                            : 'text-text-secondary hover:text-text-primary hover:bg-surface-2/50'
                                             }`}
                                     >
                                         <div className={`w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-mono border shrink-0 ${isActive
-                                            ? 'bg-indigo-100 dark:bg-indigo-500/20 border-indigo-300 dark:border-indigo-500/40 text-indigo-600 dark:text-indigo-400'
+                                            ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-600 dark:text-indigo-400'
                                             : isCompleted
-                                                ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20 text-green-600 dark:text-green-400'
-                                                : 'bg-zinc-100 dark:bg-white/5 border-zinc-200 dark:border-white/5 text-zinc-400 dark:text-white/20'
+                                                ? 'bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400'
+                                                : 'bg-surface-2 border border-glass-border text-text-muted'
                                             }`}>
                                             {isCompleted ? <CheckCircle2 size={10} /> : num}
                                         </div>
@@ -116,7 +116,7 @@ const Sidebar = ({
                 {/* Saved Projects */}
                 {savedDissertations?.length > 0 && (
                     <div className="space-y-2">
-                        <h3 className="text-[9px] font-bold text-zinc-400 dark:text-white/20 uppercase tracking-[0.2em] px-1 flex items-center gap-1.5">
+                        <h3 className="text-[9px] font-bold text-text-muted uppercase tracking-[0.2em] px-1 flex items-center gap-1.5">
                             <History size={10} />
                             Saved Assignments
                         </h3>
@@ -131,23 +131,23 @@ const Sidebar = ({
                                         key={item.id}
                                         onClick={() => { onLoadDissertation(item.id); onClose?.(); }}
                                         className={`w-full p-3 rounded-xl border transition-all text-left active:scale-[0.98] group relative ${isActive
-                                            ? 'ring-2 ring-indigo-500/50 border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10 shadow-lg shadow-indigo-500/10'
+                                            ? 'ring-2 ring-indigo-500/50 border-indigo-500 bg-surface-2 shadow-lg shadow-indigo-500/10'
                                             : isCompleted
-                                                ? 'bg-green-50/50 dark:bg-green-500/5 border-green-200 dark:border-green-500/20 hover:border-green-400'
-                                                : 'bg-zinc-50 dark:bg-white/5 border-zinc-200 dark:border-white/5 hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:bg-indigo-50 dark:hover:bg-indigo-500/5'
+                                                ? 'bg-surface-2 border-green-500/30 hover:border-green-500'
+                                                : 'bg-surface-2 border border-glass-border hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:bg-surface-1'
                                             }`}
                                     >
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-1.5 mb-1">
-                                                    <p className={`text-[11px] font-bold line-clamp-1 transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-400' : isCompleted ? 'text-green-700 dark:text-green-400' : 'text-[var(--text-primary)] group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
+                                                    <p className={`text-[11px] font-bold line-clamp-1 transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-400' : isCompleted ? 'text-green-700 dark:text-green-400' : 'text-text-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
                                                         }`}>
                                                         {item.topic}
                                                     </p>
                                                     {isActive && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shrink-0" />}
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
-                                                    <p className="text-[9px] text-[var(--text-secondary)] flex items-center gap-1">
+                                                    <p className="text-[9px] text-text-secondary flex items-center gap-1">
                                                         <LayoutDashboard size={9} />
                                                         {item.program}
                                                     </p>
@@ -174,9 +174,9 @@ const Sidebar = ({
             </div>
 
             {/* User Profile Footer */}
-            <div className="p-3 border-t border-zinc-200 dark:border-white/5 bg-zinc-50/50 dark:bg-white/5">
-                <div className="flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-zinc-200 dark:hover:border-white/10 transition-all group relative">
-                    <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-indigo-500/20 shrink-0 overflow-hidden ring-2 ring-white dark:ring-zinc-900">
+            <div className="p-3 border-t border-glass-border bg-surface-2">
+                <div className="flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-glass-border transition-all group relative">
+                    <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-indigo-500/20 shrink-0 overflow-hidden ring-2 ring-bg-main">
                         {user?.photoURL ? (
                             <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
                         ) : (
@@ -184,11 +184,11 @@ const Sidebar = ({
                         )}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-bold text-[var(--text-primary)] truncate">{user?.name || 'Loading...'}</p>
+                        <p className="text-[11px] font-bold text-text-primary truncate">{user?.name || 'Loading...'}</p>
                         <div className="flex items-center gap-1.5">
                             <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${dissState?.plan === 'pro'
                                 ? 'bg-indigo-500 text-white shadow-sm shadow-indigo-500/20'
-                                : 'bg-zinc-200 dark:bg-white/10 text-zinc-500 dark:text-zinc-400'
+                                : 'bg-surface-1 text-text-secondary'
                                 }`}>
                                 {dissState?.plan === 'pro' ? 'Pro' : 'Free'}
                             </span>
@@ -207,7 +207,7 @@ const Sidebar = ({
                     <button
                         onClick={() => logout()}
                         title="Logout"
-                        className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+                        className="p-1.5 rounded-lg text-text-muted hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
                     >
                         <LogOut size={14} />
                     </button>
@@ -215,6 +215,7 @@ const Sidebar = ({
             </div>
         </aside>
     );
+
 
     return (
         <>

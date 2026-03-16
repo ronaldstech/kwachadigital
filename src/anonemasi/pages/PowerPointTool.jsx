@@ -190,7 +190,7 @@ const PowerPointTool = () => {
                             <div className="flex flex-col h-full">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-2">
-                                    <button onClick={() => navigate('/ai-tools/powerpoint')} className="p-1 hover:bg-white/10 rounded-lg transition-colors text-[var(--pp-text-dim)]">
+                                    <button onClick={() => navigate('/ai-tools/powerpoint')} className="p-1 hover:bg-surface-2 rounded-lg transition-colors text-text-secondary">
                                             <ChevronLeft size={20} />
                                         </button>
                                         <h2 className="font-bold text-lg">History</h2>
@@ -212,7 +212,7 @@ const PowerPointTool = () => {
                                                 key={ppt.id}
                                                 className={`p-3 rounded-xl border flex flex-col gap-2 cursor-pointer transition-all ${powerPointState.id === ppt.id
                                                     ? 'bg-indigo-500/10 border-indigo-500/30'
-                                                    : 'bg-white/5 border-[var(--pp-border)] hover:bg-white/10'
+                                                    : 'bg-surface-2 border-glass-border hover:bg-surface-1'
                                                     }`}
                                                 onClick={() => {
                                                     loadPowerPoint(ppt.id);
@@ -231,7 +231,7 @@ const PowerPointTool = () => {
                                                         <Trash2 size={14} />
                                                     </button>
                                                 </div>
-                                                <div className="flex items-center justify-between text-[10px] text-[var(--pp-text-dim)]">
+                                                <div className="flex items-center justify-between text-[10px] text-text-secondary">
                                                     <span>{ppt.slides?.length || 0} slides</span>
                                                     <span>{ppt.lastModified?.toDate().toLocaleDateString() || "Just now"}</span>
                                                 </div>
@@ -250,7 +250,7 @@ const PowerPointTool = () => {
                                         </div>
                                         <h1 className="font-bold text-xl tracking-tight">PPT Gen</h1>
                                     </div>
-                                    <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden p-2 text-[var(--pp-text-dim)]">
+                                    <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden p-2 text-text-secondary">
                                         <X size={24} />
                                     </button>
                                 </div>
@@ -258,7 +258,7 @@ const PowerPointTool = () => {
                                 <nav className="flex flex-col gap-2">
                                     <button
                                         onClick={() => navigate('/ai-tools')}
-                                        className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 text-[var(--pp-text-dim)] border border-white/5 mb-2"
+                                        className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-surface-2 text-text-secondary border border-glass-border mb-2"
                                     >
                                         <ArrowLeft size={18} />
                                         <span className="text-sm font-semibold">Back to Matrix</span>
@@ -274,7 +274,7 @@ const PowerPointTool = () => {
                                             onClick={() => setActivePanel(tab.id)}
                                             className={`flex items-center gap-3 p-3 rounded-xl transition-all ${activePanel === tab.id
                                                 ? "bg-indigo-600/10 text-indigo-500 font-semibold"
-                                                : "hover:bg-white/5 text-[var(--pp-text-dim)]"
+                                                : "hover:bg-surface-2 text-text-secondary"
                                                 }`}
                                         >
                                             {tab.icon}
@@ -283,14 +283,14 @@ const PowerPointTool = () => {
                                     ))}
                                 </nav>
 
-                                <div className="mt-auto pt-6 border-t border-[var(--pp-border)]">
+                                <div className="mt-auto pt-6 border-t border-glass-border">
                                     <div className="pp-glass-card p-4">
-                                        <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--pp-text-dim)] mb-3 flex items-center gap-2">
+                                        <h3 className="text-xs font-bold uppercase tracking-wider text-text-secondary mb-3 flex items-center gap-2">
                                             <Zap size={14} className="text-yellow-500" /> Tool Active
                                         </h3>
                                         {activePanel === "sources" && (
                                             <div className="space-y-3">
-                                                <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[var(--pp-border)] rounded-xl cursor-pointer hover:border-indigo-500/50 transition-colors">
+                                                <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-glass-border rounded-xl cursor-pointer hover:border-indigo-500/50 transition-colors">
                                                     <Upload size={20} className="mb-2 text-indigo-500" />
                                                     <span className="text-[10px] text-center">Upload PDF/Docs</span>
                                                     <input type="file" className="hidden" onChange={(e) => handleUploadClick(e, "sources")} accept=".pdf,.docx" />
@@ -311,7 +311,7 @@ const PowerPointTool = () => {
 
                                         {activePanel === "template" && (
                                             <div className="space-y-3">
-                                                <p className="text-[10px] text-[var(--pp-text-dim)]">Preserve design from an existing PPTX.</p>
+                                                <p className="text-[10px] text-text-secondary">Preserve design from an existing PPTX.</p>
                                                 <label className="flex items-center gap-2 p-2 bg-indigo-500/20 text-indigo-400 rounded-lg cursor-pointer hover:bg-indigo-500/30 transition-colors text-xs font-medium justify-center">
                                                     <Palette size={14} /> {files.template ? "Change Template" : "Select PPTX"}
                                                     <input type="file" className="hidden" onChange={(e) => handleUploadClick(e, "template")} accept=".pptx" />
@@ -323,20 +323,20 @@ const PowerPointTool = () => {
                                         {activePanel === "customize" && (
                                             <div className="space-y-4">
                                                 <div className="space-y-1">
-                                                    <label className="text-[10px] font-bold text-[var(--pp-text-dim)]">Slide Count</label>
+                                                    <label className="text-[10px] font-bold text-text-secondary">Slide Count</label>
                                                     <input
                                                         type="range" min="3" max="25" value={config.slideCount}
                                                         onChange={(e) => updateConfig({ slideCount: parseInt(e.target.value) })}
                                                         className="w-full accent-indigo-500"
                                                     />
-                                                    <div className="flex justify-between text-[10px] font-medium"><span>3</span> <span>{config.slideCount} slides</span> <span>25</span></div>
+                                                    <div className="flex justify-between text-[10px] font-medium text-text-secondary"><span>3</span> <span>{config.slideCount} slides</span> <span>25</span></div>
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <label className="text-[10px] font-bold text-[var(--pp-text-dim)]">Audience</label>
+                                                    <label className="text-[10px] font-bold text-text-secondary">Audience</label>
                                                     <select
                                                         value={config.audience}
                                                         onChange={(e) => updateConfig({ audience: e.target.value })}
-                                                        className="w-full bg-white/5 border border-[var(--pp-border)] rounded-lg p-1 text-[10px]"
+                                                        className="w-full bg-surface-2 border border-glass-border rounded-lg p-1 text-[10px] text-text-primary"
                                                     >
                                                         <option value="Professional">Professional</option>
                                                         <option value="Academic">Academic</option>
@@ -349,7 +349,7 @@ const PowerPointTool = () => {
 
                                         {activePanel === "copycat" && (
                                             <div className="space-y-3">
-                                                <p className="text-[10px] text-[var(--pp-text-dim)]">Mirror slide structure & count from a reference PPTX.</p>
+                                                <p className="text-[10px] text-text-secondary">Mirror slide structure & count from a reference PPTX.</p>
                                                 <label className="flex items-center gap-2 p-2 bg-purple-500/20 text-purple-400 rounded-lg cursor-pointer hover:bg-purple-500/30 transition-colors text-xs font-medium justify-center">
                                                     <Copy size={14} /> {files.copycat ? "Change Reference" : "Select PPTX"}
                                                     <input type="file" className="hidden" onChange={(e) => handleUploadClick(e, "copycat")} accept=".pptx" />
@@ -372,9 +372,9 @@ const PowerPointTool = () => {
 
             {/* Main Chat Area */}
             <main className="pp-main-content">
-                <header className="flex items-center justify-between p-4 lg:p-5 border-b border-[var(--pp-border)] relative z-20">
+                <header className="flex items-center justify-between p-4 lg:p-5 border-b border-glass-border relative z-20">
                     <div className="flex items-center gap-3 w-1/2">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 -ml-2 text-[var(--pp-text-dim)] flex-shrink-0">
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 -ml-2 text-text-secondary flex-shrink-0">
                             <SidebarIcon size={20} />
                         </button>
                         <motion.div animate={isBusy ? { rotate: 360 } : {}} transition={{ repeat: Infinity, duration: 2, ease: "linear" }} className="flex-shrink-0">
@@ -413,7 +413,7 @@ const PowerPointTool = () => {
                         >
                             <div className={`max-w-[80%] p-4 rounded-2xl ${m.role === "user"
                                 ? "bg-indigo-600 text-white rounded-tr-none shadow-lg shadow-indigo-600/20"
-                                : "bg-white/5 border border-[var(--pp-border)] rounded-tl-none"
+                                : "bg-surface-2 border border-glass-border rounded-tl-none"
                                 }`}>
                                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.content}</p>
                                 {m.actionable && slides.length > 0 && (
@@ -429,14 +429,14 @@ const PowerPointTool = () => {
 
                     {isBusy && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
-                            <div className="bg-white/5 border border-[var(--pp-border)] rounded-2xl rounded-tl-none p-4 max-w-[80%] flex items-center gap-4">
+                            <div className="bg-surface-2 border border-glass-border rounded-2xl rounded-tl-none p-4 max-w-[80%] flex items-center gap-4">
                                 <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex flex-shrink-0 items-center justify-center relative">
                                     <Sparkles size={18} className="animate-pulse" />
                                     <div className="absolute inset-0 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
                                 </div>
                                 <div className="flex flex-col gap-1.5">
-                                    <h3 className="text-sm font-bold text-white m-0 leading-tight">Architecting Presentation</h3>
-                                    <p className="text-[11px] text-[var(--pp-text-dim)] m-0 leading-tight">Extracting insights and formatting slides...</p>
+                                    <h3 className="text-sm font-bold text-text-primary m-0 leading-tight">Architecting Presentation</h3>
+                                    <p className="text-[11px] text-text-secondary m-0 leading-tight">Extracting insights and formatting slides...</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -452,11 +452,11 @@ const PowerPointTool = () => {
                             onChange={(e) => setUserInput(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleRunGeneration())}
                             placeholder="Describe your presentation... (e.g., '12-slide summary of the attached PDF')"
-                            className="w-full bg-white/5 border border-[var(--pp-border)] rounded-2xl p-4 pr-14 min-h-[80px] lg:min-h-[100px] text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none transition-all group-hover:bg-white/[0.07]"
+                            className="w-full bg-surface-2 border border-glass-border rounded-2xl p-4 pr-14 min-h-[80px] lg:min-h-[100px] text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 outline-none transition-all group-hover:bg-surface-1"
                         />
                         <div className="absolute bottom-4 right-4 flex items-center gap-2">
                             <label className="pp-btn-ghost p-1.5 cursor-pointer">
-                                <Plus size={20} className="text-[var(--pp-text-dim)]" />
+                                <Plus size={20} className="text-text-secondary" />
                                 <input type="file" className="hidden" onChange={(e) => handleUploadClick(e, "main")} />
                             </label>
                             <button
@@ -486,27 +486,27 @@ const PowerPointTool = () => {
                                 <Layout size={18} className="text-indigo-500" /> Live Preview
                             </h2>
                             <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5 border border-[var(--pp-border)]">
+                                <div className="flex items-center gap-1 bg-surface-2 rounded-lg p-0.5 border border-glass-border">
                                     <button
                                         disabled={currentSlideIdx === 0}
                                         onClick={() => setCurrentSlideIdx(prev => prev - 1)}
-                                        className="p-1 hover:bg-white/10 rounded disabled:opacity-30"
+                                        className="p-1 hover:bg-surface-1 rounded disabled:opacity-30"
                                     ><ChevronLeft size={16} /></button>
                                     <span className="text-[10px] font-bold px-1">{currentSlideIdx + 1} / {slides.length || 1}</span>
                                     <button
                                         disabled={currentSlideIdx === slides.length - 1 || !slides.length}
                                         onClick={() => setCurrentSlideIdx(prev => prev + 1)}
-                                        className="p-1 hover:bg-white/10 rounded disabled:opacity-30"
+                                        className="p-1 hover:bg-surface-1 rounded disabled:opacity-30"
                                     ><ChevronRight size={16} /></button>
                                 </div>
                                 {isMobilePreviewOpen && (
-                                    <button onClick={() => setIsMobilePreviewOpen(false)} className="lg:hidden p-2 text-[var(--pp-text-dim)]">
+                                    <button onClick={() => setIsMobilePreviewOpen(false)} className="lg:hidden p-2 text-text-secondary">
                                         <X size={20} />
                                     </button>
                                 )}
                             </div>
                         </div>
-                        {/* ... rest of the preview content ... */}
+                        {/* Slide content preview */}
                         {slides.length > 0 && currentSlide ? (
                             <div className="space-y-4">
                                 <div className="pp-slide-preview">
@@ -534,14 +534,14 @@ const PowerPointTool = () => {
                                 </div>
 
                                 <div className="pp-glass-card p-4">
-                                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-[var(--pp-text-dim)] mb-2">Slide Data</h4>
+                                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-text-secondary mb-2">Slide Data</h4>
                                     <div className="space-y-2">
                                         <div className="flex justify-between text-[10px]">
-                                            <span className="text-[var(--pp-text-dim)]">Type</span>
+                                            <span className="text-text-secondary">Type</span>
                                             <span className="font-bold text-indigo-500 uppercase">{currentSlide.type}</span>
                                         </div>
                                         <div className="flex justify-between text-[10px]">
-                                            <span className="text-[var(--pp-text-dim)]">Words</span>
+                                            <span className="text-text-secondary">Words</span>
                                             <span className="font-bold">{JSON.stringify(currentSlide).length / 6 | 0}</span>
                                         </div>
                                     </div>

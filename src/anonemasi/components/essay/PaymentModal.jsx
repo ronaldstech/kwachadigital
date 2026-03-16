@@ -223,7 +223,7 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                 <motion.div key="shell" initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
                     transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-                    className="relative w-full max-w-md bg-white dark:bg-[#1c1c1e] rounded-3xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-white/10">
+                    className="relative w-full max-w-md bg-bg-main rounded-3xl shadow-2xl overflow-hidden border border-glass-border">
 
                     {/* ── HEADER ── */}
                     <div className="h-26 bg-gradient-to-br from-indigo-600 to-purple-700 relative flex items-center justify-center overflow-hidden py-5">
@@ -256,8 +256,8 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                         <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6">
                             <div className="space-y-2 mb-5">
                                 {FEATURES.map((f, i) => (
-                                    <div key={i} className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
-                                        <div className="w-5 h-5 rounded-full bg-zinc-100 dark:bg-white/5 flex items-center justify-center shrink-0">{f.icon}</div>
+                                    <div key={i} className="flex items-center gap-3 text-sm text-text-secondary">
+                                        <div className="w-5 h-5 rounded-full bg-surface-2 flex items-center justify-center shrink-0">{f.icon}</div>
                                         <span>{f.text}</span>
                                     </div>
                                 ))}
@@ -286,7 +286,7 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                             </button>
 
                             <button onClick={() => setStep('payment')}
-                                className="w-full py-2.5 rounded-2xl border border-dashed border-zinc-200 dark:border-white/10 hover:bg-zinc-50 dark:hover:bg-white/5 transition-all flex items-center justify-center gap-2 text-xs text-[var(--text-secondary)] mb-3">
+                                className="w-full py-2.5 rounded-2xl border border-dashed border-glass-border hover:bg-surface-2 transition-all flex items-center justify-center gap-2 text-xs text-text-secondary mb-3">
                                 <CreditCard size={13} />
                                 Pay directly with Mobile Money
                             </button>
@@ -309,14 +309,14 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                                     </span>
                                 </button>
                             )}
-                            <p className="text-center text-[10px] text-[var(--text-secondary)] mt-3 opacity-40">Secure · Malawian networks supported</p>
+                            <p className="text-center text-[10px] text-text-secondary mt-3 opacity-40">Secure · Malawian networks supported</p>
                         </motion.div>
                     )}
 
                     {/* ── HISTORY ── */}
                     {step === 'history' && (
                         <motion.div key="history" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-5">
-                            <p className="text-xs text-[var(--text-secondary)] mb-4">
+                            <p className="text-xs text-text-secondary mb-4">
                                 Previous payment attempts for Essay generation. Click <strong>Verify</strong> on any unverified transaction to check its status.
                             </p>
 
@@ -325,7 +325,7 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                                     <Loader2 size={22} className="animate-spin text-indigo-500" />
                                 </div>
                             ) : transactions.length === 0 ? (
-                                <p className="text-center text-sm text-[var(--text-secondary)] py-8 opacity-50">No transactions yet.</p>
+                                <p className="text-center text-sm text-text-secondary py-8 opacity-50">No transactions yet.</p>
                             ) : (
                                 <div className="space-y-2.5 max-h-72 overflow-y-auto pr-0.5 custom-scrollbar">
                                     {transactions.map(txn => {
@@ -341,7 +341,7 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                                         const feedback = txnFeedback[txn.id];
 
                                         return (
-                                            <div key={txn.id} className="rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/10 overflow-hidden">
+                                            <div key={txn.id} className="rounded-2xl bg-surface-2 border border-glass-border overflow-hidden">
                                                 {/* Main row */}
                                                 <div className="flex items-center gap-3 p-3.5">
                                                     {/* Operator dot */}
@@ -349,11 +349,11 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
 
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-1.5 flex-wrap">
-                                                            <span className="text-[11px] font-bold text-[var(--text-primary)]">{opInfo?.name || txn.operator}</span>
+                                                            <span className="text-[11px] font-bold text-text-primary">{opInfo?.name || txn.operator}</span>
                                                             <span className={`px-1.5 py-[1px] rounded text-[8px] font-bold uppercase ${ss.cls}`}>{ss.label}</span>
                                                         </div>
-                                                        <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 truncate">{txn.phone} · {dateStr}</p>
-                                                        <p className="text-[9px] text-[var(--text-secondary)] opacity-40 font-mono truncate">ID: {txn.chargeId}</p>
+                                                        <p className="text-[10px] text-text-secondary mt-0.5 truncate">{txn.phone} · {dateStr}</p>
+                                                        <p className="text-[9px] text-text-secondary opacity-40 font-mono truncate">ID: {txn.chargeId}</p>
                                                     </div>
 
                                                     {/* Verify / status indicator */}
@@ -404,7 +404,7 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                                                                 {feedback.logs.map((log, li) => (
                                                                     <div key={li} className="flex items-start gap-1.5">
                                                                         <div className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0 ${log.type === 'error' ? 'bg-red-400' : 'bg-zinc-400'}`} />
-                                                                        <p className="text-[9px] text-[var(--text-secondary)] opacity-70 leading-relaxed">{log.message}</p>
+                                                                        <p className="text-[9px] text-text-secondary opacity-70 leading-relaxed">{log.message}</p>
                                                                     </div>
                                                                 ))}
                                                             </div>
@@ -428,7 +428,7 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                     {/* ── PHONE INPUT ── */}
                     {step === 'payment' && (
                         <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6">
-                            <p className="text-sm text-[var(--text-secondary)] mb-4">
+                            <p className="text-sm text-text-secondary mb-4">
                                 Enter your Mobile Money number. Your network is detected automatically.
                             </p>
 
@@ -436,7 +436,7 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                                 <Phone size={17} className={opStyle ? opStyle.text : 'text-zinc-400'} />
                                 <input autoFocus type="tel" value={phone} onChange={handlePhoneChange}
                                     placeholder="e.g. 0993764649"
-                                    className="flex-1 bg-transparent text-[var(--text-primary)] text-base font-medium placeholder:text-zinc-400 dark:placeholder:text-white/30 focus:outline-none" />
+                                    className="flex-1 bg-transparent text-text-primary text-base font-medium placeholder:text-zinc-400 dark:placeholder:text-white/30 focus:outline-none" />
                                 {detectedOp && (
                                     <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
                                         className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shrink-0 ${opStyle?.badge}`}>
@@ -464,7 +464,7 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                                 Pay 2,500 MWK
                                 {detectedOp && <span className="opacity-60 font-normal">via {detectedOp.info.name}</span>}
                             </button>
-                            <p className="text-center text-[10px] text-[var(--text-secondary)] mt-3 opacity-40">
+                            <p className="text-center text-[10px] text-text-secondary mt-3 opacity-40">
                                 You'll receive a prompt on your phone to confirm.
                             </p>
                         </motion.div>
@@ -478,15 +478,15 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                                 <Loader2 size={30} className="text-indigo-600 dark:text-indigo-400 animate-spin" />
                             </div>
                             <div>
-                                <p className="font-bold text-[var(--text-primary)]">Waiting for Confirmation…</p>
-                                <p className="text-sm text-[var(--text-secondary)] mt-1.5 max-w-[230px] mx-auto">
+                                <p className="font-bold text-text-primary">Waiting for Confirmation…</p>
+                                <p className="text-sm text-text-secondary mt-1.5 max-w-[230px] mx-auto">
                                     Approve the <strong>{detectedOp?.info?.name}</strong> prompt on <strong>{phone}</strong> to proceed.
                                 </p>
                             </div>
                             <div className="w-full bg-zinc-100 dark:bg-white/10 rounded-full h-1.5 overflow-hidden">
                                 <motion.div className="h-full bg-indigo-500 rounded-full" animate={{ width: `${pollPercent}%` }} transition={{ duration: 0.8 }} />
                             </div>
-                            <p className="text-[10px] text-[var(--text-secondary)] opacity-50 flex items-center gap-1">
+                            <p className="text-[10px] text-text-secondary opacity-50 flex items-center gap-1">
                                 <Clock size={9} /> Checking… {pollProgress.attempt}/{pollProgress.total}
                             </p>
                         </motion.div>
@@ -499,8 +499,8 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                             <div className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center shadow-xl shadow-green-500/20">
                                 <Check size={40} strokeWidth={3} />
                             </div>
-                            <h3 className="text-2xl font-black text-[var(--text-primary)]">Project Unlocked!</h3>
-                            <p className="text-sm text-[var(--text-secondary)]">Payment confirmed. Let's generate your essay!</p>
+                            <h3 className="text-2xl font-black text-text-primary">Project Unlocked!</h3>
+                            <p className="text-sm text-text-secondary">Payment confirmed. Let's generate your essay!</p>
                         </motion.div>
                     )}
 
@@ -512,11 +512,11 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                                 <AlertCircle size={30} className="text-red-500" />
                             </div>
                             <div>
-                                <p className="font-bold text-[var(--text-primary)]">Payment Declined</p>
-                                <p className="text-sm text-[var(--text-secondary)] mt-1">Your transaction was cancelled or declined.</p>
+                                <p className="font-bold text-text-primary">Payment Declined</p>
+                                <p className="text-sm text-text-secondary mt-1">Your transaction was cancelled or declined.</p>
                             </div>
                             <div className="flex gap-2 w-full">
-                                <button onClick={() => setStep('history')} className="flex-1 py-2.5 rounded-xl border border-zinc-200 dark:border-white/10 text-sm font-semibold text-[var(--text-secondary)] hover:bg-zinc-50 dark:hover:bg-white/5 transition-all flex items-center justify-center gap-1.5">
+                                <button onClick={() => setStep('history')} className="flex-1 py-2.5 rounded-xl border border-glass-border text-sm font-semibold text-text-secondary hover:bg-surface-2 transition-all flex items-center justify-center gap-1.5">
                                     <History size={13} /> History
                                 </button>
                                 <button onClick={() => setStep('payment')} className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-all">
@@ -534,13 +534,13 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                                 <Clock size={30} className="text-amber-500" />
                             </div>
                             <div>
-                                <p className="font-bold text-[var(--text-primary)]">Confirmation Timed Out</p>
-                                <p className="text-sm text-[var(--text-secondary)] mt-1 max-w-[230px] mx-auto">
+                                <p className="font-bold text-text-primary">Confirmation Timed Out</p>
+                                <p className="text-sm text-text-secondary mt-1 max-w-[230px] mx-auto">
                                     We couldn't confirm in time. If money was deducted, use the <strong>Verify</strong> button in history.
                                 </p>
                             </div>
                             <div className="flex gap-2 w-full">
-                                <button onClick={() => setStep('history')} className="flex-1 py-2.5 rounded-xl border border-zinc-200 dark:border-white/10 text-sm font-semibold text-[var(--text-secondary)] hover:bg-zinc-50 dark:hover:bg-white/5 transition-all flex items-center justify-center gap-1.5">
+                                <button onClick={() => setStep('history')} className="flex-1 py-2.5 rounded-xl border border-glass-border text-sm font-semibold text-text-secondary hover:bg-surface-2 transition-all flex items-center justify-center gap-1.5">
                                     <History size={13} /> Verify in History
                                 </button>
                                 <button onClick={() => setStep('payment')} className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-all">
@@ -558,8 +558,8 @@ const PaymentModal = ({ isOpen, onClose, onSuccess, userName, userEmail, userId 
                                 <AlertCircle size={26} className="text-zinc-500" />
                             </div>
                             <div>
-                                <p className="font-bold text-[var(--text-primary)]">Error</p>
-                                <p className="text-sm text-[var(--text-secondary)] mt-1 max-w-[240px] mx-auto">{errorMsg}</p>
+                                <p className="font-bold text-text-primary">Error</p>
+                                <p className="text-sm text-text-secondary mt-1 max-w-[240px] mx-auto">{errorMsg}</p>
                             </div>
                             <button onClick={() => setStep('payment')} className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-all">
                                 Try Again

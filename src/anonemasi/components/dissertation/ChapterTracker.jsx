@@ -20,7 +20,7 @@ const ChapterTracker = ({ currentChapter = 0, completed = false }) => {
                 </span>
             </div>
 
-            <div className="hidden md:block h-3.5 w-px bg-[var(--glass-border)] mx-1" />
+            <div className="hidden md:block h-3.5 w-px bg-glass-border mx-1" />
 
             <div className="hidden md:flex items-center gap-1.5">
                 {steps.map((step, i) => {
@@ -35,22 +35,23 @@ const ChapterTracker = ({ currentChapter = 0, completed = false }) => {
                                         ? 'bg-green-500/15 border border-green-500/30 text-green-500 dark:text-green-400'
                                         : isStepActive
                                             ? 'bg-indigo-500/15 border border-indigo-500/40 text-indigo-500 dark:text-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.25)]'
-                                            : 'bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] opacity-50'
+                                            : 'bg-surface-1 border border-glass-border text-text-secondary opacity-50'
                                     }`}>
                                     {stepNum}
                                 </div>
-                                <span className={`text-[9px] font-bold uppercase tracking-wider transition-all hidden sm:block ${stepNum <= currentChapter ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] opacity-40'
+                                <span className={`text-[9px] font-bold uppercase tracking-wider transition-all hidden sm:block ${stepNum <= currentChapter ? 'text-text-primary' : 'text-text-secondary opacity-40'
                                     }`}>
                                     {step.label}
                                 </span>
                             </div>
                             {i < steps.length - 1 && (
-                                <ChevronRight size={10} className="text-[var(--glass-border)] opacity-60" />
+                                <ChevronRight size={10} className="text-glass-border opacity-60" />
                             )}
                         </React.Fragment>
                     );
                 })}
             </div>
+
         </div>
     );
 };

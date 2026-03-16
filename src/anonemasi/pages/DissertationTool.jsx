@@ -65,7 +65,7 @@ const DissertationTool = () => {
     const currentChapterData = dissState.chapters[dissState.currentChapter];
 
     return (
-        <div className="flex h-screen bg-[var(--bg-color)] text-[var(--text-primary)] font-sans overflow-hidden relative">
+        <div className="flex h-screen bg-bg-main text-text-primary font-sans overflow-hidden relative">
             {/* Sidebar */}
             <Sidebar
                 dissState={dissState}
@@ -79,13 +79,13 @@ const DissertationTool = () => {
             />
 
             {/* Main Workspace */}
-            <main className="flex-1 flex flex-col relative overflow-hidden bg-[var(--bg-color)]">
+            <main className="flex-1 flex flex-col relative overflow-hidden">
                 {/* Top Header */}
-                <header className="h-14 lg:h-12 border-b border-[var(--glass-border)] px-4 lg:px-5 flex items-center justify-between backdrop-blur-md bg-[var(--glass-bg)] z-20 shrink-0">
+                <header className="h-14 lg:h-12 border-b border-glass-border px-4 lg:px-5 flex items-center justify-between backdrop-blur-md bg-surface-1/80 z-20 shrink-0">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-2 -ml-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                            className="lg:hidden p-2 -ml-2 text-text-secondary hover:text-text-primary transition-colors"
                         >
                             <Menu size={20} />
                         </button>
@@ -95,7 +95,7 @@ const DissertationTool = () => {
                     <div className="flex items-center gap-1.5 lg:gap-2">
                         <button
                             onClick={() => setIsPreviewOpen(true)}
-                            className="flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-lg border border-[var(--glass-border)] hover:bg-[var(--glass-bg)] transition-all text-[10px] lg:text-xs font-medium text-[var(--text-secondary)]"
+                            className="flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-lg border border-glass-border hover:bg-surface-2 transition-all text-[10px] lg:text-xs font-medium text-text-secondary"
                         >
                             <Eye size={14} className="hidden xs:block" />
                             Preview
@@ -103,7 +103,7 @@ const DissertationTool = () => {
                         <button
                             onClick={exportFullToWord}
                             disabled={!dissState.topic}
-                            className="flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[10px] lg:text-xs font-bold text-[var(--text-primary)] border border-zinc-200 dark:border-white/10"
+                            className="flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface-1 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[10px] lg:text-xs font-bold text-text-primary border border-glass-border"
                         >
                             <Download size={14} className="text-blue-500 hidden xs:block" />
                             Word
@@ -120,7 +120,7 @@ const DissertationTool = () => {
                 </header>
 
                 {/* Chat / Work Area */}
-                <div className="flex-1 overflow-hidden relative">
+                <div className="flex-1 overflow-hidden relative bg-bg-main">
                     <ChatThread
                         messages={messages}
                         loading={loading}
@@ -147,6 +147,7 @@ const DissertationTool = () => {
                     }}
                 />
             </main>
+
 
             <TopicGenModal
                 isOpen={topicModalOpen}

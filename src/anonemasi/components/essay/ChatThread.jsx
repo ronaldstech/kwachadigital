@@ -30,7 +30,7 @@ const ChatThread = ({
     const renderActionBar = () => {
         if (!pendingAction) return null;
 
-        const baseBar = "flex flex-col xs:flex-row items-center justify-between gap-3 px-4 py-3 xs:py-2.5 bg-white dark:bg-[#0e0e10] border-t border-zinc-200 dark:border-white/10";
+        const baseBar = "flex flex-col xs:flex-row items-center justify-between gap-3 px-4 py-3 xs:py-2.5 bg-surface-1 border-t border-glass-border";
 
         if (pendingAction.type === 'essay_analysis') {
             return (
@@ -40,8 +40,8 @@ const ChatThread = ({
                             <BrainCircuit size={13} />
                         </div>
                         <div>
-                            <p className="text-[11px] font-bold text-[var(--text-primary)]">Analysis Complete</p>
-                            <p className="text-[10px] text-[var(--text-secondary)]">Topic and themes identified.</p>
+                            <p className="text-[11px] font-bold text-text-primary">Analysis Complete</p>
+                            <p className="text-[10px] text-text-secondary">Topic and themes identified.</p>
                         </div>
                     </div>
                     <button
@@ -63,8 +63,8 @@ const ChatThread = ({
                             <Book size={13} />
                         </div>
                         <div>
-                            <p className="text-[11px] font-bold text-[var(--text-primary)]">Sources Found</p>
-                            <p className="text-[10px] text-[var(--text-secondary)]">Academic references have been attached.</p>
+                            <p className="text-[11px] font-bold text-text-primary">Sources Found</p>
+                            <p className="text-[10px] text-text-secondary">Academic references have been attached.</p>
                         </div>
                     </div>
                     <button
@@ -86,8 +86,8 @@ const ChatThread = ({
                             <List size={13} />
                         </div>
                         <div>
-                            <p className="text-[11px] font-bold text-[var(--text-primary)]">Paragraph Plan Ready</p>
-                            <p className="text-[10px] text-[var(--text-secondary)]">Review the outline. Ready to draft?</p>
+                            <p className="text-[11px] font-bold text-text-primary">Paragraph Plan Ready</p>
+                            <p className="text-[10px] text-text-secondary">Review the outline. Ready to draft?</p>
                         </div>
                     </div>
                     <button
@@ -108,14 +108,14 @@ const ChatThread = ({
                             <Trophy size={13} />
                         </div>
                         <div>
-                            <p className="text-[11px] font-bold text-[var(--text-primary)]">Essay Complete!</p>
-                            <p className="text-[10px] text-[var(--text-secondary)]">Your essay and references are ready.</p>
+                            <p className="text-[11px] font-bold text-text-primary">Essay Complete!</p>
+                            <p className="text-[10px] text-text-secondary">Your essay and references are ready.</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={onExportWord}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 text-[var(--text-primary)] transition-all text-xs font-bold shrink-0 border border-zinc-200 dark:border-white/10"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-surface-2 hover:bg-surface-1 text-text-primary transition-all text-xs font-bold shrink-0 border border-glass-border"
                         >
                             <Download size={13} className="text-blue-500" />
                             Word
@@ -135,8 +135,8 @@ const ChatThread = ({
         return null;
     };
 
-    const aiCard = "bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-tl-sm";
-    const innerCard = "bg-zinc-50 dark:bg-white/5 border border-zinc-200/80 dark:border-white/5";
+    const aiCard = "bg-surface-1 border border-glass-border rounded-tl-sm";
+    const innerCard = "bg-surface-2 border border-glass-border";
 
     return (
         <div className="h-full flex flex-col overflow-hidden">
@@ -156,26 +156,26 @@ const ChatThread = ({
                             )}
 
                             <div className={`flex flex-col gap-1 max-w-[88%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-60 px-1">
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-text-secondary opacity-60 px-1">
                                     {msg.role === 'user' ? 'You' : 'Anonemasi AI'}
                                 </span>
 
                                 <div className={`p-4 rounded-xl border relative group text-sm ${msg.role === 'user'
                                     ? 'bg-purple-500/10 border-purple-500/20 rounded-tr-sm text-purple-800 dark:text-purple-200'
-                                    : `${aiCard} text-[var(--text-primary)]`
+                                    : `${aiCard} text-text-primary`
                                     }`}>
 
                                     {/* Welcome */}
                                     {msg.type === 'essay_welcome' && (
                                         <div className="space-y-4 text-center py-3">
                                             <div>
-                                                <h2 className="text-xl font-bold font-outfit text-[var(--text-primary)] mb-1">Welcome to Essay Weaver.</h2>
-                                                <p className="text-xs leading-relaxed text-[var(--text-secondary)] max-w-md mx-auto">
+                                                <h2 className="text-xl font-bold font-outfit text-text-primary mb-1">Welcome to Essay Weaver.</h2>
+                                                <p className="text-xs leading-relaxed text-text-secondary max-w-md mx-auto">
                                                     I'll analyze your essay prompt, find scholarly sources, draft an outline, and write your essay with perfect APA citations.
                                                 </p>
                                             </div>
-                                            <div className="flex justify-center mt-4 text-zinc-400">
-                                                <span className="text-xs italic bg-zinc-100 dark:bg-white/5 px-4 py-2 rounded-lg border border-zinc-200 dark:border-white/10">Type or paste your prompt in the box below</span>
+                                            <div className="flex justify-center mt-4 text-text-muted">
+                                                <span className="text-xs italic bg-surface-2 px-4 py-2 rounded-lg border border-glass-border">Type or paste your prompt in the box below</span>
                                             </div>
                                         </div>
                                     )}

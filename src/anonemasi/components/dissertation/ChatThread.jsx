@@ -31,7 +31,7 @@ const ChatThread = ({
     const renderActionBar = () => {
         if (!pendingAction) return null;
 
-        const baseBar = "flex flex-col xs:flex-row items-center justify-between gap-3 px-4 py-3 xs:py-2.5 bg-white dark:bg-[#0e0e10] border-t border-zinc-200 dark:border-white/10";
+        const baseBar = "flex flex-col xs:flex-row items-center justify-between gap-3 px-4 py-3 xs:py-2.5 bg-surface-1 border-t border-glass-border";
 
         if (pendingAction.type === 'plan') {
             return (
@@ -41,8 +41,8 @@ const ChatThread = ({
                             <List size={13} />
                         </div>
                         <div>
-                            <p className="text-[11px] font-bold text-[var(--text-primary)]">Chapter {pendingAction.chapterNum} Plan Ready</p>
-                            <p className="text-[10px] text-[var(--text-secondary)]">Review the outline above, then approve to continue.</p>
+                            <p className="text-[11px] font-bold text-text-primary">Chapter {pendingAction.chapterNum} Plan Ready</p>
+                            <p className="text-[10px] text-text-secondary">Review the outline above, then approve to continue.</p>
                         </div>
                     </div>
                     <button
@@ -64,8 +64,8 @@ const ChatThread = ({
                             <Book size={13} />
                         </div>
                         <div>
-                            <p className="text-[11px] font-bold text-[var(--text-primary)]">Citations Ready — Chapter {pendingAction.chapterNum}</p>
-                            <p className="text-[10px] text-[var(--text-secondary)]">Sources found. Start drafting the full chapter.</p>
+                            <p className="text-[11px] font-bold text-text-primary">Citations Ready — Chapter {pendingAction.chapterNum}</p>
+                            <p className="text-[10px] text-text-secondary">Sources found. Start drafting the full chapter.</p>
                         </div>
                     </div>
                     <button
@@ -87,8 +87,8 @@ const ChatThread = ({
                             <CheckCircle2 size={13} />
                         </div>
                         <div>
-                            <p className="text-[11px] font-bold text-[var(--text-primary)]">Chapter {pendingAction.chapterNum} Complete!</p>
-                            <p className="text-[10px] text-[var(--text-secondary)]">Ready to begin Chapter {pendingAction.nextChapter}.</p>
+                            <p className="text-[11px] font-bold text-text-primary">Chapter {pendingAction.chapterNum} Complete!</p>
+                            <p className="text-[10px] text-text-secondary">Ready to begin Chapter {pendingAction.nextChapter}.</p>
                         </div>
                     </div>
                     <button
@@ -110,8 +110,8 @@ const ChatThread = ({
                             <Zap size={13} fill="currentColor" />
                         </div>
                         <div>
-                            <p className="text-[11px] font-bold text-[var(--text-primary)]">Upgrade Required</p>
-                            <p className="text-[10px] text-[var(--text-secondary)] line-clamp-1">{pendingAction.content}</p>
+                            <p className="text-[11px] font-bold text-text-primary">Upgrade Required</p>
+                            <p className="text-[10px] text-text-secondary line-clamp-1">{pendingAction.content}</p>
                         </div>
                     </div>
                     <button
@@ -133,14 +133,14 @@ const ChatThread = ({
                             <Trophy size={13} />
                         </div>
                         <div>
-                            <p className="text-[11px] font-bold text-[var(--text-primary)]">Dissertation Complete!</p>
-                            <p className="text-[10px] text-[var(--text-secondary)]">Your work is ready for submission.</p>
+                            <p className="text-[11px] font-bold text-text-primary">Dissertation Complete!</p>
+                            <p className="text-[10px] text-text-secondary">Your work is ready for submission.</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={onExportWord}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 text-[var(--text-primary)] transition-all text-xs font-bold shrink-0 border border-zinc-200 dark:border-white/10"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-surface-2 hover:bg-surface-1 text-text-primary transition-all text-xs font-bold shrink-0 border border-glass-border"
                         >
                             <Download size={13} className="text-blue-500" />
                             Word
@@ -161,8 +161,8 @@ const ChatThread = ({
     };
 
     // Shared card classes: visible in both light and dark
-    const aiCard = "bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-tl-sm";
-    const innerCard = "bg-zinc-50 dark:bg-white/5 border border-zinc-200/80 dark:border-white/5";
+    const aiCard = "bg-surface-1 border border-glass-border rounded-tl-sm";
+    const innerCard = "bg-surface-2 border border-glass-border";
 
     return (
         <div className="h-full flex flex-col overflow-hidden">
@@ -182,21 +182,21 @@ const ChatThread = ({
                             )}
 
                             <div className={`flex flex-col gap-1 max-w-[88%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-60 px-1">
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-text-secondary opacity-60 px-1">
                                     {msg.role === 'user' ? 'You' : 'Anonemasi Writer'}
                                 </span>
 
                                 <div className={`p-4 rounded-xl border relative group text-sm ${msg.role === 'user'
-                                    ? 'bg-indigo-500/10 border-indigo-500/20 rounded-tr-sm text-indigo-800 dark:text-indigo-200'
-                                    : `${aiCard} text-[var(--text-primary)]`
+                                    ? 'bg-indigo-500/10 border-indigo-500/20 rounded-tr-sm text-text-primary'
+                                    : `${aiCard} text-text-primary`
                                     }`}>
 
                                     {/* Welcome */}
                                     {msg.type === 'welcome' && (
                                         <div className="space-y-4 text-center py-3">
                                             <div>
-                                                <h2 className="text-xl font-bold font-outfit text-[var(--text-primary)] mb-1">Welcome to your writing workspace.</h2>
-                                                <p className="text-xs leading-relaxed text-[var(--text-secondary)] max-w-md mx-auto">
+                                                <h2 className="text-xl font-bold font-outfit text-text-primary mb-1">Welcome to your writing workspace.</h2>
+                                                <p className="text-xs leading-relaxed text-text-secondary max-w-md mx-auto">
                                                     I'll analyze your requirements, find academic sources, build a comprehensive plan, and draft each paragraph with proper citations.
                                                 </p>
                                             </div>
@@ -209,17 +209,17 @@ const ChatThread = ({
                                                         <Sparkles size={20} />
                                                     </div>
                                                     <div>
-                                                        <span className="block font-bold text-[var(--text-primary)] text-xs">Generate Topics</span>
-                                                        <span className="block text-[10px] text-[var(--text-secondary)]">AI suggests relevant research topics</span>
+                                                        <span className="block font-bold text-text-primary text-xs">Generate Topics</span>
+                                                        <span className="block text-[10px] text-text-secondary">AI suggests relevant research topics</span>
                                                     </div>
                                                 </button>
-                                                <div className="p-4 rounded-xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:bg-zinc-200/60 dark:hover:bg-white/10 transition-all cursor-pointer group flex flex-col items-center gap-2 text-center">
-                                                    <div className="p-2.5 rounded-lg bg-zinc-200 dark:bg-white/5 text-zinc-500 dark:text-white/40 group-hover:text-[var(--text-primary)] transition-colors">
+                                                <div className="p-4 rounded-xl bg-surface-2 border border-glass-border hover:bg-surface-1 transition-all cursor-pointer group flex flex-col items-center gap-2 text-center">
+                                                    <div className="p-2.5 rounded-lg bg-surface-2 text-text-muted group-hover:text-text-primary transition-colors">
                                                         <Book size={20} />
                                                     </div>
                                                     <div>
-                                                        <span className="block font-bold text-[var(--text-primary)] text-xs">Manual Entry</span>
-                                                        <span className="block text-[10px] text-[var(--text-secondary)]">Have a topic? Paste it below</span>
+                                                        <span className="block font-bold text-text-primary text-xs">Manual Entry</span>
+                                                        <span className="block text-[10px] text-text-secondary">Have a topic? Paste it below</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -231,7 +231,7 @@ const ChatThread = ({
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <Sparkles size={14} className="text-indigo-600 dark:text-indigo-400" />
-                                                <h3 className="text-sm font-bold text-[var(--text-primary)]">Suggested Dissertation Topics</h3>
+                                                <h3 className="text-sm font-bold text-text-primary">Suggested Dissertation Topics</h3>
                                             </div>
                                             <div className="grid grid-cols-1 gap-2.5">
                                                 {msg.topics.map((topic, idx) => (
@@ -240,11 +240,11 @@ const ChatThread = ({
                                                         onClick={() => onSelectTopic(topic)}
                                                         className={`p-3.5 rounded-xl ${innerCard} hover:border-indigo-500/40 hover:bg-indigo-500/5 transition-all cursor-pointer group text-left`}
                                                     >
-                                                        <h4 className="font-bold text-xs text-[var(--text-primary)] group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-1">{topic.title}</h4>
-                                                        <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed mb-2 line-clamp-2">{topic.background}</p>
+                                                        <h4 className="font-bold text-xs text-text-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-1">{topic.title}</h4>
+                                                        <p className="text-[10px] text-text-secondary leading-relaxed mb-2 line-clamp-2">{topic.background}</p>
                                                         <div className="flex flex-wrap gap-1.5">
                                                             {topic.objectives.slice(0, 2).map((obj, oIdx) => (
-                                                                <span key={oIdx} className="text-[9px] px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/15">Obj {oIdx + 1}: {obj.substring(0, 35)}…</span>
+                                                                <span key={oIdx} className="text-[9px] px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/15">Obj {oIdx + 1}: {obj.substring(0, 35)}…</span>
                                                             ))}
                                                         </div>
                                                     </div>
@@ -258,19 +258,19 @@ const ChatThread = ({
                                         <div className="space-y-4">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <List size={15} className="text-indigo-600 dark:text-indigo-400" />
-                                                <h3 className="text-sm font-bold text-[var(--text-primary)]">Chapter {msg.chapterNum} Plan</h3>
+                                                <h3 className="text-sm font-bold text-text-primary">Chapter {msg.chapterNum} Plan</h3>
                                             </div>
                                             <div className="space-y-2.5">
                                                 {msg.plan.map((item, idx) => (
                                                     <div key={idx} className={`p-3 rounded-xl ${innerCard}`}>
-                                                        <h4 className="text-xs font-bold text-[var(--text-primary)] mb-1.5 flex items-center gap-2">
+                                                        <h4 className="text-xs font-bold text-text-primary mb-1.5 flex items-center gap-2">
                                                             <span className="w-4 h-4 rounded bg-indigo-500/10 flex items-center justify-center text-[9px] font-mono text-indigo-600 dark:text-indigo-400 shrink-0">{idx + 1}</span>
                                                             {item.heading}
                                                         </h4>
-                                                        <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed mb-2">{item.purpose}</p>
+                                                        <p className="text-[10px] text-text-secondary leading-relaxed mb-2">{item.purpose}</p>
                                                         <ul className="space-y-1 border-l-2 border-indigo-500/20 pl-3">
                                                             {item.keyPoints.map((kp, kpIdx) => (
-                                                                <li key={kpIdx} className="text-[10px] text-[var(--text-secondary)] flex items-start gap-1.5">
+                                                                <li key={kpIdx} className="text-[10px] text-text-secondary flex items-start gap-1.5">
                                                                     <span className="w-1 h-1 rounded-full bg-indigo-500/40 mt-1.5 shrink-0" />
                                                                     {kp}
                                                                 </li>
@@ -287,14 +287,14 @@ const ChatThread = ({
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <Book size={15} className="text-indigo-600 dark:text-indigo-400" />
-                                                <h3 className="text-sm font-bold text-[var(--text-primary)]">Recommended Academic Sources</h3>
+                                                <h3 className="text-sm font-bold text-text-primary">Recommended Academic Sources</h3>
                                             </div>
                                             <div className="grid grid-cols-1 gap-2">
                                                 {msg.citations.map((cite, idx) => (
                                                     <div key={idx} className={`p-3 rounded-xl ${innerCard} hover:border-indigo-500/30 transition-all`}>
                                                         <span className="text-[9px] font-mono text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded uppercase tracking-wider">{cite.inText}</span>
-                                                        <p className="text-[10px] text-[var(--text-secondary)] italic leading-relaxed mt-2 mb-1.5">"{cite.reference}"</p>
-                                                        <p className="text-[9px] text-[var(--text-secondary)] opacity-60 leading-relaxed border-t border-zinc-200 dark:border-white/5 pt-1.5">{cite.relevance}</p>
+                                                        <p className="text-[10px] text-text-secondary italic leading-relaxed mt-2 mb-1.5">"{cite.reference}"</p>
+                                                        <p className="text-[9px] text-text-secondary opacity-60 leading-relaxed border-t border-glass-border pt-1.5">{cite.relevance}</p>
                                                     </div>
                                                 ))}
                                             </div>
@@ -309,8 +309,8 @@ const ChatThread = ({
                                                 <div className="absolute inset-0 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
                                             </div>
                                             <div>
-                                                <h3 className="text-sm font-bold text-[var(--text-primary)] mb-0.5">Drafting Chapter {msg.chapterNum}</h3>
-                                                <p className="text-[10px] text-[var(--text-secondary)]">Writing each paragraph with academic rigor…</p>
+                                                <h3 className="text-sm font-bold text-text-primary mb-0.5">Drafting Chapter {msg.chapterNum}</h3>
+                                                <p className="text-[10px] text-text-secondary">Writing each paragraph with academic rigor…</p>
                                             </div>
                                         </div>
                                     )}
@@ -320,13 +320,13 @@ const ChatThread = ({
                                         <div className="para-card group">
                                             <div className="flex items-center justify-between mb-2">
                                                 <h4 className="text-xs font-bold text-indigo-600 dark:text-indigo-400">{msg.heading}</h4>
-                                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/15 font-bold uppercase tracking-wider">Drafted</span>
+                                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/15 font-bold uppercase tracking-wider">Drafted</span>
                                             </div>
-                                            <p className="text-xs leading-relaxed text-[var(--text-secondary)] line-clamp-4 group-hover:line-clamp-none transition-all duration-500">
+                                            <p className="text-xs leading-relaxed text-text-secondary line-clamp-4 group-hover:line-clamp-none transition-all duration-500">
                                                 {msg.content}
                                             </p>
-                                            <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-white/5 flex justify-end">
-                                                <button className="text-[9px] font-bold text-[var(--text-secondary)] opacity-50 hover:opacity-100 transition-opacity uppercase tracking-widest flex items-center gap-1">
+                                            <div className="mt-3 pt-3 border-t border-glass-border flex justify-end">
+                                                <button className="text-[9px] font-bold text-text-secondary opacity-50 hover:opacity-100 transition-opacity uppercase tracking-widest flex items-center gap-1">
                                                     Refine Section
                                                     <ChevronRight size={9} />
                                                 </button>
@@ -341,8 +341,8 @@ const ChatThread = ({
                                                 <CheckCircle2 size={14} />
                                             </div>
                                             <div>
-                                                <p className="text-xs font-bold text-[var(--text-primary)]">Chapter {msg.chapterNum} Complete!</p>
-                                                <p className="text-[10px] text-[var(--text-secondary)]">Use the action bar below to continue to Chapter {msg.nextChapter}.</p>
+                                                <p className="text-xs font-bold text-text-primary">Chapter {msg.chapterNum} Complete!</p>
+                                                <p className="text-[10px] text-text-secondary">Use the action bar below to continue to Chapter {msg.nextChapter}.</p>
                                             </div>
                                         </div>
                                     )}
@@ -354,8 +354,8 @@ const ChatThread = ({
                                                 <Trophy size={24} />
                                             </div>
                                             <div>
-                                                <h3 className="text-base font-bold text-[var(--text-primary)] mb-1">Dissertation Complete! 🎉</h3>
-                                                <p className="text-xs text-[var(--text-secondary)] max-w-xs mx-auto">All 5 chapters have been written. Use the Export button to download your full dissertation.</p>
+                                                <h3 className="text-base font-bold text-text-primary mb-1">Dissertation Complete! 🎉</h3>
+                                                <p className="text-xs text-text-secondary max-w-xs mx-auto">All 5 chapters have been written. Use the Export button to download your full dissertation.</p>
                                             </div>
                                         </div>
                                     )}
@@ -366,7 +366,7 @@ const ChatThread = ({
                                     {/* Hover copy icon */}
                                     {msg.role === 'ai' && msg.type !== 'welcome' && msg.type !== 'topics' && (
                                         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button className="p-1.5 rounded-lg bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                                            <button className="p-1.5 rounded-lg bg-surface-2 hover:bg-surface-1 text-text-secondary hover:text-text-primary">
                                                 <Paperclip size={12} />
                                             </button>
                                         </div>
@@ -389,7 +389,7 @@ const ChatThread = ({
                                 <Sparkles size={15} className="animate-spin" />
                             </div>
                             <div className="flex flex-col gap-1 items-start">
-                                <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-60 px-1">Thinking</span>
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-text-secondary opacity-60 px-1">Thinking</span>
                                 <div className="p-3 px-4 rounded-xl bg-indigo-500/10 border border-indigo-500/15 rounded-tl-sm">
                                     <div className="flex gap-1">
                                         <motion.div animate={{ opacity: [0, 1, 0] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0 }} className="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400" />

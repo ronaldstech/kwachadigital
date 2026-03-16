@@ -50,7 +50,7 @@ const EssayTool = () => {
 
 
     return (
-        <div className="flex h-screen bg-[var(--bg-color)] text-[var(--text-primary)] font-sans overflow-hidden relative">
+        <div className="flex h-screen bg-bg-main text-text-primary font-sans overflow-hidden relative">
             {/* Sidebar */}
             <Sidebar
                 essayState={essayState}
@@ -64,16 +64,17 @@ const EssayTool = () => {
             />
 
             {/* Main Workspace */}
-            <main className="flex-1 flex flex-col relative overflow-hidden bg-[var(--bg-color)]">
+            <main className="flex-1 flex flex-col relative overflow-hidden bg-bg-main">
                 {/* Top Header */}
-                <header className="h-14 lg:h-12 border-b border-[var(--glass-border)] px-4 lg:px-5 flex items-center justify-between backdrop-blur-md bg-[var(--glass-bg)] z-20 shrink-0">
+                <header className="h-14 lg:h-12 border-b border-glass-border px-4 lg:px-5 flex items-center justify-between backdrop-blur-md bg-surface-1 z-20 shrink-0">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="lg:hidden p-2 -ml-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                            className="lg:hidden p-2 -ml-2 text-text-secondary hover:text-text-primary transition-colors"
                         >
                             <Menu size={20} />
                         </button>
+
                         {/* Simple status indicator instead of ChapterTracker */}
                         {essayState.topic && (
                             <div className="hidden sm:flex items-center gap-2">
@@ -91,7 +92,7 @@ const EssayTool = () => {
                         <button
                             onClick={exportToWord}
                             disabled={!essayState.references}
-                            className="flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-white/10 hover:bg-zinc-200 dark:hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[10px] lg:text-xs font-bold text-[var(--text-primary)] border border-zinc-200 dark:border-white/10"
+                            className="flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-lg bg-surface-2 hover:bg-surface-1 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[10px] lg:text-xs font-bold text-text-primary border border-glass-border"
                         >
                             <Download size={14} className="text-blue-500 hidden xs:block" />
                             Word

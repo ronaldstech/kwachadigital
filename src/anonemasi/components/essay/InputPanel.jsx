@@ -37,9 +37,9 @@ const InputPanel = ({ loading, onSend }) => {
     };
 
     return (
-        <footer className="p-3 pb-4 border-t border-zinc-200 dark:border-white/5 bg-white dark:bg-[var(--bg-color)] z-10 shrink-0">
+        <footer className="p-3 pb-4 border-t border-glass-border bg-bg-main z-10 shrink-0">
             <div className="max-w-4xl mx-auto">
-                <div className="relative bg-white dark:bg-white/5 border border-zinc-300 dark:border-white/10 rounded-xl shadow-sm dark:shadow-none focus-within:border-purple-400 dark:focus-within:border-purple-500/50 transition-all">
+                <div className="relative bg-surface-1 border border-glass-border rounded-xl shadow-sm dark:shadow-none focus-within:border-purple-400 dark:focus-within:border-purple-500/50 transition-all">
                     <textarea
                         ref={textareaRef}
                         rows={1}
@@ -47,7 +47,7 @@ const InputPanel = ({ loading, onSend }) => {
                         onChange={handleInput}
                         onKeyDown={handleKeyDown}
                         placeholder="Type your essay topic, paste an assignment brief, or ask anything…"
-                        className="w-full bg-transparent border-none focus:ring-0 text-[var(--text-primary)] p-3 lg:p-3.5 pr-20 lg:pr-24 resize-none text-[13px] lg:text-sm leading-relaxed custom-scrollbar placeholder:text-zinc-400 dark:placeholder:text-white/30"
+                        className="w-full bg-transparent border-none focus:ring-0 text-text-primary p-3 lg:p-3.5 pr-20 lg:pr-24 resize-none text-[13px] lg:text-sm leading-relaxed custom-scrollbar placeholder:text-text-muted/50"
                     />
 
                     <div className="absolute right-2 bottom-2 flex items-center gap-1.5">
