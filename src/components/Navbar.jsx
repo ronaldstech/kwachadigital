@@ -18,8 +18,9 @@ import {
     LogOut,
     ChevronDown,
     Heart, ShoppingBag,
-    Sparkle
+    Sparkle, Coins, Plus
 } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useStore } from '../context/StoreContext';
@@ -33,7 +34,8 @@ const Navbar = () => {
     const profileRef = useRef(null);
     const prevScrollY = useRef(0);
 
-    const { user, logout, openAuthModal } = useAuth();
+    const { user, logout, openAuthModal, openBuyTokensModal } = useAuth();
+
     const { isDark, toggleTheme } = useTheme();
     const { cart, favorites } = useStore();
     const location = useLocation();
@@ -207,9 +209,16 @@ const Navbar = () => {
                                         className="absolute top-full right-0 mt-3 w-64 z-50 bg-bg-main/100 backdrop-blur-2xl rounded-[28px] border border-glass-border overflow-hidden py-3 p-2 pointer-events-auto"
                                     >
                                         <div className="px-4 py-3 mb-2 border-b border-glass-border/50">
-                                            <p className="text-[10px] uppercase tracking-widest font-black text-text-muted mb-1">Signed in as</p>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <p className="text-[10px] uppercase tracking-widest font-black text-text-muted">Signed in as</p>
+                                                <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">
+                                                    <Coins size={10} className="text-primary" />
+                                                    <span className="text-[10px] font-black text-primary">{(user.tokens || 0).toLocaleString()}</span>
+                                                </div>
+                                            </div>
                                             <p className="text-sm font-bold text-text-primary truncate">{user.email}</p>
                                         </div>
+
 
                                         <div className="space-y-1">
                                             <Link
@@ -244,6 +253,17 @@ const Navbar = () => {
                                                 </div>
                                                 <span className="text-sm font-bold">Favorites</span>
                                             </Link>
+
+                                            <button
+                                                onClick={() => { setIsProfileOpen(false); openBuyTokensModal(); }}
+                                                className="w-full flex items-center gap-3 px-4 py-1 rounded-2xl hover:bg-amber-500/10 text-text-secondary hover:text-amber-500 transition-all group"
+                                            >
+                                                <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all">
+                                                    <Plus size={16} />
+                                                </div>
+                                                <span className="text-sm font-bold">Buy Tokens</span>
+                                            </button>
+
 
                                             <div className="h-px bg-glass-border/50 my-2 mx-2" />
 

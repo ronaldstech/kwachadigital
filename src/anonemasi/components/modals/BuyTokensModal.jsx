@@ -4,7 +4,8 @@ import {
     X, Check, CreditCard, Sparkles, Zap, Phone,
     ArrowLeft, Loader2, AlertCircle, Clock, Coins
 } from 'lucide-react';
-import { detectOperator, processTokenPurchase, OPERATORS, fetchOperators } from '../../services/paychangu';
+import { detectOperator, processTokenPurchase, OPERATORS, fetchOperators } from '../../../services/paychangu';
+
 
 const OP_STYLE = {
     airtel: {

@@ -7,11 +7,15 @@ import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, doc, setDoc, increment, updateDoc } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 import { detectOperator, processPayment } from '../services/paychangu';
+import { deductTokens } from '../services/tokenService';
+
 
 const PAYMENT_METHODS = [
     { id: 'mobile_money', name: 'Mobile Money', description: 'Airtel Money or TNM Mpamba', icon: Smartphone, accent: '#10b981' },
+    { id: 'tokens', name: 'KD Tokens', description: 'Pay with your token balance', icon: Zap, accent: '#f59e0b' },
     { id: 'bank', name: 'Debit / Credit Card', description: 'Pay securely with your card', icon: CreditCard, accent: '#3b82f6' },
 ];
+
 
 const CheckoutModal = ({ isOpen, onClose }) => {
     const { cart, removeFromCart, referrerId, loading: storeLoading } = useStore();
@@ -63,7 +67,15 @@ const CheckoutModal = ({ isOpen, onClose }) => {
         if (selectedMethod === 'mobile_money') {
             if (!detectedOp) { toast.error('Please enter a valid Airtel or TNM number.'); return; }
         }
+        if (selectedMethod === 'tokens') {
+            const tokenBalance = user?.tokens || 0;
+            if (tokenBalance < total) {
+                toast.error('Insufficient token balance. Please recharge.');
+                return;
+            }
+        }
         if (selectedMethod === 'bank') {
+
             if (cardName.trim().length < 2) { toast.error('Please enter the cardholder name.'); return; }
             if (cardNumber.replace(/\s/g, '').length < 16) { toast.error('Please enter a valid 16-digit card number.'); return; }
             if (cardExpiry.replace(/\D/g, '').length < 4) { toast.error('Please enter a valid expiry date.'); return; }
@@ -104,7 +116,11 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                 if (res !== 'success') {
                     throw new Error(res === 'timeout' ? 'Payment timed out. Please check your phone.' : 'Payment failed.');
                 }
+            } else if (selectedMethod === 'tokens') {
+                const success = await deductTokens(user.uid, total, 'Marketplace Purchase');
+                if (!success) throw new Error('Token deduction failed. Please check your balance.');
             }
+
 
             // Prepare Order Data as requested
             const referralCommission = referrerId ? (total * 0.10) : 0;
@@ -114,8 +130,11 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                 items,
                 paymentDetails: selectedMethod === 'bank'
                     ? { cardName, lastFour: cardNumber.replace(/\s/g, '').slice(-4) }
-                    : { phoneNumber, operator: detectedOp?.operator },
+                    : selectedMethod === 'tokens'
+                        ? { type: 'tokens', amount: total }
+                        : { phoneNumber, operator: detectedOp?.operator },
                 paymentMethod: selectedMethod,
+
                 referralCommission,
                 referrerId: referrerId || null,
                 sellerIds,
@@ -348,7 +367,32 @@ const CheckoutModal = ({ isOpen, onClose }) => {
                                                     </div>
                                                 )}
 
+                                                {/* ── KD TOKENS ── */}
+                                                {selectedMethod === 'tokens' && (
+                                                    <div className="mb-6">
+                                                        <div className="p-6 rounded-3xl glass border-2 border-primary/20 bg-primary/5 flex flex-col items-center text-center">
+                                                            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-4 shadow-xl">
+                                                                <Zap size={32} className="fill-primary/20" />
+                                                            </div>
+                                                            <h4 className="text-lg font-display font-black text-text-primary uppercase tracking-tight mb-1">Pay with Tokens</h4>
+                                                            <p className="text-xs text-text-muted font-medium mb-6">Your current balance: <span className="text-primary font-black">{(user?.tokens || 0).toLocaleString()} Tokens</span></p>
+                                                            
+                                                            <div className="w-full h-1 bg-glass-border rounded-full overflow-hidden mb-2">
+                                                                <div 
+                                                                    className="h-full bg-primary" 
+                                                                    style={{ width: `${Math.min(((user?.tokens || 0) / total) * 100, 100)}%` }}
+                                                                />
+                                                            </div>
+                                                            <div className="flex justify-between w-full text-[10px] font-black uppercase tracking-widest text-text-muted">
+                                                                <span>Cost: {total.toLocaleString()}</span>
+                                                                <span>{user?.tokens >= total ? 'Sufficient Balance' : 'Insufficient Balance'}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
                                                 {/* ── MOBILE MONEY (Airtel / TNM Auto Detection) ── */}
+
                                                 {selectedMethod === 'mobile_money' && (
                                                     <div className="mb-6">
                                                         <label className="text-[9px] font-black uppercase tracking-[0.2em] text-text-muted block mb-3">

@@ -4,8 +4,9 @@ import {
     X, Check, CreditCard, Sparkles, ShieldCheck, Zap, Trophy, Phone,
     ArrowLeft, Loader2, AlertCircle, Clock, RefreshCw, History, ChevronRight, Coins
 } from 'lucide-react';
-import { detectOperator, processPayment, fetchPowerPointTransactions, reverifyTransaction, OPERATORS, fetchOperators } from '../../services/paychangu';
-import { hasSufficientBalance, deductTokens } from '../../services/tokenService';
+import { detectOperator, processPayment, fetchPowerPointTransactions, reverifyTransaction, OPERATORS, fetchOperators } from '../../../services/paychangu';
+import { hasSufficientBalance, deductTokens } from '../../../services/tokenService';
+
 import BuyTokensModal from '../modals/BuyTokensModal';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../../firebase';

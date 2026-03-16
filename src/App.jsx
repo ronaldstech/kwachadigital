@@ -9,6 +9,8 @@ import { StoreProvider } from './context/StoreContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
+import BuyTokensModal from './components/BuyTokensModal';
+
 
 // Pages
 import Home from './pages/Home';
@@ -73,7 +75,15 @@ const MainLayout = () => {
 };
 
 const AppContent = () => {
-  const { isAuthModalOpen, closeAuthModal, initialAuthMode } = useAuth();
+  const { 
+    user,
+    isAuthModalOpen, 
+    closeAuthModal, 
+    initialAuthMode,
+    isBuyTokensModalOpen,
+    closeBuyTokensModal
+  } = useAuth();
+
 
   return (
     <>
@@ -121,6 +131,12 @@ const AppContent = () => {
         onClose={closeAuthModal} 
         initialMode={initialAuthMode} 
       />
+      <BuyTokensModal 
+        isOpen={isBuyTokensModalOpen} 
+        onClose={closeBuyTokensModal} 
+        user={user}
+      />
+
     </>
   );
 };

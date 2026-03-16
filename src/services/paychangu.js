@@ -2,7 +2,8 @@
 // Operator detection + transaction logging + payment verification
 
 import { db } from '../firebase';
-import { collection, addDoc, updateDoc, doc, Timestamp, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, Timestamp, query, where, getDocs, orderBy, getDoc, increment } from 'firebase/firestore';
+
 
 const PAYCHANGU_BASE_URL = 'https://api.paychangu.com';
 
@@ -230,6 +231,22 @@ async function pollPaymentStatus(chargeId, transactionDocId, onStatusUpdate) {
 
             if (status === 'success' || status === 'successful' || status === 'completed') {
                 await updateTransactionStatus(transactionDocId, 'success', result);
+                
+                // Handle token purchase if resourceType is 'tokens'
+                const txnRef = doc(db, 'transactions', transactionDocId);
+                const txnSnap = await getDoc(txnRef);
+                if (txnSnap.exists()) {
+                    const txnData = txnSnap.data();
+                    if (txnData.resourceType === 'tokens' && txnData.userId) {
+                        const userRef = doc(db, 'users', txnData.userId);
+                        await updateDoc(userRef, {
+                            tokens: increment(txnData.amount), // 1 MWK = 1 Token
+                            updatedAt: Timestamp.now()
+                        });
+                        console.log(`[PayChangu] Added ${txnData.amount} tokens to user ${txnData.userId}`);
+                    }
+                }
+                
                 return 'success';
             }
             if (status === 'failed' || status === 'cancelled' || status === 'canceled' || status === 'declined') {
@@ -254,9 +271,14 @@ async function pollPaymentStatus(chargeId, transactionDocId, onStatusUpdate) {
  * 3. Poll for confirmation
  * 4. Returns 'success' | 'failed' | 'timeout'
  */
-export async function processPayment({ phone, email, firstName, lastName, operator, resourceType, resourceId, userId, amount, items = [], sellerIds = [], onStatusUpdate }) {
+export async function processPayment({ phone, email, firstName, lastName, operator, resourceType, resourceId, userId, amount, items = [], sellerIds = [], onStatusUpdate, ...rest }) {
     const secretKey = import.meta.env.VITE_PAYCHANGU_SECRET_KEY;
     if (!secretKey) throw new Error('PayChangu secret key is not configured.');
+
+    // Backward compatibility for dissertation
+    const finalResourceType = resourceType || (rest.dissertationId ? 'dissertation' : 'marketplace');
+    const finalResourceId = resourceId || rest.dissertationId || 'cart';
+    const finalAmount = amount || (rest.dissertationId ? 10000 : 10000);
 
     // Fetch live operator list to get correct ref_ids
     const operators = await fetchOperators();
@@ -281,7 +303,7 @@ export async function processPayment({ phone, email, firstName, lastName, operat
             email,
             first_name: firstName,
             last_name: lastName,
-            amount: (amount || 10000).toString(),
+            amount: finalAmount.toString(),
             charge_id: chargeId
         })
     });
@@ -296,9 +318,9 @@ export async function processPayment({ phone, email, firstName, lastName, operat
 
     // 2. Log to Firestore
     const transactionDocId = await saveTransaction({
-        chargeId, resourceType, resourceId, userId,
+        chargeId, resourceType: finalResourceType, resourceId: finalResourceId, userId,
         phone: normalizedPhone, operator, email, firstName, lastName, 
-        amount: amount || 10000,
+        amount: finalAmount,
         items,
         sellerIds
     });
@@ -306,6 +328,56 @@ export async function processPayment({ phone, email, firstName, lastName, operat
     // 3. Poll
     return pollPaymentStatus(chargeId, transactionDocId, onStatusUpdate);
 }
+
+/**
+ * Fetch functions for backwards compatibility with AI Tool History
+ */
+export async function fetchDissertationTransactions(dissertationId) {
+    const q = query(
+        collection(db, 'transactions'),
+        where('resourceId', '==', dissertationId),
+        orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+export async function fetchEssayTransactions(userId) {
+    const q = query(
+        collection(db, 'transactions'),
+        where('userId', '==', userId),
+        where('resourceType', '==', 'essay'),
+        orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+export async function fetchPowerPointTransactions(userId) {
+    const q = query(
+        collection(db, 'transactions'),
+        where('userId', '==', userId),
+        where('resourceType', '==', 'powerpoint'),
+        orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+/**
+ * Specifically for buying tokens (re-uses processPayment with resourceType='tokens').
+ */
+export async function processTokenPurchase({ phone, email, firstName, lastName, operator, userId, amount, onStatusUpdate }) {
+    return processPayment({
+        phone, email, firstName, lastName, operator,
+        resourceType: 'tokens',
+        resourceId: 'token_purchase',
+        userId,
+        amount,
+        onStatusUpdate
+    });
+}
+
 /**
  * Payout flow:
  * 1. Initialize payout with PayChangu

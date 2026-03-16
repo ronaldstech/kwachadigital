@@ -1,4 +1,4 @@
-import { db } from '../../firebase';
+import { db } from '../firebase';
 import { doc, getDoc, updateDoc, increment, collection, addDoc, Timestamp, runTransaction } from 'firebase/firestore';
 
 /**
@@ -53,8 +53,7 @@ export async function deductTokens(userId, amount, toolName) {
 
             // Log the usage
             const usageRef = collection(db, 'token_usage');
-            const usageDoc = doc(usageRef); // pre-generate doc if needed or just use addDoc outside
-            // Note: transaction.set is better inside transaction
+            const usageDoc = doc(usageRef);
             transaction.set(usageDoc, {
                 userId,
                 amount,

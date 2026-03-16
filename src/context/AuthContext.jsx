@@ -21,7 +21,9 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [isBuyTokensModalOpen, setIsBuyTokensModalOpen] = useState(false);
     const [initialAuthMode, setInitialAuthMode] = useState('login');
+
     const isInitialAuthCheck = useRef(true);
 
     useEffect(() => {
@@ -46,8 +48,10 @@ export const AuthProvider = ({ children }) => {
                             uid: firebaseUser.uid,
                             email: firebaseUser.email,
                             ...userData,
+                            tokens: userData.tokens || 0,
                             avatar: userData.avatar || (userData.name || firebaseUser.email).slice(0, 2).toUpperCase()
                         });
+
                     } else {
                         setUser({
                             uid: firebaseUser.uid,
@@ -187,6 +191,17 @@ export const AuthProvider = ({ children }) => {
 
     const closeAuthModal = () => setIsAuthModalOpen(false);
 
+    const openBuyTokensModal = () => {
+        if (!user) {
+            openAuthModal('login');
+            return;
+        }
+        setIsBuyTokensModalOpen(true);
+    };
+
+    const closeBuyTokensModal = () => setIsBuyTokensModalOpen(false);
+
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -198,8 +213,12 @@ export const AuthProvider = ({ children }) => {
             isAuthModalOpen,
             openAuthModal,
             closeAuthModal,
-            initialAuthMode
+            initialAuthMode,
+            isBuyTokensModalOpen,
+            openBuyTokensModal,
+            closeBuyTokensModal
         }}>
+
             {loading ? <SystemLoader /> : children}
         </AuthContext.Provider>
     );

@@ -14,7 +14,7 @@ import {
     CreditCard as DebitCard,
     Smartphone,
     Zap,
-    Loader2
+    Loader2, Coins
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { db } from '../firebase';
@@ -267,45 +267,78 @@ const Orders = () => {
                                     <div className="flex-1">
                                         <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em] mb-4">Items Summary</p>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            {order.items?.map((item, idx) => (
-                                                <div key={idx} className="flex items-center gap-3 p-3 rounded-2xl glass border border-glass-border group-hover:border-primary/20 transition-all">
-                                                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-surface-2 border border-glass-border shrink-0">
-                                                        {item.imageUrl ? (
-                                                            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-text-muted">
-                                                                <Package size={20} />
+                                            {order.items && order.items.length > 0 ? (
+                                                order.items.map((item, idx) => (
+                                                    <div key={idx} className="flex items-center gap-3 p-3 rounded-2xl glass border border-glass-border group-hover:border-primary/20 transition-all">
+                                                        <div className="w-14 h-14 rounded-xl overflow-hidden bg-surface-2 border border-glass-border shrink-0">
+                                                            {item.imageUrl ? (
+                                                                <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center text-text-muted">
+                                                                    <Package size={20} />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="text-sm font-bold text-text-primary truncate">{item.title}</p>
+                                                            <div className="flex justify-between items-center mt-0.5">
+                                                                <div className="flex items-center gap-2 min-w-0">
+                                                                    <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider shrink-0">{item.category}</p>
+                                                                    <span className="w-1 h-1 rounded-full bg-glass-border shrink-0" />
+                                                                    <p className="text-[10px] text-text-muted/70 font-bold uppercase tracking-wider truncate">By {item.sellerName || 'Unknown Seller'}</p>
+                                                                </div>
+                                                                <p className="text-xs font-black text-primary ml-2 shrink-0">MK {Number(item.price).toLocaleString()}</p>
                                                             </div>
+                                                            {(order.status === 'success' || order.status === 'completed') && item.fileUrl && (
+                                                                <div className="mt-3">
+                                                                    <a
+                                                                        href={item.fileUrl}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 glass rounded-lg text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 hover:border-primary/30 transition-all shadow-sm border border-glass-border"
+                                                                    >
+                                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                                                        Download
+                                                                    </a>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                /* Virtual Item Fallback (Tokens, AI Tools) */
+                                                <div className="flex items-center gap-4 p-4 rounded-2xl animate-pulse-subtle bg-primary/5 border border-primary/20 col-span-full">
+                                                    <div className="w-16 h-16 rounded-2xl glass border border-primary/20 flex items-center justify-center shrink-0">
+                                                        {order.resourceType === 'tokens' ? (
+                                                            <Coins size={28} className="text-amber-500" />
+                                                        ) : (
+                                                            <Zap size={28} className="text-primary" />
                                                         )}
                                                     </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="text-sm font-bold text-text-primary truncate">{item.title}</p>
-                                                        <div className="flex justify-between items-center mt-0.5">
-                                                            <div className="flex items-center gap-2 min-w-0">
-                                                                <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider shrink-0">{item.category}</p>
-                                                                <span className="w-1 h-1 rounded-full bg-glass-border shrink-0" />
-                                                                <p className="text-[10px] text-text-muted/70 font-bold uppercase tracking-wider truncate">By {item.sellerName || 'Unknown Seller'}</p>
-                                                            </div>
-                                                            <p className="text-xs font-black text-primary ml-2 shrink-0">MK {Number(item.price).toLocaleString()}</p>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h4 className="text-base font-black text-text-primary tracking-tight">
+                                                                {order.resourceType === 'tokens' ? 'KD Token Recharge' :
+                                                                    order.resourceType === 'essay' ? 'Essay Generation Unlock' :
+                                                                        order.resourceType === 'powerpoint' ? 'PowerPoint Presentation Unlock' :
+                                                                            order.resourceType === 'dissertation' ? 'Dissertation Tool Unlock' :
+                                                                                'Digital Asset Unlock'}
+                                                            </h4>
+                                                            <span className="px-2 py-0.5 rounded-lg bg-primary/10 text-primary text-[8px] font-black uppercase tracking-tighter">
+                                                                Virtual
+                                                            </span>
                                                         </div>
-                                                        {(order.status === 'success' || order.status === 'completed') && item.fileUrl && (
-                                                            <div className="mt-3">
-                                                                <a
-                                                                    href={item.fileUrl}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 glass rounded-lg text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 hover:border-primary/30 transition-all shadow-sm border border-glass-border"
-                                                                >
-                                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                                                    Download
-                                                                </a>
-                                                            </div>
-                                                        )}
+                                                        <p className="text-xs text-text-muted font-medium">
+                                                            {order.resourceType === 'tokens'
+                                                                ? `You have ordered ${Number(order.amount).toLocaleString()} tokens.`
+                                                                : `Premium AI tool features unlocked for this project.`}
+                                                        </p>
                                                     </div>
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </motion.div>
